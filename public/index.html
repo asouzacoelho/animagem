@@ -427,6 +427,21 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
     <div class="dcards" id="dcards"></div>
   </div>
 
+  <!-- POR QUE ULTRASSOM DOMICILIAR -->
+  <div class="why-wrap" style="max-width:900px;margin:0 auto;padding:8px 16px 28px">
+    <div style="font-family:'Fraunces',serif;font-size:20px;font-weight:600;margin-bottom:14px">Por que ultrassom domiciliar?</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px">
+      <div style="background:#fff;border:1px solid rgba(15,10,26,0.08);border-radius:14px;padding:14px"><div style="font-size:22px;margin-bottom:6px">🏠</div><div style="font-weight:600;font-size:13px;margin-bottom:3px">Sem deslocamento</div><div style="font-size:12px;color:var(--light)">O pet faz o exame no ambiente dele, sem o estresse da viagem até a clínica.</div></div>
+      <div style="background:#fff;border:1px solid rgba(15,10,26,0.08);border-radius:14px;padding:14px"><div style="font-size:22px;margin-bottom:6px">🩺</div><div style="font-weight:600;font-size:13px;margin-bottom:3px">Mesma qualidade clínica</div><div style="font-size:12px;color:var(--light)">Equipamento e laudo no mesmo padrão de uma clínica especializada.</div></div>
+      <div style="background:#fff;border:1px solid rgba(15,10,26,0.08);border-radius:14px;padding:14px"><div style="font-size:22px;margin-bottom:6px">✅</div><div style="font-weight:600;font-size:13px;margin-bottom:3px">CRMV verificado</div><div style="font-size:12px;color:var(--light)">Todo médico é aprovado manualmente antes de aparecer nas buscas.</div></div>
+      <div style="background:#fff;border:1px solid rgba(15,10,26,0.08);border-radius:14px;padding:14px"><div style="font-size:22px;margin-bottom:6px">⏱</div><div style="font-weight:600;font-size:13px;margin-bottom:3px">Agendamento rápido</div><div style="font-size:12px;color:var(--light)">Escolha o horário, pague e o médico já fica notificado.</div></div>
+    </div>
+    <a href="landing.html" style="font-size:12px;color:var(--plum);font-weight:600;text-decoration:underline">Conheça a Animagem em detalhes →</a>
+  </div>
+
+  <!-- ESPAÇO PATROCINADO -->
+  <div id="sponsor-wrap" style="max-width:900px;margin:0 auto;padding:0 16px 28px"></div>
+
   <div class="stats-bar">
     <div class="stat-item"><div class="stat-val">12</div><div class="stat-lbl">Médicos</div></div>
     <div class="stat-item"><div class="stat-val">8</div><div class="stat-lbl">Especialidades</div></div>
@@ -685,6 +700,17 @@ async function loadCatalogo(){
   CATALOGO.forEach(e=>{EP[e.nome]={p:Number(e.preco_base),d:e.duracao_min+' min',id:e.id};});
 }
 
+async function loadSponsor(){
+  const el=document.getElementById('sponsor-wrap');if(!el)return;
+  const {data,error}=await sb.from('patrocinadores').select('*').eq('ativo',true).order('ordem').limit(1);
+  if(error||!data?.length){el.innerHTML='';return;}
+  const s=data[0];
+  el.innerHTML=`<a href="${s.link||'#'}" target="_blank" style="text-decoration:none;display:block;background:linear-gradient(135deg,var(--plum-pale),var(--sage-pale));border:1px solid rgba(15,10,26,0.08);border-radius:14px;padding:14px 16px;color:inherit">
+    <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--light);margin-bottom:4px">Conteúdo patrocinado</div>
+    <div style="font-weight:600;font-size:14px;margin-bottom:2px">${s.nome}${s.cidade?' · '+s.cidade:''}</div>
+    <div style="font-size:12px;color:var(--mid)">${s.descricao||''}</div>
+  </a>`;
+}
 async function loadMedicos(){
   const {data,error}=await sb.from('medicos').select(`
     id,crmv,bio,cidade,estado,
@@ -1156,7 +1182,7 @@ async function init(){
   await refreshProfile();
   renderAuthSlot();
   sb.auth.onAuthStateChange((_e,sess)=>{session=sess;refreshProfile().then(renderAuthSlot);});
-  await Promise.all([loadCatalogo(),loadMedicos()]);
+  await Promise.all([loadCatalogo(),loadMedicos(),loadSponsor()]);
   renderCards(MEDICOS);
 }
 init();
