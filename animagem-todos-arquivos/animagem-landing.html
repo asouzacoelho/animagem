@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Animagem — Ultrassonografia Veterinária</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --sage:#3d7a6a;--sage-mid:#5a9e8c;--sage-light:#9dd4c4;--sage-pale:#e6f4f0;
+  --plum:#4a2d6e;--plum-mid:#7a5aaa;--plum-pale:#f0eaf8;
+  --ink:#0f0a1a;--cream:#faf7f2;--warm:#f5f0e8;--mist:#f8f6f2;
+  --mid:#6a5e7a;--light:#a89ab8;
+  --radius:14px;--touch:50px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html{font-size:16px;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+
+/* NAV */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;height:52px;
+  background:rgba(250,247,242,0.97);backdrop-filter:blur(14px);
+  border-bottom:1px solid rgba(15,10,26,0.07);
+}
+.nav-logo{font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:var(--plum);}
+.nav-logo span{color:var(--sage);}
+.nav-cta{
+  background:var(--plum);color:#fff;border:none;border-radius:10px;
+  padding:0 16px;height:38px;font-family:'DM Sans',sans-serif;
+  font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;
+  display:flex;align-items:center;
+}
+
+/* HERO */
+.hero{
+  min-height:100svh;display:flex;flex-direction:column;justify-content:center;
+  padding:80px 16px 40px;position:relative;overflow:hidden;
+  background:linear-gradient(160deg,#1a0e2e 0%,#2a1a4e 50%,#1a3530 100%);
+}
+.hero::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 80% 20%,rgba(93,184,164,0.14) 0%,transparent 70%),
+             radial-gradient(ellipse 60% 80% at 10% 90%,rgba(122,90,170,0.13) 0%,transparent 60%);}
+.hero-in{position:relative;max-width:700px;margin:0 auto;width:100%;}
+.hero-tag{
+  display:inline-flex;align-items:center;gap:7px;
+  background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);
+  border-radius:999px;padding:6px 14px;margin-bottom:20px;
+  font-size:11px;color:rgba(255,255,255,0.65);letter-spacing:1.5px;text-transform:uppercase;
+}
+.hero-tag::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--sage-light);animation:pulse 2s infinite;flex-shrink:0;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.3)}}
+.hero h1{font-family:'Fraunces',serif;font-size:clamp(32px,8vw,60px);font-weight:600;color:#fff;line-height:1.15;margin-bottom:14px;}
+.hero h1 em{font-style:italic;color:var(--sage-light);}
+.hero-sub{font-size:15px;color:rgba(255,255,255,0.55);font-weight:300;margin-bottom:28px;line-height:1.7;max-width:480px;}
+.hero-badges{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:32px;}
+.hero-badge{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:7px 12px;font-size:12px;color:rgba(255,255,255,0.7);}
+.hero-ctas{display:flex;flex-direction:column;gap:10px;width:100%;}
+.btn-hero-primary{
+  background:var(--sage);color:#fff;border:none;border-radius:var(--radius);
+  height:var(--touch);font-family:'DM Sans',sans-serif;font-size:16px;font-weight:600;
+  cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;
+  letter-spacing:0.3px;transition:all 0.2s;
+}
+.btn-hero-secondary{
+  background:transparent;color:rgba(255,255,255,0.75);
+  border:1.5px solid rgba(255,255,255,0.25);border-radius:var(--radius);
+  height:var(--touch);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:400;
+  cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;
+  transition:all 0.2s;
+}
+
+/* SECTIONS */
+.section{padding:52px 16px;max-width:900px;margin:0 auto;}
+.sec-label{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--sage);font-weight:600;margin-bottom:10px;}
+.sec-title{font-family:'Fraunces',serif;font-size:clamp(26px,5vw,42px);font-weight:600;color:var(--ink);line-height:1.2;margin-bottom:12px;}
+.sec-sub{font-size:14px;color:var(--mid);line-height:1.7;font-weight:300;margin-bottom:0;}
+
+/* SERVIÇOS */
+.servicos-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:28px;}
+.servico-card{
+  background:#fff;border:1.5px solid rgba(15,10,26,0.07);border-radius:var(--radius);
+  padding:18px 16px;cursor:pointer;transition:all 0.22s;
+  display:flex;flex-direction:column;gap:6px;
+}
+.servico-card:active{border-color:var(--sage);box-shadow:0 6px 20px rgba(61,122,106,0.12);}
+.servico-icon{font-size:24px;}
+.servico-nome{font-weight:600;color:var(--ink);font-size:14px;line-height:1.3;}
+.servico-desc{font-size:12px;color:var(--light);line-height:1.4;}
+.servico-preco{font-family:'Fraunces',serif;font-size:20px;font-weight:600;color:var(--sage);margin-top:4px;}
+
+/* COMO FUNCIONA */
+.como-bg{background:linear-gradient(135deg,#1a0e2e,#1a3530);padding:52px 16px;}
+.como-inner{max-width:900px;margin:0 auto;}
+.como-steps{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:28px;}
+.como-step{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius);padding:18px 16px;}
+.step-num{font-family:'Fraunces',serif;font-size:48px;font-weight:700;color:rgba(255,255,255,0.06);line-height:1;margin-bottom:-10px;}
+.step-icon{font-size:22px;margin-bottom:8px;}
+.step-title{font-weight:600;color:#fff;font-size:14px;margin-bottom:5px;}
+.step-desc{font-size:12px;color:rgba(255,255,255,0.5);line-height:1.5;font-weight:300;}
+
+/* AGENDAMENTO */
+.booking-wrap{background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 8px 40px rgba(15,10,26,0.1);margin-top:28px;}
+.booking-head{background:linear-gradient(135deg,var(--plum),var(--sage));padding:20px 18px;}
+.booking-head h3{font-family:'Fraunces',serif;font-size:22px;font-weight:600;color:#fff;margin-bottom:3px;}
+.booking-head p{font-size:12px;color:rgba(255,255,255,0.7);}
+.booking-body{padding:18px 16px 24px;}
+
+/* PROG */
+.prog{display:flex;align-items:center;margin-bottom:20px;overflow-x:auto;padding-bottom:2px;}
+.pstep{display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0;}
+.pcircle{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;transition:all 0.25s;}
+.pcircle.done{background:var(--sage);color:#fff;}
+.pcircle.act{background:var(--plum);color:#fff;box-shadow:0 0 0 3px rgba(74,45,110,0.2);}
+.pcircle.idle{background:#f0ecfa;color:var(--light);}
+.plabel{font-size:9px;color:var(--light);text-transform:uppercase;letter-spacing:0.3px;white-space:nowrap;}
+.pline{flex:1;height:2px;margin:0 3px 16px;min-width:10px;}
+
+/* FORM */
+.flabel{display:block;font-size:12px;font-weight:600;color:var(--mid);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;}
+.finput{width:100%;padding:13px 14px;border:1.5px solid #e0d8ec;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:16px;color:var(--ink);background:var(--mist);outline:none;-webkit-appearance:none;transition:border-color 0.2s;}
+.finput:focus{border-color:var(--plum-mid);}
+.frow{margin-bottom:12px;}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.chip-row{display:flex;flex-wrap:wrap;gap:7px;}
+.chip{padding:9px 13px;border-radius:999px;border:1.5px solid #e0d8ec;background:#fff;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all 0.15s;color:var(--mid);min-height:40px;display:flex;align-items:center;}
+.chip.sel{border-color:var(--plum);background:var(--plum-pale);color:var(--plum);font-weight:600;}
+.slot-day{font-size:11px;font-weight:700;color:var(--plum);text-transform:uppercase;letter-spacing:0.8px;margin:14px 0 8px;}
+.slot-row{display:flex;flex-wrap:wrap;gap:8px;}
+.slot{padding:10px 16px;border-radius:10px;border:1.5px solid #e0d8ec;background:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.15s;min-height:44px;display:flex;align-items:center;}
+.slot.sel{border-color:var(--plum);background:var(--plum-pale);color:var(--plum);}
+.resumo{background:var(--sage-pale);border:1px solid rgba(61,122,106,0.2);border-radius:12px;padding:16px;margin-bottom:14px;}
+.rrow{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(61,122,106,0.12);font-size:14px;gap:8px;}
+.rrow:last-child{border:none;font-weight:700;padding-top:10px;}
+.rrow span:first-child{color:var(--mid);flex-shrink:0;}
+.rrow span:last-child{text-align:right;}
+.btn-book{background:var(--plum);color:#fff;border:none;border-radius:10px;height:var(--touch);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;width:100%;margin-top:14px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+.btn-book:disabled{opacity:0.35;cursor:not-allowed;}
+.btn-book:active{background:var(--plum-mid);}
+.btn-back{background:var(--plum-pale);color:var(--plum);border:none;border-radius:10px;height:46px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.brow{display:flex;gap:8px;margin-top:12px;}
+.btn-wa{display:flex;align-items:center;justify-content:center;gap:8px;background:#25D366;color:#fff;border:none;border-radius:10px;height:var(--touch);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;width:100%;text-decoration:none;margin-top:14px;}
+.notice-pay{background:#fffbea;border:1px solid #f0d060;border-radius:10px;padding:12px 14px;font-size:13px;color:#7a5a10;margin-bottom:14px;line-height:1.6;}
+
+/* SOBRE */
+.sobre-wrap{display:flex;flex-direction:column;gap:24px;margin-top:28px;}
+.sobre-img{background:linear-gradient(135deg,var(--plum-pale),var(--sage-pale));border-radius:20px;height:220px;display:flex;align-items:center;justify-content:center;font-size:72px;}
+.sobre-text p{color:var(--mid);line-height:1.8;font-size:14px;font-weight:300;margin-bottom:14px;}
+.sobre-creds{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
+.cred{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mid);}
+.cred-dot{width:6px;height:6px;border-radius:50%;background:var(--sage);flex-shrink:0;}
+
+/* DEPOIMENTOS */
+.depo-bg{background:#fff;padding:52px 16px;}
+.depo-inner{max-width:900px;margin:0 auto;}
+.depo-grid{display:flex;flex-direction:column;gap:12px;margin-top:28px;}
+.depo-card{background:var(--cream);border:1.5px solid rgba(15,10,26,0.07);border-radius:var(--radius);padding:18px;}
+.depo-stars{color:#f4b942;font-size:14px;margin-bottom:10px;}
+.depo-text{font-size:14px;color:var(--mid);line-height:1.7;font-style:italic;margin-bottom:12px;font-weight:300;}
+.depo-author{font-size:13px;font-weight:600;color:var(--ink);}
+.depo-pet{font-size:12px;color:var(--light);}
+
+/* CONFIRMACAO */
+.confirm-box{text-align:center;padding:12px 0;}
+.confirm-icon{width:64px;height:64px;border-radius:50%;background:var(--sage-pale);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:28px;color:var(--sage);}
+.confirm-title{font-family:'Fraunces',serif;font-size:26px;color:var(--sage);margin-bottom:8px;}
+.confirm-sub{color:var(--light);font-size:14px;line-height:1.7;margin-bottom:20px;}
+
+/* FOOTER */
+footer{background:var(--ink);padding:40px 16px;text-align:center;}
+.footer-logo{font-family:'Fraunces',serif;font-size:24px;color:#fff;font-weight:600;margin-bottom:6px;}
+.footer-sub{font-size:11px;color:rgba(255,255,255,0.3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:20px;}
+.footer-links{display:flex;flex-direction:column;gap:10px;align-items:center;}
+.footer-link{color:rgba(255,255,255,0.45);font-size:13px;text-decoration:none;}
+.footer-divider{width:40px;height:1px;background:rgba(255,255,255,0.1);margin:20px auto;}
+.footer-copy{font-size:11px;color:rgba(255,255,255,0.2);}
+
+/* DESKTOP */
+@media(min-width:640px){
+  nav{padding:0 32px;height:58px;}
+  .nav-cta{height:40px;padding:0 20px;font-size:14px;}
+  .hero{padding:100px 32px 60px;}
+  .hero-ctas{flex-direction:row;width:auto;}
+  .btn-hero-primary,.btn-hero-secondary{width:auto;padding:0 28px;}
+  .servicos-grid{grid-template-columns:repeat(3,1fr);}
+  .como-steps{grid-template-columns:repeat(4,1fr);}
+  .booking-wrap{margin-top:36px;}
+  .booking-body{padding:24px 28px 32px;}
+  .sobre-wrap{flex-direction:row;align-items:flex-start;}
+  .sobre-img{width:280px;flex-shrink:0;height:320px;}
+  .depo-grid{display:grid;grid-template-columns:repeat(3,1fr);}
+  .footer-links{flex-direction:row;justify-content:center;gap:24px;}
+  .fgrid{grid-template-columns:1fr 1fr;}
+  .section{padding:72px 32px;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">Anim<span>a</span>gem</div>
+  <a href="#agendar" class="nav-cta">Agendar exame</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero" style="padding-top:80px">
+  <div class="hero-in">
+    <div class="hero-tag">Ultrassonografia veterinária domiciliar</div>
+    <h1>Cuidado especializado,<br/><em>onde seu pet</em><br/>se sente seguro.</h1>
+    <p class="hero-sub">Exames de ultrassom realizados na sua casa por M.V. Ana Camila V. Augusti, com equipamento profissional e atendimento humanizado.</p>
+    <div class="hero-badges">
+      <span class="hero-badge">🏠 Domiciliar</span>
+      <span class="hero-badge">📅 Online</span>
+      <span class="hero-badge">💬 WhatsApp</span>
+      <span class="hero-badge">📍 Campinas</span>
+    </div>
+    <div class="hero-ctas">
+      <a href="#agendar" class="btn-hero-primary">Agendar agora</a>
+      <a href="#servicos" class="btn-hero-secondary">Ver serviços</a>
+    </div>
+  </div>
+</div>
+
+<!-- SERVIÇOS -->
+<div class="section" id="servicos">
+  <div class="sec-label">O que oferecemos</div>
+  <h2 class="sec-title">Exames disponíveis</h2>
+  <p class="sec-sub">Ultrassonografia diagnóstica com equipamento de alta resolução, na sua casa.</p>
+  <div class="servicos-grid">
+    <div class="servico-card" onclick="document.getElementById('agendar').scrollIntoView({behavior:'smooth'})">
+      <div class="servico-icon">🔬</div><div class="servico-nome">Ultrassom Abdominal</div>
+      <div class="servico-desc">Avaliação dos órgãos abdominais</div><div class="servico-preco">R$ 180</div>
+    </div>
+    <div class="servico-card" onclick="document.getElementById('agendar').scrollIntoView({behavior:'smooth'})">
+      <div class="servico-icon">🤱</div><div class="servico-nome">Ultrassom Gestacional</div>
+      <div class="servico-desc">Acompanhamento da gestação</div><div class="servico-preco">R$ 200</div>
+    </div>
+    <div class="servico-card" onclick="document.getElementById('agendar').scrollIntoView({behavior:'smooth'})">
+      <div class="servico-icon">❤️</div><div class="servico-nome">Ecocardiograma</div>
+      <div class="servico-desc">Avaliação do coração</div><div class="servico-preco">R$ 280</div>
+    </div>
+    <div class="servico-card" onclick="document.getElementById('agendar').scrollIntoView({behavior:'smooth'})">
+      <div class="servico-icon">🦴</div><div class="servico-nome">Ultrassom Ortopédico</div>
+      <div class="servico-desc">Tendões e tecidos moles</div><div class="servico-preco">R$ 160</div>
+    </div>
+    <div class="servico-card" onclick="document.getElementById('agendar').scrollIntoView({behavior:'smooth'})">
+      <div class="servico-icon">👁️</div><div class="servico-nome">Ultrassom Ocular</div>
+      <div class="servico-desc">Avaliação ocular</div><div class="servico-preco">R$ 150</div>
+    </div>
+  </div>
+</div>
+
+<!-- COMO FUNCIONA -->
+<div class="como-bg">
+  <div class="como-inner">
+    <div class="sec-label" style="color:var(--sage-light)">Passo a passo</div>
+    <h2 class="sec-title" style="color:#fff">Como funciona</h2>
+    <p class="sec-sub" style="color:rgba(255,255,255,0.5)">Do agendamento ao laudo, sem sair de casa.</p>
+    <div class="como-steps">
+      <div class="como-step"><div class="step-num">01</div><div class="step-icon">📋</div><div class="step-title">Escolha o exame</div><div class="step-desc">Selecione o tipo de ultrassom e o horário disponível.</div></div>
+      <div class="como-step"><div class="step-num">02</div><div class="step-icon">📍</div><div class="step-title">Informe o endereço</div><div class="step-desc">Confirme que está na área de atendimento.</div></div>
+      <div class="como-step"><div class="step-num">03</div><div class="step-icon">💬</div><div class="step-title">Confirmação</div><div class="step-desc">A Ana Camila confirma e orienta o preparo do pet.</div></div>
+      <div class="como-step"><div class="step-num">04</div><div class="step-icon">🔬</div><div class="step-title">Exame em casa</div><div class="step-desc">Atendimento profissional com laudo digital.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- AGENDAMENTO -->
+<div id="agendar" style="background:var(--cream);padding:52px 16px;">
+  <div style="max-width:600px;margin:0 auto">
+    <div class="sec-label">Agendar</div>
+    <h2 class="sec-title">Marque seu horário</h2>
+    <p class="sec-sub">Mínimo 1h de antecedência. Apenas para a área de cobertura.</p>
+    <div class="booking-wrap">
+      <div class="booking-head">
+        <h3>Animagem — Agendamento</h3>
+        <p>M.V. Ana Camila V. Augusti · Ultrassonografia Veterinária</p>
+      </div>
+      <div class="booking-body" id="bookingBody"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SOBRE -->
+<div class="section" id="sobre">
+  <div class="sec-label">Quem atende</div>
+  <h2 class="sec-title">Ana Camila Augusti</h2>
+  <div class="sobre-wrap">
+    <div class="sobre-img">🩺</div>
+    <div class="sobre-text">
+      <p>Médica veterinária especializada em diagnóstico por imagem, com foco em ultrassonografia de pequenos animais. Atua há anos na área, com experiência em clínicas e hospitais de referência em Campinas.</p>
+      <p>Oferece atendimento domiciliar humanizado, reduzindo o estresse dos pets e proporcionando conforto para tutores e animais.</p>
+      <div class="sobre-creds">
+        <div class="cred"><div class="cred-dot"></div>CRMV-SP ativo</div>
+        <div class="cred"><div class="cred-dot"></div>Especialização em ultrassonografia veterinária</div>
+        <div class="cred"><div class="cred-dot"></div>Equipamento de alta resolução</div>
+        <div class="cred"><div class="cred-dot"></div>Laudos digitais por e-mail</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DEPOIMENTOS -->
+<div class="depo-bg">
+  <div class="depo-inner">
+    <div class="sec-label">Quem já atendemos</div>
+    <h2 class="sec-title">O que dizem os tutores</h2>
+    <div class="depo-grid">
+      <div class="depo-card"><div class="depo-stars">★★★★★</div><div class="depo-text">"Incrível a comodidade! A Ana Camila foi super cuidadosa com o Thor."</div><div class="depo-author">Juliana M.</div><div class="depo-pet">Thor · Golden Retriever</div></div>
+      <div class="depo-card"><div class="depo-stars">★★★★★</div><div class="depo-text">"Profissional excelente, explicou tudo direitinho. O laudo chegou rapidinho!"</div><div class="depo-author">Roberto S.</div><div class="depo-pet">Luna · Gata SRD</div></div>
+      <div class="depo-card"><div class="depo-stars">★★★★★</div><div class="depo-text">"Agendei pelo site super fácil. Atendimento impecável e pontual."</div><div class="depo-author">Fernanda R.</div><div class="depo-pet">Mel · Shih Tzu</div></div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-logo">Animagem</div>
+  <div class="footer-sub">Ultrassonografia Veterinária</div>
+  <div class="footer-links">
+    <a class="footer-link" href="https://instagram.com/animagem_ac" target="_blank">@animagem_ac</a>
+    <a class="footer-link" href="mailto:animagem_ac@outlook.com">animagem_ac@outlook.com</a>
+    <a class="footer-link" href="tel:+5519995188335">(19) 99518-8335</a>
+  </div>
+  <div class="footer-divider"></div>
+  <div class="footer-copy">© 2025 Animagem · M.V. Ana Camila V. Augusti · CRMV-SP</div>
+</footer>
+
+<script>
+const WA="5519995188335";
+const SERVICOS=[
+  {id:"abdominal",nome:"Ultrassom Abdominal",preco:180,dur:"30–40 min"},
+  {id:"gestacional",nome:"Ultrassom Gestacional",preco:200,dur:"30–45 min"},
+  {id:"cardiaco",nome:"Ecocardiograma",preco:280,dur:"40–50 min"},
+  {id:"ortopedico",nome:"Ultrassom Ortopédico",preco:160,dur:"25–35 min"},
+  {id:"ocular",nome:"Ultrassom Ocular",preco:150,dur:"20–30 min"},
+];
+const ESPECIES=["Cão","Gato","Coelho","Ave","Réptil","Outro"];
+let step=0,servico=null,slot=null,form={};
+
+function getMockSlots(){
+  const now=new Date();const slots=[];
+  for(let d=0;d<7;d++){const day=new Date(now);day.setDate(now.getDate()+d);
+    [8,9,10,11,14,15,16,17].forEach(h=>{const s=new Date(day);s.setHours(h,0,0,0);
+      const diff=(s-now)/60000;const occ=(d===0&&[9,14].includes(h))||(d===1&&h===10);
+      if(diff>=60&&!occ)slots.push(s);
+    });
+  }return slots;
+}
+function fmtD(d){return d.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'});}
+function fmtH(d){return d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}
+function groupByDay(sl){const m={};sl.forEach(s=>{const k=s.toDateString();if(!m[k])m[k]=[];m[k].push(s);});return m;}
+
+function progHTML(s){
+  const steps=['Serviço','Horário','Dados','Confirmar'];
+  let h='<div class="prog">';
+  steps.forEach((n,i)=>{
+    const cls=i<s?'done':i===s?'act':'idle';
+    h+=`<div class="pstep"><div class="pcircle ${cls}">${i<s?'✓':i+1}</div><div class="plabel">${n}</div></div>`;
+    if(i<steps.length-1)h+=`<div class="pline" style="background:${i<s?'var(--sage)':'#e8e0f4'}"></div>`;
+  });
+  return h+'</div>';
+}
+
+function render(){
+  const b=document.getElementById('bookingBody');
+  if(step===0){
+    b.innerHTML=progHTML(0)+'<p style="font-size:13px;color:var(--light);margin-bottom:14px">Escolha o tipo de exame</p><div style="display:flex;flex-direction:column;gap:9px">'+
+    SERVICOS.map(s=>`<button onclick="selServ('${s.id}')" style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-radius:12px;border:2px solid ${servico?.id===s.id?'var(--plum)':'rgba(15,10,26,0.1)'};background:${servico?.id===s.id?'var(--plum-pale)':'#fff'};cursor:pointer;text-align:left;font-family:'DM Sans',sans-serif;min-height:56px;width:100%"><div><div style="font-weight:600;font-size:15px">${s.nome}</div><div style="font-size:12px;color:var(--light)">⏱ ${s.dur}</div></div><div style="font-family:'Fraunces',serif;font-size:20px;font-weight:600;color:var(--sage);flex-shrink:0">R$ ${s.preco}</div></button>`).join('')+
+    `</div><button class="btn-book" style="opacity:${servico?1:0.35}" ${servico?'':'disabled'} onclick="step=1;render()">Continuar →</button>`;
+  }else if(step===1){
+    const slots=getMockSlots();const grouped=groupByDay(slots);
+    let html=progHTML(1)+'<p style="font-size:13px;color:var(--light);margin-bottom:4px">Horários com ≥ 1h de antecedência</p>';
+    Object.entries(grouped).forEach(([k,ds])=>{
+      html+=`<div class="slot-day">${fmtD(ds[0])}</div><div class="slot-row">`;
+      ds.forEach(s=>{const sel=slot?.getTime()===s.getTime();html+=`<button class="slot ${sel?'sel':''}" onclick="selSlot(${s.getTime()})">${fmtH(s)}</button>`;});
+      html+='</div>';
+    });
+    html+=`<div class="brow"><button class="btn-back" onclick="step=0;render()">← Voltar</button><button class="btn-book" style="flex:1;margin-top:0;opacity:${slot?1:0.35}" ${slot?'':'disabled'} onclick="step=2;render()">Confirmar →</button></div>`;
+    b.innerHTML=html;
+  }else if(step===2){
+    const f=form;
+    b.innerHTML=progHTML(2)+`<div style="display:flex;flex-direction:column;gap:0">
+      <div class="fgrid">
+        <div class="frow"><label class="flabel">Nome *</label><input class="finput" id="f-nome" value="${f.nome||''}" placeholder="Maria Silva"/></div>
+        <div class="frow"><label class="flabel">WhatsApp *</label><input class="finput" id="f-tel" value="${f.tel||''}" placeholder="(19) 99999-9999" type="tel"/></div>
+      </div>
+      <div class="frow"><label class="flabel">E-mail</label><input class="finput" id="f-email" value="${f.email||''}" placeholder="seu@email.com" type="email"/></div>
+      <div class="frow"><label class="flabel">Nome do pet *</label><input class="finput" id="f-pet" value="${f.pet||''}" placeholder="Thor"/></div>
+      <div class="frow"><label class="flabel">Espécie *</label><div class="chip-row">${ESPECIES.map(e=>`<div class="chip ${f.especie===e?'sel':''}" onclick="selEsp('${e}')">${e}</div>`).join('')}</div></div>
+      <div class="frow"><label class="flabel">Endereço completo *</label><input class="finput" id="f-end" value="${f.end||''}" placeholder="Rua, número, bairro, cidade"/></div>
+      <div class="frow"><label class="flabel">Observações</label><textarea class="finput" id="f-obs" rows="2" placeholder="Motivo do exame">${f.obs||''}</textarea></div>
+    </div>
+    <div class="brow"><button class="btn-back" onclick="step=1;render()">← Voltar</button><button class="btn-book" style="flex:1;margin-top:0" onclick="saveForm()">Revisar →</button></div>`;
+  }else if(step===3){
+    const msg=`Olá Ana Camila! Agendamento via site:\n\n📋 *${servico.nome}*\n📅 ${fmtD(slot)} às ${fmtH(slot)}\n🐾 ${form.pet} (${form.especie})\n📍 ${form.end}\n👤 ${form.nome} — ${form.tel}${form.obs?'\n📝 '+form.obs:''}`;
+    b.innerHTML=progHTML(3)+`
+    <div class="resumo">
+      <div class="rrow"><span>Serviço</span><span>${servico.nome}</span></div>
+      <div class="rrow"><span>Data</span><span>${fmtD(slot)}</span></div>
+      <div class="rrow"><span>Horário</span><span>${fmtH(slot)}</span></div>
+      <div class="rrow"><span>Pet</span><span>${form.pet} · ${form.especie}</span></div>
+      <div class="rrow"><span>Local</span><span style="font-size:12px;text-align:right">${form.end}</span></div>
+      <div class="rrow"><span>Valor</span><span style="color:var(--sage);font-size:18px">R$ ${servico.preco},00</span></div>
+    </div>
+    <div class="notice-pay">⚡ Pagamento realizado com a Ana Camila no atendimento (PIX ou maquininha).</div>
+    <div class="brow"><button class="btn-back" onclick="step=2;render()">← Voltar</button>
+    <a href="https://wa.me/${WA}?text=${encodeURIComponent(msg)}" target="_blank" class="btn-wa" style="flex:1;margin-top:0" onclick="setTimeout(()=>{step=4;render()},800)">
+      💬 Confirmar via WhatsApp
+    </a></div>`;
+  }else if(step===4){
+    b.innerHTML=`<div class="confirm-box">
+      <div class="confirm-icon">✓</div>
+      <div class="confirm-title">Solicitação enviada!</div>
+      <p class="confirm-sub">A Ana Camila receberá sua mensagem e confirmará em breve. Fique atento ao WhatsApp.</p>
+      <button class="btn-book" onclick="step=0;servico=null;slot=null;form={};render()">Novo agendamento</button>
+    </div>`;
+  }
+  addEvents();
+}
+
+function selServ(id){servico=SERVICOS.find(s=>s.id===id);render();}
+function selSlot(t){slot=new Date(t);render();}
+function selEsp(e){form.especie=e;render();}
+function saveForm(){
+  form.nome=document.getElementById('f-nome')?.value;
+  form.tel=document.getElementById('f-tel')?.value;
+  form.email=document.getElementById('f-email')?.value;
+  form.pet=document.getElementById('f-pet')?.value;
+  form.end=document.getElementById('f-end')?.value;
+  form.obs=document.getElementById('f-obs')?.value;
+  if(form.nome&&form.tel&&form.pet&&form.especie&&form.end){step=3;render();}
+  else alert('Preencha todos os campos obrigatórios (*)');
+}
+function addEvents(){}
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Animagem — Portal Veterinário</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+/* ─── TOKENS ─── */
+:root{
+  --sage:#3d7a6a;--sage-mid:#5a9e8c;--sage-light:#9dd4c4;--sage-pale:#e6f4f0;
+  --plum:#4a2d6e;--plum-mid:#7a5aaa;--plum-pale:#f0eaf8;
+  --ink:#0f0a1a;--cream:#faf7f2;--warm:#f5f0e8;--mist:#f8f6f2;
+  --gold:#c8a84b;--red:#c0392b;--red-pale:#fdecea;
+  --mid:#6a5e7a;--light:#a89ab8;
+  --r:14px;--rs:10px;--touch:50px;
+  --topbar:52px;--bottomnav:62px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html{font-size:16px;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+
+/* ─── TOPBAR ─── */
+.topbar{
+  position:fixed;top:0;left:0;right:0;z-index:500;height:var(--topbar);
+  display:flex;align-items:center;justify-content:space-between;padding:0 16px;
+  background:rgba(250,247,242,0.97);backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(15,10,26,0.08);
+}
+.logo{font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:var(--plum);cursor:pointer;}
+.logo span{color:var(--sage);}
+.topnav-desktop{display:none;gap:6px;}/* shown only desktop */
+
+/* ─── BOTTOM NAV (always visible on mobile) ─── */
+.bottomnav{
+  position:fixed;bottom:0;left:0;right:0;z-index:500;
+  display:flex;align-items:stretch;
+  background:rgba(250,247,242,0.98);backdrop-filter:blur(16px);
+  border-top:1px solid rgba(15,10,26,0.09);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  height:var(--bottomnav);
+}
+.bnav-btn{
+  flex:1;border:none;background:transparent;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  font-family:'DM Sans',sans-serif;font-size:10px;font-weight:500;color:var(--light);
+  transition:color 0.18s;padding:6px 2px;
+}
+.bnav-btn.on{color:var(--plum);}
+.bnav-icon{font-size:19px;line-height:1;}
+
+/* ─── VIEWS ─── */
+.view{display:none;padding-top:var(--topbar);padding-bottom:calc(var(--bottomnav) + env(safe-area-inset-bottom,0px));min-height:100dvh;}
+.view.on{display:block;}
+
+/* ════════════════════════════════
+   TUTOR VIEW
+════════════════════════════════ */
+.hero{
+  background:linear-gradient(155deg,#0f0a1a 0%,#1e1040 50%,#0d2a24 100%);
+  padding:28px 16px 24px;position:relative;overflow:hidden;
+}
+.hero::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 80% 20%,rgba(93,184,164,0.13) 0%,transparent 65%),
+             radial-gradient(ellipse 60% 80% at 5% 90%,rgba(122,90,170,0.12) 0%,transparent 60%);}
+.hero-in{position:relative;}
+.eyebrow{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.14);border-radius:999px;padding:5px 12px;margin-bottom:14px;font-size:10px;color:rgba(255,255,255,0.6);letter-spacing:1.5px;text-transform:uppercase;}
+.eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--sage-light);animation:blink 2s infinite;flex-shrink:0;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.hero h1{font-family:'Fraunces',serif;font-size:26px;font-weight:600;color:#fff;line-height:1.2;margin-bottom:10px;}
+.hero h1 em{font-style:italic;color:var(--sage-light);}
+.hero-p{font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:20px;line-height:1.6;}
+
+/* SEARCH */
+.sbox{background:#fff;border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 16px 40px rgba(0,0,0,0.3);}
+.sf-label{display:block;font-size:10px;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px;}
+.si{width:100%;height:var(--touch);padding:0 14px;border:1.5px solid #e0d8f0;border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:16px;color:var(--ink);background:var(--mist);outline:none;-webkit-appearance:none;transition:border-color 0.2s;}
+.si:focus{border-color:var(--sage);}
+.btn-search{background:var(--sage);color:#fff;border:none;border-radius:var(--rs);height:var(--touch);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;width:100%;transition:background 0.2s;}
+.btn-search:active{background:var(--sage-mid);}
+
+/* RESULTS */
+.results-wrap{padding:20px 16px;}
+.results-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;}
+.results-title{font-family:'Fraunces',serif;font-size:18px;font-weight:600;}
+.results-count{font-size:11px;color:var(--light);background:var(--warm);padding:4px 11px;border-radius:999px;flex-shrink:0;}
+.dcards{display:flex;flex-direction:column;gap:10px;}
+
+/* DOCTOR CARD */
+.dcard{background:#fff;border-radius:var(--r);padding:14px;border:1.5px solid rgba(15,10,26,0.07);box-shadow:0 2px 10px rgba(15,10,26,0.04);cursor:pointer;}
+.dcard:active{border-color:var(--sage);}
+.dcard-head{display:flex;gap:12px;align-items:flex-start;margin-bottom:10px;}
+.davatar{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,var(--plum-pale),var(--sage-pale));display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.dname{font-family:'Fraunces',serif;font-size:16px;font-weight:600;line-height:1.2;margin-bottom:2px;}
+.dcrmv{font-size:10px;color:var(--light);margin-bottom:6px;}
+.dtags{display:flex;flex-wrap:wrap;gap:4px;}
+.dtag{background:var(--sage-pale);color:var(--sage);font-size:10px;font-weight:600;padding:2px 8px;border-radius:999px;}
+.dcard-foot{display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid rgba(15,10,26,0.06);gap:8px;}
+.dprice-block{}
+.dprice-from{font-size:10px;color:var(--light);}
+.dprice{font-family:'Fraunces',serif;font-size:20px;font-weight:600;color:var(--sage);}
+.davail{font-size:11px;color:var(--sage);font-weight:600;margin-top:2px;}
+.btn-ag{background:var(--plum);color:#fff;border:none;border-radius:var(--rs);padding:0 18px;height:42px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;}
+.btn-ag:active{background:var(--plum-mid);}
+
+/* STATS */
+.stats-bar{background:var(--ink);padding:20px 16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.stat-item{text-align:center;}
+.stat-val{font-family:'Fraunces',serif;font-size:26px;font-weight:700;color:var(--sage-light);}
+.stat-lbl{font-size:10px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.8px;margin-top:2px;}
+
+/* ════════════════════════════════
+   MODAL AGENDAMENTO
+════════════════════════════════ */
+.overlay{position:fixed;inset:0;z-index:600;background:rgba(15,10,26,0.7);display:none;flex-direction:column;justify-content:flex-end;backdrop-filter:blur(4px);}
+.overlay.on{display:flex;}
+.modal{background:#fff;border-radius:20px 20px 0 0;width:100%;max-height:92dvh;display:flex;flex-direction:column;animation:slideUp 0.26s ease;}
+@keyframes slideUp{from{transform:translateY(80px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-head{background:linear-gradient(135deg,var(--plum),var(--sage));padding:16px 16px 14px;border-radius:20px 20px 0 0;display:flex;justify-content:space-between;align-items:flex-start;flex-shrink:0;}
+.modal-head h3{font-family:'Fraunces',serif;font-size:17px;color:#fff;font-weight:600;}
+.modal-head p{font-size:11px;color:rgba(255,255,255,0.65);margin-top:2px;}
+.modal-close{background:rgba(255,255,255,0.18);border:none;border-radius:8px;width:34px;height:34px;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.modal-body{padding:16px;overflow-y:auto;flex:1;}
+
+/* PROGRESS */
+.prog{display:flex;align-items:center;margin-bottom:18px;}
+.pstep{display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0;}
+.pcircle{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;transition:all 0.22s;}
+.pcircle.done{background:var(--sage);color:#fff;}
+.pcircle.act{background:var(--plum);color:#fff;box-shadow:0 0 0 3px rgba(74,45,110,0.18);}
+.pcircle.idle{background:#f0ecfa;color:var(--light);}
+.plbl{font-size:9px;color:var(--light);text-transform:uppercase;white-space:nowrap;}
+.pline{flex:1;height:2px;margin:0 3px 16px;min-width:8px;transition:background 0.22s;}
+
+/* FORM */
+.flabel{display:block;font-size:11px;font-weight:600;color:var(--mid);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;}
+.finput{width:100%;height:var(--touch);padding:0 14px;border:1.5px solid #e0d8ec;border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:16px;color:var(--ink);background:var(--mist);outline:none;-webkit-appearance:none;transition:border-color 0.2s;}
+.finput:focus{border-color:var(--plum-mid);}
+textarea.finput{height:auto;padding:12px 14px;resize:none;}
+.frow{margin-bottom:11px;}
+.fgrid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.chips{display:flex;flex-wrap:wrap;gap:7px;}
+.chip{padding:8px 13px;border-radius:999px;border:1.5px solid #e0d8ec;background:#fff;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;color:var(--mid);min-height:40px;display:flex;align-items:center;transition:all 0.14s;}
+.chip.on{border-color:var(--plum);background:var(--plum-pale);color:var(--plum);font-weight:600;}
+
+/* SLOTS */
+.slot-day-lbl{font-size:10px;font-weight:700;color:var(--plum);text-transform:uppercase;letter-spacing:0.8px;margin:12px 0 7px;}
+.slots-row{display:flex;flex-wrap:wrap;gap:7px;}
+.slot-btn{padding:9px 15px;border-radius:var(--rs);border:1.5px solid #e0d8ec;background:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;min-height:42px;display:flex;align-items:center;transition:all 0.14s;}
+.slot-btn.on{border-color:var(--plum);background:var(--plum-pale);color:var(--plum);}
+
+/* RESUMO */
+.resumo{background:var(--sage-pale);border:1px solid rgba(61,122,106,0.2);border-radius:var(--r);padding:14px;margin-bottom:12px;}
+.rrow{display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;border-bottom:1px solid rgba(61,122,106,0.12);font-size:13px;gap:8px;}
+.rrow:last-child{border:none;font-weight:700;padding-top:10px;}
+.rrow-lbl{color:var(--mid);flex-shrink:0;}
+.rrow-val{text-align:right;}
+
+/* PAY OPTIONS */
+.pay-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.pay-opt{border:2px solid #e0d8ec;border-radius:var(--r);background:#fff;cursor:pointer;padding:14px 10px;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:100px;justify-content:center;transition:all 0.14s;}
+.pay-opt.on-pix{border-color:var(--sage);background:var(--sage-pale);}
+.pay-opt.on-cartao{border-color:var(--plum);background:var(--plum-pale);}
+.pay-opt-icon{font-size:24px;}
+.pay-opt-name{font-weight:700;font-size:14px;}
+.pay-opt-sub{font-size:11px;color:var(--light);text-align:center;}
+.pay-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:999px;}
+.pix-box{background:var(--plum-pale);border:1.5px solid rgba(74,45,110,0.2);border-radius:var(--r);padding:12px;margin-bottom:12px;}
+.pix-box-lbl{font-size:10px;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px;}
+.pix-code{font-family:monospace;font-size:11px;word-break:break-all;color:var(--plum);line-height:1.5;}
+.notice-pay{background:#fffbea;border:1px solid #f0d060;border-radius:var(--rs);padding:11px 13px;font-size:12px;color:#7a5a10;margin-bottom:12px;line-height:1.6;}
+
+/* BTNS */
+.btn-p{background:var(--plum);color:#fff;border:none;border-radius:var(--rs);height:var(--touch);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;width:100%;margin-top:12px;display:flex;align-items:center;justify-content:center;transition:background 0.2s;}
+.btn-p:disabled{opacity:0.35;cursor:not-allowed;}
+.btn-p:not(:disabled):active{background:var(--plum-mid);}
+.btn-b{background:var(--plum-pale);color:var(--plum);border:none;border-radius:var(--rs);height:46px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s;flex-shrink:0;}
+.brow{display:flex;gap:8px;margin-top:10px;}
+.btn-wa{display:flex;align-items:center;justify-content:center;gap:8px;background:#25D366;color:#fff;border:none;border-radius:var(--rs);height:var(--touch);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;width:100%;text-decoration:none;margin-top:12px;}
+.btn-copy{background:var(--plum);color:#fff;border:none;border-radius:var(--rs);height:42px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;width:100%;margin-top:8px;}
+
+/* CONFIRM */
+.confirm-box{text-align:center;padding:10px 0;}
+.confirm-ring{width:64px;height:64px;border-radius:50%;background:var(--sage-pale);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:28px;color:var(--sage);}
+.confirm-title{font-family:'Fraunces',serif;font-size:24px;color:var(--sage);margin-bottom:6px;}
+.confirm-sub{color:var(--light);font-size:13px;line-height:1.7;margin-bottom:18px;}
+
+/* ════════════════════════════════
+   MÉDICO VIEW
+════════════════════════════════ */
+.med-layout{display:flex;flex-direction:column;}/* row on desktop */
+.med-sidebar{display:none;}/* shown on desktop */
+.med-main{padding:14px;}
+
+/* Tab strip — horizontal scroll */
+.tab-strip{display:flex;gap:6px;overflow-x:auto;padding-bottom:12px;margin-bottom:6px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.tab-strip::-webkit-scrollbar{display:none;}
+.tab-btn{border:1.5px solid transparent;border-radius:999px;padding:0 16px;height:36px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;background:transparent;color:var(--mid);transition:all 0.16s;flex-shrink:0;}
+.tab-btn.on{background:var(--plum);color:#fff;border-color:var(--plum);}
+
+.mpages .mpage{display:none;}
+.mpages .mpage.on{display:block;}
+.ptitle{font-family:'Fraunces',serif;font-size:22px;font-weight:600;margin-bottom:3px;}
+.psub{font-size:12px;color:var(--light);margin-bottom:18px;}
+
+/* STAT CARDS */
+.scards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+.scard{background:#fff;border-radius:var(--r);padding:14px;box-shadow:0 2px 8px rgba(15,10,26,0.05);}
+.scard-val{font-family:'Fraunces',serif;font-size:24px;font-weight:700;line-height:1;margin-bottom:2px;}
+.scard-lbl{font-size:10px;color:var(--light);text-transform:uppercase;letter-spacing:0.5px;}
+
+/* TABLE CARD */
+.tcard{background:#fff;border-radius:var(--r);padding:14px;box-shadow:0 2px 8px rgba(15,10,26,0.05);margin-bottom:12px;}
+.tcard-title{font-size:11px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:12px;}
+
+/* AGENDAMENTO ITEM */
+.agitem{border:1.5px solid rgba(15,10,26,0.07);border-radius:var(--rs);padding:11px;margin-bottom:8px;}
+.agitem-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:5px;}
+.ag-h4{font-size:14px;font-weight:600;margin-bottom:2px;}
+.ag-p{font-size:11px;color:var(--light);line-height:1.5;}
+.agright{text-align:right;flex-shrink:0;}
+.agprice{font-family:'Fraunces',serif;font-size:17px;font-weight:700;color:var(--sage);}
+.badge{display:inline-block;font-size:10px;padding:3px 8px;border-radius:999px;font-weight:600;margin-top:2px;}
+.bok{background:var(--sage-pale);color:var(--sage);}
+.bpend{background:#fffbea;color:#a07010;}
+.btn-wasm{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#25D366;font-weight:700;background:#f0fdf4;border-radius:7px;padding:5px 9px;border:none;cursor:pointer;text-decoration:none;min-height:32px;}
+
+/* AGENDA */
+.datenav{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.datenav-btn{background:var(--plum-pale);border:none;border-radius:8px;width:var(--touch);height:var(--touch);cursor:pointer;color:var(--plum);font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.datenav-lbl{font-weight:600;font-size:14px;flex:1;text-align:center;}
+.slot-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0ecfa;font-size:14px;gap:8px;}
+.slot-row:last-child{border:none;}
+.toggle{width:44px;height:26px;border-radius:999px;border:none;cursor:pointer;position:relative;transition:background 0.2s;flex-shrink:0;}
+.toggle.on{background:var(--sage);}
+.toggle.off{background:#ddd;}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:4px;transition:left 0.18s;box-shadow:0 1px 2px rgba(0,0,0,0.18);}
+.toggle.on::after{left:22px;}
+.toggle.off::after{left:4px;}
+
+/* EXAMES */
+.exam-list{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+.exam-item{background:#fff;border:1.5px solid rgba(15,10,26,0.07);border-radius:var(--r);padding:13px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.exam-name{font-weight:600;font-size:14px;}
+.exam-dur{font-size:11px;color:var(--light);margin-top:2px;}
+.exam-price{font-family:'Fraunces',serif;font-size:19px;color:var(--sage);font-weight:600;flex-shrink:0;}
+
+/* AREA */
+.area-stats{background:var(--ink);border-radius:var(--r);padding:14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;}
+.area-stat{text-align:center;}
+.area-stat-val{font-family:'Fraunces',serif;font-size:22px;font-weight:700;}
+.area-stat-lbl{font-size:9px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-top:1px;}
+.area-sec{font-size:11px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:0.6px;margin:12px 0 8px;}
+.area-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px;}
+.area-chip{padding:7px 13px;border-radius:999px;border:1.5px solid #e0d8ec;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px;min-height:36px;transition:all 0.13s;}
+.area-chip.on{border-color:var(--sage);background:var(--sage-pale);color:var(--sage);font-weight:600;}
+.area-chip.off{border-color:#f0c0c0;background:var(--red-pale);color:var(--red);}
+.adot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+
+/* PERFIL */
+.pfrow{margin-bottom:10px;}
+
+/* BTN SAVE */
+.btn-save{background:var(--plum);color:#fff;border:none;border-radius:var(--rs);height:var(--touch);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;margin-top:8px;transition:background 0.2s;}
+.btn-save:active{background:var(--plum-mid);}
+.notice{background:var(--plum-pale);border:1px solid rgba(74,45,110,0.14);border-radius:var(--rs);padding:12px 13px;font-size:13px;color:var(--plum);line-height:1.6;margin-top:10px;}
+
+/* ════════════════════════════════
+   ADMIN VIEW
+════════════════════════════════ */
+.admin-layout{display:flex;flex-direction:column;}
+.admin-sidebar{display:none;}
+.admin-main{padding:14px;}
+.apages .apage{display:none;}
+.apages .apage.on{display:block;}
+
+/* Table scrollable */
+.tbl-wrap{overflow-x:auto;border-radius:var(--r);border:1.5px solid rgba(15,10,26,0.07);}
+.tbl{width:100%;border-collapse:collapse;min-width:440px;}
+.tbl th{background:var(--warm);font-size:10px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:0.5px;padding:9px 12px;text-align:left;white-space:nowrap;}
+.tbl td{padding:10px 12px;border-bottom:1px solid rgba(15,10,26,0.05);font-size:12px;vertical-align:middle;}
+.tbl tr:last-child td{border:none;}
+.sdot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:4px;}
+.sdot-ok{background:#2ecc71;}.sdot-pend{background:#f4b942;}
+
+/* COMISSÕES */
+.comm-card{background:#fff;border-radius:var(--r);padding:14px;box-shadow:0 2px 8px rgba(15,10,26,0.05);margin-bottom:12px;}
+.comm-card-title{font-size:11px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:12px;}
+.comm-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f0ecfa;gap:10px;}
+.comm-row:last-child{border:none;}
+.comm-lbl{font-size:14px;font-weight:500;flex:1;}
+.comm-hint{font-size:11px;color:var(--light);margin-top:1px;}
+.comm-inp{padding:8px;border:1.5px solid #e0d8ec;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:16px;width:62px;text-align:center;outline:none;-webkit-appearance:none;}
+.comm-pct{font-size:14px;color:var(--mid);margin-left:3px;}
+
+/* CONFIG */
+.cfg-card{background:#fff;border-radius:var(--r);padding:14px;box-shadow:0 2px 8px rgba(15,10,26,0.05);margin-bottom:12px;}
+.cfg-title{font-size:11px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:12px;}
+.cfg-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:9px 0;border-bottom:1px solid #f0ecfa;gap:8px;}
+.cfg-row:last-child{border:none;}
+.cfg-lbl{font-size:14px;font-weight:500;}
+.cfg-inp{padding:8px 10px;border:1.5px solid #e0d8ec;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:16px;width:130px;text-align:right;outline:none;-webkit-appearance:none;}
+.btn-invite{background:var(--sage);color:#fff;border:none;border-radius:var(--rs);height:var(--touch);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-top:10px;display:flex;align-items:center;justify-content:center;}
+
+/* ════════════════════════════════
+   DESKTOP  ≥ 640px
+════════════════════════════════ */
+@media(min-width:640px){
+  :root{--topbar:58px;--bottomnav:0px;}
+  .topbar{padding:0 28px;height:58px;}
+  .topnav-desktop{display:flex;align-items:center;gap:6px;}
+  .topnav-btn{padding:0 14px;height:36px;border-radius:999px;border:1.5px solid transparent;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;background:transparent;color:var(--mid);transition:all 0.18s;}
+  .topnav-btn:hover{background:var(--warm);}
+  .topnav-btn.on{background:var(--plum);color:#fff;}
+  .topnav-btn.adm{background:var(--ink);color:#fff;}
+  .bottomnav{display:none;}
+  .view{padding-bottom:0;}
+
+  /* hero */
+  .hero{padding:60px 32px 48px;}
+  .hero h1{font-size:clamp(36px,5vw,54px);}
+  .sbox{flex-direction:row;align-items:flex-end;flex-wrap:wrap;}
+  .sbox .sf{flex:1;min-width:130px;}
+  .btn-search{width:auto;padding:0 26px;}
+
+  /* results */
+  .results-wrap{padding:32px;}
+
+  /* stats */
+  .stats-bar{grid-template-columns:repeat(4,1fr);padding:28px 32px;}
+
+  /* modal — center on desktop */
+  .overlay{justify-content:center;align-items:center;padding:20px;}
+  .modal{border-radius:20px;max-width:520px;max-height:88dvh;}
+  @keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+  /* medico — sidebar */
+  .med-layout{flex-direction:row;min-height:calc(100dvh - 58px);}
+  .med-sidebar{
+    display:flex;flex-direction:column;
+    width:190px;background:var(--ink);flex-shrink:0;
+    padding:20px 0;position:sticky;top:58px;height:calc(100dvh - 58px);overflow-y:auto;
+  }
+  .med-sidebar-logo{padding:0 16px 14px;border-bottom:1px solid rgba(255,255,255,0.07);margin-bottom:10px;}
+  .med-sidebar-logo p{font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:1.3px;text-transform:uppercase;margin-top:2px;}
+  .med-sidebar-nav{display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:13px;color:rgba(255,255,255,0.45);cursor:pointer;border-left:3px solid transparent;transition:all 0.15s;font-family:'DM Sans',sans-serif;}
+  .med-sidebar-nav:hover{color:rgba(255,255,255,0.8);background:rgba(255,255,255,0.04);}
+  .med-sidebar-nav.on{color:#fff;background:rgba(255,255,255,0.07);border-left-color:var(--sage-light);}
+  .med-sidebar-foot{margin-top:auto;padding:12px 16px;border-top:1px solid rgba(255,255,255,0.07);font-size:11px;color:rgba(255,255,255,0.2);}
+  .med-main{flex:1;padding:24px;overflow-y:auto;}
+  .tab-strip{display:none;}/* sidebar replaces tabs on desktop */
+  .scards{grid-template-columns:repeat(4,1fr);}
+  .exam-list{display:grid;grid-template-columns:1fr 1fr;}
+  .btn-save{width:auto;padding:0 24px;}
+
+  /* admin — sidebar */
+  .admin-layout{flex-direction:row;min-height:calc(100dvh - 58px);}
+  .admin-sidebar{
+    display:flex;flex-direction:column;
+    width:190px;background:var(--ink);flex-shrink:0;
+    padding:20px 0;position:sticky;top:58px;height:calc(100dvh - 58px);overflow-y:auto;
+  }
+  .admin-sidebar-logo{padding:0 16px 14px;border-bottom:1px solid rgba(255,255,255,0.07);margin-bottom:10px;}
+  .admin-sidebar-logo p{font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:1.3px;text-transform:uppercase;margin-top:2px;}
+  .admin-sidebar-nav{display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:13px;color:rgba(255,255,255,0.45);cursor:pointer;border-left:3px solid transparent;transition:all 0.15s;font-family:'DM Sans',sans-serif;}
+  .admin-sidebar-nav:hover{color:rgba(255,255,255,0.8);background:rgba(255,255,255,0.04);}
+  .admin-sidebar-nav.on{color:#fff;background:rgba(255,255,255,0.07);border-left-color:var(--gold);}
+  .admin-main{flex:1;padding:24px;overflow-y:auto;}
+  .admin-tab-strip{display:none;}
+  .btn-invite{width:auto;padding:0 24px;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo" onclick="showView('tutor')">Anim<span>a</span>gem</div>
+  <div class="topnav-desktop">
+    <button class="topnav-btn on" onclick="showView('tutor')">🐾 Buscar exame</button>
+    <button class="topnav-btn" onclick="showView('medico')">🩺 Área do médico</button>
+    <button class="topnav-btn adm" onclick="showView('admin')">⚙️ Admin</button>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottomnav">
+  <button class="bnav-btn on" id="bn-tutor" onclick="showView('tutor')"><div class="bnav-icon">🐾</div>Buscar</button>
+  <button class="bnav-btn" id="bn-medico" onclick="showView('medico')"><div class="bnav-icon">🩺</div>Médico</button>
+  <button class="bnav-btn" id="bn-admin" onclick="showView('admin')"><div class="bnav-icon">⚙️</div>Admin</button>
+</div>
+
+<!-- ══ TUTOR ══ -->
+<div class="view on" id="view-tutor">
+  <div class="hero">
+    <div class="hero-in">
+      <div class="eyebrow">Portal veterinário domiciliar</div>
+      <h1>Encontre o especialista<br/>certo para o <em>seu pet</em></h1>
+      <p class="hero-p">Médicos veterinários que atendem na sua casa. Agende online em minutos.</p>
+      <div class="sbox">
+        <div class="sf"><label class="sf-label">Tipo de exame</label>
+          <select class="si" id="s-exame">
+            <option value="">Todos os exames</option>
+            <option>Ultrassom Abdominal</option><option>Ultrassom Gestacional</option>
+            <option>Ecocardiograma</option><option>Ultrassom Ortopédico</option>
+            <option>Ultrassom Ocular</option><option>Raio-X Portátil</option>
+            <option>Eletrocardiograma</option>
+          </select>
+        </div>
+        <div class="sf"><label class="sf-label">Cidade / Estado</label>
+          <input class="si" id="s-cidade" placeholder="Ex: Campinas, SP" value="Campinas, SP"/>
+        </div>
+        <div class="sf"><label class="sf-label">Nome do médico</label>
+          <input class="si" id="s-nome" placeholder="Opcional"/>
+        </div>
+        <button class="btn-search" onclick="buscar()">Buscar médicos</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="results-wrap">
+    <div class="results-head">
+      <div class="results-title" id="res-title">Médicos disponíveis</div>
+      <div class="results-count" id="res-count">3 encontrados</div>
+    </div>
+    <div class="dcards" id="dcards"></div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-item"><div class="stat-val">12</div><div class="stat-lbl">Médicos</div></div>
+    <div class="stat-item"><div class="stat-val">8</div><div class="stat-lbl">Especialidades</div></div>
+    <div class="stat-item"><div class="stat-val">34</div><div class="stat-lbl">Cidades</div></div>
+    <div class="stat-item"><div class="stat-val">247</div><div class="stat-lbl">Exames</div></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div><h3 id="m-title">Agendar</h3><p id="m-sub"></p></div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="m-body"></div>
+  </div>
+</div>
+
+<!-- ══ MÉDICO ══ -->
+<div class="view" id="view-medico">
+  <div class="med-layout">
+    <!-- Sidebar desktop -->
+    <div class="med-sidebar">
+      <div class="med-sidebar-logo"><div class="logo" style="font-size:16px">Animagem</div><p>Área do Médico</p></div>
+      <div class="med-sidebar-nav on" data-mp="dash">📊 Dashboard</div>
+      <div class="med-sidebar-nav" data-mp="agenda">📅 Agenda</div>
+      <div class="med-sidebar-nav" data-mp="exames">🔬 Meus Exames</div>
+      <div class="med-sidebar-nav" data-mp="area">📍 Área</div>
+      <div class="med-sidebar-nav" data-mp="perfil">👤 Perfil</div>
+      <div class="med-sidebar-foot">M.V. Ana Camila · Animagem</div>
+    </div>
+    <!-- Main -->
+    <div class="med-main">
+      <!-- Tab strip mobile -->
+      <div class="tab-strip">
+        <button class="tab-btn on" data-mp="dash">📊 Dashboard</button>
+        <button class="tab-btn" data-mp="agenda">📅 Agenda</button>
+        <button class="tab-btn" data-mp="exames">🔬 Exames</button>
+        <button class="tab-btn" data-mp="area">📍 Área</button>
+        <button class="tab-btn" data-mp="perfil">👤 Perfil</button>
+      </div>
+      <div class="mpages">
+        <!-- DASH -->
+        <div class="mpage on" id="mp-dash">
+          <div class="ptitle">Dashboard</div><div class="psub">Resumo da semana</div>
+          <div class="scards">
+            <div class="scard"><div class="scard-val" style="color:var(--plum)">4</div><div class="scard-lbl">Agendamentos</div></div>
+            <div class="scard"><div class="scard-val" style="color:var(--sage)">R$820</div><div class="scard-lbl">Receita prevista</div></div>
+            <div class="scard"><div class="scard-val" style="color:#f4b942">1</div><div class="scard-lbl">Pendentes</div></div>
+            <div class="scard"><div class="scard-val" style="color:var(--mid)">14</div><div class="scard-lbl">Slots livres</div></div>
+          </div>
+          <div class="tcard">
+            <div class="tcard-title">Próximos agendamentos</div>
+            <div class="agitem"><div class="agitem-top"><div><div class="ag-h4">🐕 Rex — Ultrassom Abdominal</div><div class="ag-p">📅 Qui 24/04 · 09:00 · 📍 Taquaral<br/>👤 João Silva · (19) 99999-1111</div></div><div class="agright"><div class="agprice">R$180</div><span class="badge bok">confirmado</span></div></div><a href="#" class="btn-wasm">💬 WhatsApp</a></div>
+            <div class="agitem"><div class="agitem-top"><div><div class="ag-h4">🐈 Luna — Ecocardiograma</div><div class="ag-p">📅 Sex 25/04 · 14:00 · 📍 Cambuí<br/>👤 Maria Souza · (19) 99999-2222</div></div><div class="agright"><div class="agprice">R$280</div><span class="badge bok">confirmado</span></div></div><a href="#" class="btn-wasm">💬 WhatsApp</a></div>
+            <div class="agitem"><div class="agitem-top"><div><div class="ag-h4">🐕 Mel — Ultrassom Gestacional</div><div class="ag-p">📅 Sáb 26/04 · 10:00 · 📍 Bosque<br/>👤 Carlos Pereira · (19) 99999-3333</div></div><div class="agright"><div class="agprice">R$200</div><span class="badge bpend">pendente</span></div></div><a href="#" class="btn-wasm">💬 WhatsApp</a></div>
+          </div>
+        </div>
+        <!-- AGENDA -->
+        <div class="mpage" id="mp-agenda">
+          <div class="ptitle">Agenda</div><div class="psub">Gerencie seus horários disponíveis</div>
+          <div class="tcard">
+            <div class="datenav">
+              <button class="datenav-btn" id="btn-prev">‹</button>
+              <span class="datenav-lbl" id="day-lbl"></span>
+              <button class="datenav-btn" id="btn-next">›</button>
+            </div>
+            <div class="tcard-title">Horários do dia</div>
+            <div id="slots-list"></div>
+          </div>
+          <div class="tcard">
+            <div class="tcard-title">Regras</div>
+            <div class="slot-row"><div><div style="font-weight:500;font-size:14px">Antecedência mínima</div><div style="font-size:11px;color:var(--light)">Antes do horário</div></div><div style="display:flex;align-items:center;gap:5px"><input type="number" value="60" style="width:52px;padding:8px;border:1.5px solid #e0d8ec;border-radius:8px;font-size:16px;text-align:center;outline:none;-webkit-appearance:none"/><span style="font-size:12px;color:var(--light)">min</span></div></div>
+            <div class="slot-row"><div style="font-weight:500;font-size:14px">Aceitar fins de semana</div><button class="toggle off" id="tgl-fds"></button></div>
+            <div class="slot-row"><div style="font-weight:500;font-size:14px">Aceitar noturno (após 18h)</div><button class="toggle off" id="tgl-not"></button></div>
+          </div>
+        </div>
+        <!-- EXAMES -->
+        <div class="mpage" id="mp-exames">
+          <div class="ptitle">Meus Exames</div><div class="psub">Exames que você realiza</div>
+          <div class="exam-list" id="exam-list"></div>
+          <div class="notice">💡 Para adicionar ou remover exames, entre em contato com a administração do portal.</div>
+        </div>
+        <!-- AREA -->
+        <div class="mpage" id="mp-area">
+          <div class="ptitle">Área de Atendimento</div><div class="psub">Toque para ativar ou bloquear</div>
+          <div class="area-stats">
+            <div class="area-stat"><div class="area-stat-val" id="ars-on" style="color:var(--sage-light)">22</div><div class="area-stat-lbl">Ativas</div></div>
+            <div class="area-stat"><div class="area-stat-val" id="ars-off" style="color:#f4b942">0</div><div class="area-stat-lbl">Bloqueadas</div></div>
+            <div class="area-stat"><div class="area-stat-val" style="color:rgba(255,255,255,0.4)">22</div><div class="area-stat-lbl">Total</div></div>
+          </div>
+          <div class="tcard">
+            <div class="area-sec">Bairros — Campinas</div>
+            <div class="area-chips" id="bairros-chips"></div>
+            <div class="area-sec">Cidades — DDD 19</div>
+            <div class="area-chips" id="cidades-chips"></div>
+            <button class="btn-save" onclick="saveArea()">Salvar área</button>
+          </div>
+        </div>
+        <!-- PERFIL -->
+        <div class="mpage" id="mp-perfil">
+          <div class="ptitle">Meu Perfil</div><div class="psub">Dados exibidos no portal</div>
+          <div class="tcard">
+            <div class="pfrow"><label class="flabel">Nome completo</label><input class="finput" value="Ana Camila V. Augusti"/></div>
+            <div class="pfrow"><label class="flabel">CRMV</label><input class="finput" value="CRMV-SP XXXXX"/></div>
+            <div class="pfrow"><label class="flabel">WhatsApp</label><input class="finput" value="(19) 99518-8335" type="tel"/></div>
+            <div class="pfrow"><label class="flabel">E-mail</label><input class="finput" value="animagem_ac@outlook.com" type="email"/></div>
+            <div class="pfrow"><label class="flabel">Apresentação</label><textarea class="finput" rows="3">Médica veterinária especializada em ultrassonografia. Atendimento domiciliar humanizado em Campinas e região.</textarea></div>
+            <div class="pfrow"><label class="flabel">Instagram</label><input class="finput" value="@animagem_ac"/></div>
+            <button class="btn-save" style="margin-top:14px">Salvar perfil</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADMIN ══ -->
+<div class="view" id="view-admin">
+  <div class="admin-layout">
+    <div class="admin-sidebar">
+      <div class="admin-sidebar-logo"><div class="logo" style="font-size:16px">Animagem</div><p>Administração</p></div>
+      <div class="admin-sidebar-nav on" data-ap="dash">📊 Visão geral</div>
+      <div class="admin-sidebar-nav" data-ap="medicos">🩺 Médicos</div>
+      <div class="admin-sidebar-nav" data-ap="agendamentos">📋 Agendamentos</div>
+      <div class="admin-sidebar-nav" data-ap="comissoes">💰 Comissões</div>
+      <div class="admin-sidebar-nav" data-ap="config">⚙️ Config</div>
+    </div>
+    <div class="admin-main">
+      <div class="tab-strip" id="admin-tabs">
+        <button class="tab-btn on" data-ap="dash">📊 Geral</button>
+        <button class="tab-btn" data-ap="medicos">🩺 Médicos</button>
+        <button class="tab-btn" data-ap="agendamentos">📋 Agend.</button>
+        <button class="tab-btn" data-ap="comissoes">💰 Comissões</button>
+        <button class="tab-btn" data-ap="config">⚙️ Config</button>
+      </div>
+      <div class="apages">
+        <!-- ADMIN DASH -->
+        <div class="apage on" id="ap-dash">
+          <div class="ptitle">Visão Geral</div><div class="psub">Portal Animagem</div>
+          <div class="scards">
+            <div class="scard"><div class="scard-val" style="color:var(--plum)">12</div><div class="scard-lbl">Médicos ativos</div></div>
+            <div class="scard"><div class="scard-val" style="color:var(--sage)">R$4.280</div><div class="scard-lbl">Volume mensal</div></div>
+            <div class="scard"><div class="scard-val" style="color:var(--gold)">R$0</div><div class="scard-lbl">Comissão MVP</div></div>
+            <div class="scard"><div class="scard-val" style="color:var(--mid)">34</div><div class="scard-lbl">Agendamentos</div></div>
+          </div>
+          <div class="notice" style="margin-bottom:12px">🚀 <strong>Fase MVP ativa</strong> — comissões em 0%. Configure em Comissões.</div>
+          <div class="tcard">
+            <div class="tcard-title">Últimos agendamentos</div>
+            <div class="agitem"><div class="agitem-top"><div><div class="ag-h4">🐕 Rex — Ultrassom Abdominal</div><div class="ag-p">M.V. Ana Camila · Campinas</div></div><div class="agright"><div class="agprice">R$180</div><span class="badge bok">confirmado</span></div></div></div>
+            <div class="agitem"><div class="agitem-top"><div><div class="ag-h4">🐈 Mia — Ecocardiograma</div><div class="ag-p">M.V. Carlos Henrique · Valinhos</div></div><div class="agright"><div class="agprice">R$280</div><span class="badge bok">confirmado</span></div></div></div>
+            <div class="agitem"><div class="agitem-top"><div><div class="ag-h4">🐕 Thor — Gestacional</div><div class="ag-p">M.V. Ana Camila · Campinas</div></div><div class="agright"><div class="agprice">R$200</div><span class="badge bpend">pendente</span></div></div></div>
+          </div>
+        </div>
+        <!-- MÉDICOS -->
+        <div class="apage" id="ap-medicos">
+          <div class="ptitle">Médicos</div><div class="psub">Profissionais cadastrados</div>
+          <div class="tcard">
+            <div class="tbl-wrap">
+              <table class="tbl">
+                <thead><tr><th>Médico</th><th>Especialidades</th><th>Cidade</th><th>Status</th><th>Agend.</th></tr></thead>
+                <tbody>
+                  <tr><td><strong>Ana Camila V. Augusti</strong></td><td>Ultrassom, Eco</td><td>Campinas</td><td><span class="sdot sdot-ok"></span>Ativo</td><td>18</td></tr>
+                  <tr><td><strong>Carlos Henrique M.</strong></td><td>Raio-X, Ultrassom</td><td>Valinhos</td><td><span class="sdot sdot-ok"></span>Ativo</td><td>9</td></tr>
+                  <tr><td><strong>Priscila Andrade</strong></td><td>Ecocardiograma</td><td>Indaiatuba</td><td><span class="sdot sdot-pend"></span>Pendente</td><td>0</td></tr>
+                  <tr><td><strong>Rodrigo Fonseca</strong></td><td>Ultrassom, ECG</td><td>Americana</td><td><span class="sdot sdot-ok"></span>Ativo</td><td>7</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <button class="btn-invite" onclick="alert('Em desenvolvimento')">+ Convidar médico</button>
+        </div>
+        <!-- AGENDAMENTOS -->
+        <div class="apage" id="ap-agendamentos">
+          <div class="ptitle">Agendamentos</div><div class="psub">Visão consolidada do portal</div>
+          <div class="tcard">
+            <div class="tbl-wrap">
+              <table class="tbl">
+                <thead><tr><th>Data</th><th>Pet / Exame</th><th>Médico</th><th>Valor</th><th>Status</th></tr></thead>
+                <tbody>
+                  <tr><td>24/04</td><td>Rex · US Abdominal</td><td>Ana Camila</td><td>R$180</td><td><span class="badge bok">confirmado</span></td></tr>
+                  <tr><td>24/04</td><td>Mia · Ecocardiograma</td><td>Carlos H.</td><td>R$280</td><td><span class="badge bok">confirmado</span></td></tr>
+                  <tr><td>25/04</td><td>Thor · Gestacional</td><td>Ana Camila</td><td>R$200</td><td><span class="badge bpend">pendente</span></td></tr>
+                  <tr><td>26/04</td><td>Mel · Ortopédico</td><td>Rodrigo F.</td><td>R$160</td><td><span class="badge bok">confirmado</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <!-- COMISSÕES -->
+        <div class="apage" id="ap-comissoes">
+          <div class="ptitle">Comissões</div><div class="psub">Configure por especialidade ou médico</div>
+          <div class="notice" style="margin-bottom:12px">⚡ <strong>MVP:</strong> Comissões em 0%. Altere abaixo para ativar.</div>
+          <div class="comm-card">
+            <div class="comm-card-title">Por especialidade</div>
+            <div class="comm-row"><div class="comm-lbl">Ultrassonografia</div><div style="display:flex;align-items:center"><input class="comm-inp" value="0" type="number"/><span class="comm-pct">%</span></div></div>
+            <div class="comm-row"><div class="comm-lbl">Ecocardiograma</div><div style="display:flex;align-items:center"><input class="comm-inp" value="0" type="number"/><span class="comm-pct">%</span></div></div>
+            <div class="comm-row"><div class="comm-lbl">Raio-X Portátil</div><div style="display:flex;align-items:center"><input class="comm-inp" value="0" type="number"/><span class="comm-pct">%</span></div></div>
+            <div class="comm-row"><div class="comm-lbl">Eletrocardiograma</div><div style="display:flex;align-items:center"><input class="comm-inp" value="0" type="number"/><span class="comm-pct">%</span></div></div>
+          </div>
+          <div class="comm-card">
+            <div class="comm-card-title">Por médico (sobrescreve especialidade)</div>
+            <div class="comm-row"><div><div class="comm-lbl">Ana Camila V. Augusti</div><div class="comm-hint">Campinas</div></div><div style="display:flex;align-items:center"><input class="comm-inp" value="0" type="number"/><span class="comm-pct">%</span></div></div>
+            <div class="comm-row"><div><div class="comm-lbl">Carlos Henrique M.</div><div class="comm-hint">Valinhos</div></div><div style="display:flex;align-items:center"><input class="comm-inp" value="0" type="number"/><span class="comm-pct">%</span></div></div>
+            <div class="comm-row"><div><div class="comm-lbl">Rodrigo Fonseca</div><div class="comm-hint">Americana</div></div><div style="display:flex;align-items:center"><input class="comm-inp" value="0" type="number"/><span class="comm-pct">%</span></div></div>
+          </div>
+          <button class="btn-save" onclick="alert('Comissões salvas!')">Salvar comissões</button>
+        </div>
+        <!-- CONFIG -->
+        <div class="apage" id="ap-config">
+          <div class="ptitle">Configurações</div><div class="psub">Dados gerais do portal</div>
+          <div class="cfg-card">
+            <div class="cfg-title">Portal</div>
+            <div class="cfg-row"><div class="cfg-lbl">Nome do portal</div><input class="cfg-inp" value="Animagem"/></div>
+            <div class="cfg-row"><div class="cfg-lbl">E-mail contato</div><input class="cfg-inp" value="contato@animagem.com.br" type="email" style="width:180px"/></div>
+            <div class="cfg-row"><div class="cfg-lbl">WhatsApp suporte</div><input class="cfg-inp" value="(19) 99518-8335" type="tel"/></div>
+            <div class="cfg-row"><div class="cfg-lbl">Antecedência mín. (min)</div><input class="cfg-inp" value="60" type="number" style="width:70px"/></div>
+            <div class="cfg-row"><div class="cfg-lbl">Fase MVP ativa</div><button class="toggle on" id="tgl-mvp"></button></div>
+            <div class="cfg-row"><div class="cfg-lbl">Aceitar novos médicos</div><button class="toggle on" id="tgl-novos"></button></div>
+          </div>
+          <button class="btn-save" onclick="alert('Configurações salvas!')">Salvar configurações</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ─── DATA ─── */
+const MEDICOS=[
+  {id:1,nome:"Ana Camila V. Augusti",crmv:"CRMV-SP XXXXX",em:"🩺",specs:["Ultrassom Abdominal","Ultrassom Gestacional","Ecocardiograma","Ultrassom Ortopédico","Ultrassom Ocular"],cidade:"Campinas",estado:"SP",min:150,atende:"Domiciliar + Clínicas",avail:"Hoje às 14h",wa:"5519995188335"},
+  {id:2,nome:"Carlos Henrique M.",crmv:"CRMV-SP YYYYY",em:"🔬",specs:["Raio-X Portátil","Ultrassom Abdominal","Eletrocardiograma"],cidade:"Valinhos",estado:"SP",min:120,atende:"Domiciliar",avail:"Amanhã às 09h",wa:"551999990000"},
+  {id:3,nome:"Rodrigo Fonseca",crmv:"CRMV-SP WWWWW",em:"❤️",specs:["Ecocardiograma","Eletrocardiograma","Ultrassom Ortopédico"],cidade:"Americana",estado:"SP",min:160,atende:"Clínicas parceiras",avail:"Sex às 10h",wa:"551999991111"},
+];
+const EP={"Ultrassom Abdominal":{p:180,d:"30–40 min"},"Ultrassom Gestacional":{p:200,d:"30–45 min"},"Ecocardiograma":{p:280,d:"40–50 min"},"Ultrassom Ortopédico":{p:160,d:"25–35 min"},"Ultrassom Ocular":{p:150,d:"20–30 min"},"Raio-X Portátil":{p:120,d:"20–30 min"},"Eletrocardiograma":{p:140,d:"25–35 min"}};
+const BAIRROS=["Taquaral","Cambuí","Bosque","Centro","Guanabara","Nova Campinas","Barão Geraldo","Parque Prado","Alphaville","Sousas","Jardim Chapadão","Cidade Universitária"];
+const CIDADES=["Valinhos","Vinhedo","Paulínia","Sumaré","Hortolândia","Indaiatuba","Americana","Cosmópolis","Itatiba","Jaguariúna"];
+const ESP=["Cão","Gato","Coelho","Ave","Réptil","Outro"];
+const HORAS=[8,9,10,11,14,15,16,17];
+
+/* ─── STATE ─── */
+let blocked=new Set();
+let slots={};
+let curDay=new Date();
+let ms=0,mMed=null,mServ=null,mSlot=null,mForm={},mPay=null,mPix=null;
+
+/* ─── VIEWS ─── */
+function showView(v){
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.bnav-btn').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.topnav-btn').forEach(x=>x.classList.remove('on'));
+  document.getElementById('view-'+v).classList.add('on');
+  const bn=document.getElementById('bn-'+v);if(bn)bn.classList.add('on');
+  document.querySelectorAll(`.topnav-btn[onclick*="'${v}'"]`).forEach(x=>x.classList.add('on'));
+  if(v==='medico')initMedico();
+  if(v==='admin')initAdmin();
+}
+
+/* ─── TUTOR ─── */
+function buscar(){
+  const ex=document.getElementById('s-exame').value;
+  const ci=document.getElementById('s-cidade').value.toLowerCase();
+  const nm=document.getElementById('s-nome').value.toLowerCase();
+  const f=MEDICOS.filter(m=>
+    (!ex||m.specs.includes(ex))&&
+    (!ci||m.cidade.toLowerCase().includes(ci)||m.estado.toLowerCase().includes(ci))&&
+    (!nm||m.nome.toLowerCase().includes(nm))
+  );
+  renderCards(f);
+  document.getElementById('res-count').textContent=f.length+' encontrado'+(f.length!==1?'s':'');
+  document.getElementById('res-title').textContent=ex||ci?((ex||'')+(ci?' em '+ci:'')):('Todos os médicos');
+}
+
+function renderCards(list){
+  const c=document.getElementById('dcards');
+  if(!list.length){c.innerHTML='<div style="text-align:center;padding:36px 16px;color:var(--light)"><div style="font-size:36px;margin-bottom:10px">🔍</div><div style="font-family:Fraunces,serif;font-size:18px;margin-bottom:5px">Nenhum médico encontrado</div><div style="font-size:13px">Tente outra especialidade ou cidade</div></div>';return;}
+  c.innerHTML=list.map(m=>`
+    <div class="dcard" onclick="openModal(${m.id})">
+      <div class="dcard-head">
+        <div class="davatar">${m.em}</div>
+        <div>
+          <div class="dname">${m.nome}</div>
+          <div class="dcrmv">${m.crmv}</div>
+          <div class="dtags">${m.specs.slice(0,2).map(s=>`<span class="dtag">${s}</span>`).join('')}${m.specs.length>2?`<span class="dtag">+${m.specs.length-2}</span>`:''}</div>
+        </div>
+      </div>
+      <div class="dcard-foot">
+        <div class="dprice-block">
+          <div class="dprice-from">a partir de</div>
+          <div class="dprice">R$ ${m.min}</div>
+          <div class="davail">📅 ${m.avail}</div>
+        </div>
+        <button class="btn-ag">Agendar</button>
+      </div>
+    </div>`).join('');
+}
+
+/* ─── MODAL ─── */
+function getSlots(){
+  const now=new Date();const out=[];
+  for(let d=0;d<7;d++){const day=new Date(now);day.setDate(now.getDate()+d);
+    HORAS.forEach(h=>{const s=new Date(day);s.setHours(h,0,0,0);
+      const occ=(d===0&&[9,14].includes(h))||(d===1&&h===10);
+      if((s-now)/60000>=60&&!occ)out.push(s);
+    });
+  }return out;
+}
+const fD=d=>d.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'});
+const fH=d=>d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+function gByDay(sl){const m={};sl.forEach(s=>{const k=s.toDateString();if(!m[k])m[k]=[];m[k].push(s);});return m;}
+
+function openModal(id){
+  mMed=MEDICOS.find(x=>x.id===id);ms=0;mServ=null;mSlot=null;mForm={};mPay=null;mPix=null;
+  document.getElementById('m-title').textContent='Agendar com '+mMed.nome.split(' ').slice(0,2).join(' ');
+  document.getElementById('m-sub').textContent=mMed.crmv+' · '+mMed.cidade;
+  document.getElementById('overlay').classList.add('on');
+  renderM();
+}
+function closeModal(){document.getElementById('overlay').classList.remove('on');}
+
+function prog(s){
+  const steps=['Exame','Horário','Dados','Pagamento','✓'];
+  return'<div class="prog">'+steps.map((n,i)=>{
+    const cl=i<s?'done':i===s?'act':'idle';
+    return`<div class="pstep"><div class="pcircle ${cl}">${i<s?'✓':i+1}</div><div class="plbl">${n}</div></div>`+
+    (i<steps.length-1?`<div class="pline" style="background:${i<s?'var(--sage)':'#e8e0f4'}"></div>`:'');
+  }).join('')+'</div>';
+}
+
+function renderM(){
+  const b=document.getElementById('m-body');
+  /* STEP 0 */
+  if(ms===0){
+    b.innerHTML=prog(0)+'<p style="font-size:13px;color:var(--light);margin-bottom:12px">Escolha o exame</p>'+
+    '<div style="display:flex;flex-direction:column;gap:8px">'+
+    mMed.specs.map(e=>{const ep=EP[e]||{p:'—',d:'—'};
+      return`<button onclick="selE('${e}')" style="display:flex;justify-content:space-between;align-items:center;padding:13px 14px;border-radius:12px;border:2px solid ${mServ===e?'var(--plum)':'rgba(15,10,26,0.09)'};background:${mServ===e?'var(--plum-pale)':'#fff'};cursor:pointer;font-family:inherit;min-height:54px;width:100%"><div style="text-align:left"><div style="font-weight:600;font-size:14px">${e}</div><div style="font-size:11px;color:var(--light)">⏱ ${ep.d}</div></div><div style="font-family:'Fraunces',serif;font-size:19px;font-weight:600;color:var(--sage);flex-shrink:0">R$ ${ep.p}</div></button>`;
+    }).join('')+'</div>'+
+    `<button class="btn-p" ${mServ?'':'disabled'} style="opacity:${mServ?1:0.35}" onclick="ms=1;renderM()">Continuar →</button>`;
+  }
+  /* STEP 1 */
+  else if(ms===1){
+    const sl=getSlots();const gr=gByDay(sl);
+    let h=prog(1)+'<p style="font-size:12px;color:var(--light);margin-bottom:4px">Mín. 1h de antecedência</p>';
+    Object.entries(gr).forEach(([k,ds])=>{
+      h+=`<div class="slot-day-lbl">${fD(ds[0])}</div><div class="slots-row">`;
+      ds.forEach(s=>{const on=mSlot?.getTime()===s.getTime();h+=`<button class="slot-btn ${on?'on':''}" onclick="selS(${s.getTime()})">${fH(s)}</button>`;});
+      h+='</div>';
+    });
+    h+=`<div class="brow"><button class="btn-b" onclick="ms=0;renderM()">← Voltar</button><button class="btn-p" style="flex:1;margin-top:0;opacity:${mSlot?1:0.35}" ${mSlot?'':'disabled'} onclick="ms=2;renderM()">Confirmar →</button></div>`;
+    b.innerHTML=h;
+  }
+  /* STEP 2 */
+  else if(ms===2){
+    const f=mForm;
+    b.innerHTML=prog(2)+
+    `<div class="fgrid2"><div class="frow"><label class="flabel">Nome *</label><input class="finput" id="fn" value="${f.nome||''}" placeholder="Maria Silva"/></div><div class="frow"><label class="flabel">WhatsApp *</label><input class="finput" id="ft" value="${f.tel||''}" placeholder="(19) 99999-9999" type="tel"/></div></div>
+    <div class="frow"><label class="flabel">E-mail *</label><input class="finput" id="fe" value="${f.email||''}" placeholder="seu@email.com" type="email"/></div>
+    <div class="fgrid2"><div class="frow"><label class="flabel">Nome do pet *</label><input class="finput" id="fp" value="${f.pet||''}" placeholder="Thor"/></div><div class="frow"><label class="flabel">Raça</label><input class="finput" id="fr" value="${f.raca||''}" placeholder="Golden"/></div></div>
+    <div class="frow"><label class="flabel">Espécie *</label><div class="chips">${ESP.map(e=>`<div class="chip ${f.esp===e?'on':''}" onclick="selEsp('${e}')">${e}</div>`).join('')}</div></div>
+    <div class="frow"><label class="flabel">Endereço completo *</label><input class="finput" id="fend" value="${f.end||''}" placeholder="Rua, nº, bairro, cidade"/></div>
+    <div class="frow"><label class="flabel">Observações</label><textarea class="finput" id="fobs" rows="2" placeholder="Motivo do exame">${f.obs||''}</textarea></div>
+    <div class="brow"><button class="btn-b" onclick="ms=1;renderM()">← Voltar</button><button class="btn-p" style="flex:1;margin-top:0" onclick="saveForm()">Ir para pagamento →</button></div>`;
+  }
+  /* STEP 3 — pagamento */
+  else if(ms===3){
+    const ep=EP[mServ]||{p:0};const pr=ep.p;
+    /* PIX code screen */
+    if(mPay==='pix'&&mPix){
+      b.innerHTML=prog(3)+
+      `<div style="text-align:center;margin-bottom:14px"><div style="font-size:34px;margin-bottom:6px">📱</div><div style="font-family:'Fraunces',serif;font-size:18px;font-weight:600;margin-bottom:3px">PIX gerado!</div><p style="font-size:12px;color:var(--light)">Copie o código e pague no seu banco</p></div>
+      <div class="pix-box"><div class="pix-box-lbl">Código PIX — copia e cola</div><div class="pix-code">${mPix}</div><button class="btn-copy" onclick="navigator.clipboard.writeText('${mPix}');this.textContent='✓ Copiado!'">Copiar código PIX</button></div>
+      <div class="resumo"><div class="rrow"><div class="rrow-lbl">Valor</div><div class="rrow-val" style="color:var(--sage);font-weight:700;font-size:17px">R$ ${pr},00</div></div><div class="rrow"><div class="rrow-lbl">Beneficiário</div><div class="rrow-val">Animagem Ltda.</div></div><div class="rrow"><div class="rrow-lbl">Validade</div><div class="rrow-val">30 minutos</div></div></div>
+      <div class="notice-pay">⏱ O horário fica <strong>reservado por 30 min</strong>. Sem confirmação, o slot é liberado automaticamente.</div>
+      <button class="btn-p" onclick="ms=4;renderM()">✓ Já paguei — confirmar agendamento</button>
+      <button class="btn-b" style="width:100%;margin-top:8px" onclick="mPay=null;mPix=null;renderM()">← Outra forma</button>`;
+      return;
+    }
+    /* Cartão form */
+    if(mPay==='cartao'){
+      b.innerHTML=prog(3)+
+      `<div style="margin-bottom:12px"><div style="font-family:'Fraunces',serif;font-size:18px;font-weight:600;margin-bottom:3px">Dados do cartão</div><p style="font-size:12px;color:var(--light)">Processado com segurança via Pagar.me</p></div>
+      <div class="resumo" style="margin-bottom:12px"><div class="rrow"><div class="rrow-lbl">Exame</div><div class="rrow-val">${mServ}</div></div><div class="rrow"><div class="rrow-lbl">Data</div><div class="rrow-val">${fD(mSlot)} ${fH(mSlot)}</div></div><div class="rrow"><div class="rrow-lbl">Total</div><div class="rrow-val" style="color:var(--sage);font-weight:700;font-size:16px">R$ ${pr},00</div></div></div>
+      <div class="frow"><label class="flabel">Número do cartão</label><input class="finput" id="ccn" placeholder="0000 0000 0000 0000" maxlength="19" oninput="fmtCC(this)" inputmode="numeric"/></div>
+      <div class="frow"><label class="flabel">Nome no cartão</label><input class="finput" id="ccnm" placeholder="MARIA SILVA" style="text-transform:uppercase"/></div>
+      <div class="fgrid2"><div class="frow"><label class="flabel">Validade</label><input class="finput" id="ccv" placeholder="MM/AA" maxlength="5" inputmode="numeric"/></div><div class="frow"><label class="flabel">CVV</label><input class="finput" id="ccc" placeholder="123" maxlength="4" type="password" inputmode="numeric"/></div></div>
+      <div class="frow"><label class="flabel">Parcelamento</label><select class="finput" id="ccp"><option>1x de R$ ${pr},00 (sem juros)</option><option>2x de R$ ${(pr/2).toFixed(2)}</option><option>3x de R$ ${(pr/3).toFixed(2)}</option></select></div>
+      <p style="font-size:11px;color:var(--light);margin-bottom:10px">🔒 Dados criptografados. Animagem não armazena dados do cartão.</p>
+      <button class="btn-p" id="btn-pay-cc" onclick="pagarCC()">Pagar R$ ${pr},00</button>
+      <button class="btn-b" style="width:100%;margin-top:8px" onclick="mPay=null;renderM()">← Outra forma</button>`;
+      return;
+    }
+    /* Escolha do método */
+    b.innerHTML=prog(3)+
+    `<div style="font-family:'Fraunces',serif;font-size:18px;font-weight:600;margin-bottom:3px">Como deseja pagar?</div>
+    <p style="font-size:12px;color:var(--light);margin-bottom:12px">Pagamento confirma o agendamento.</p>
+    <div class="resumo" style="margin-bottom:14px">
+      <div class="rrow"><div class="rrow-lbl">Médico</div><div class="rrow-val">${mMed.nome.split(' ').slice(0,2).join(' ')}</div></div>
+      <div class="rrow"><div class="rrow-lbl">Exame</div><div class="rrow-val">${mServ}</div></div>
+      <div class="rrow"><div class="rrow-lbl">Data</div><div class="rrow-val">${fD(mSlot)} ${fH(mSlot)}</div></div>
+      <div class="rrow"><div class="rrow-lbl">Pet</div><div class="rrow-val">${mForm.pet} · ${mForm.esp}</div></div>
+      <div class="rrow"><div class="rrow-lbl">Total</div><div class="rrow-val" style="color:var(--sage);font-size:18px;font-weight:700">R$ ${pr},00</div></div>
+    </div>
+    <div class="pay-opts">
+      <button class="pay-opt ${mPay==='pix'?'on-pix':''}" onclick="selPay('pix')">
+        <div class="pay-opt-icon">⚡</div>
+        <div class="pay-opt-name">PIX</div>
+        <div class="pay-opt-sub">Aprovação imediata</div>
+        <span class="pay-badge" style="background:var(--sage-pale);color:var(--sage)">Sem taxa extra</span>
+      </button>
+      <button class="pay-opt ${mPay==='cartao'?'on-cartao':''}" onclick="selPay('cartao')">
+        <div class="pay-opt-icon">💳</div>
+        <div class="pay-opt-name">Cartão</div>
+        <div class="pay-opt-sub">Crédito em até 3x</div>
+        <span class="pay-badge" style="background:var(--plum-pale);color:var(--plum)">Taxa 3,99%</span>
+      </button>
+    </div>
+    <button class="btn-p" ${mPay?'':'disabled'} style="opacity:${mPay?1:0.35}" onclick="avancarPag()">${mPay==='pix'?'Gerar PIX →':mPay==='cartao'?'Inserir dados →':'Selecione uma forma'}</button>
+    <button class="btn-b" style="width:100%;margin-top:8px" onclick="ms=2;renderM()">← Voltar</button>`;
+  }
+  /* STEP 4 — confirmação */
+  else if(ms===4){
+    const ep=EP[mServ]||{p:0};
+    const msg=`Animagem ✓\n\n📋 ${mServ}\n📅 ${fD(mSlot)} às ${fH(mSlot)}\n🐾 ${mForm.pet} (${mForm.esp})\n📍 ${mForm.end}\n💳 R$ ${ep.p},00 — PAGO`;
+    b.innerHTML=`<div class="confirm-box">
+      <div class="confirm-ring">✓</div>
+      <div class="confirm-title">Confirmado!</div>
+      <p class="confirm-sub">Pagamento aprovado. O médico foi notificado e seu horário está garantido.</p>
+      <div class="resumo" style="text-align:left;margin-bottom:14px">
+        <div class="rrow"><div class="rrow-lbl">Exame</div><div class="rrow-val">${mServ}</div></div>
+        <div class="rrow"><div class="rrow-lbl">Data/hora</div><div class="rrow-val">${fD(mSlot)} ${fH(mSlot)}</div></div>
+        <div class="rrow"><div class="rrow-lbl">Pet</div><div class="rrow-val">${mForm.pet}</div></div>
+        <div class="rrow"><div class="rrow-lbl">Pagamento</div><div class="rrow-val" style="color:var(--sage);font-weight:700">R$ ${ep.p},00 ✓</div></div>
+      </div>
+      <p style="font-size:12px;color:var(--light);margin-bottom:14px">Confirmação enviada para <strong>${mForm.email||''}</strong></p>
+      <a href="https://wa.me/${mMed.wa}?text=${encodeURIComponent(msg)}" target="_blank" class="btn-wa">💬 Falar com o médico</a>
+      <button class="btn-b" style="width:100%;margin-top:8px" onclick="closeModal();ms=0;mPay=null;mPix=null;">Fechar</button>
+    </div>`;
+  }
+}
+
+function selE(e){mServ=e;renderM();}
+function selS(t){mSlot=new Date(t);renderM();}
+function selEsp(e){mForm.esp=e;renderM();}
+function selPay(m){mPay=m;renderM();}
+function saveForm(){
+  mForm.nome=document.getElementById('fn')?.value;
+  mForm.tel=document.getElementById('ft')?.value;
+  mForm.email=document.getElementById('fe')?.value;
+  mForm.pet=document.getElementById('fp')?.value;
+  mForm.raca=document.getElementById('fr')?.value;
+  mForm.end=document.getElementById('fend')?.value;
+  mForm.obs=document.getElementById('fobs')?.value;
+  if(mForm.nome&&mForm.tel&&mForm.email&&mForm.pet&&mForm.esp&&mForm.end){ms=3;renderM();}
+  else alert('Preencha todos os campos obrigatórios (*)');
+}
+function avancarPag(){
+  if(!mPay)return;
+  if(mPay==='pix'){
+    mPix='00020126580014br.gov.bcb.pix0136animagem@animagem.com.br5204000053039865802BR5908Animagem6008Campinas'+Math.floor(Math.random()*0xFFFF).toString(16).toUpperCase().padStart(4,'0');
+    renderM();
+  }else{renderM();}
+}
+function fmtCC(inp){let v=inp.value.replace(/\D/g,'').slice(0,16);inp.value=v.replace(/(.{4})/g,'$1 ').trim();}
+async function pagarCC(){
+  const btn=document.getElementById('btn-pay-cc');
+  if(!document.getElementById('ccn')?.value.replace(/\s/g,'').length===16){alert('Número do cartão inválido.');return;}
+  if(btn){btn.disabled=true;btn.textContent='Processando...';}
+  await new Promise(r=>setTimeout(r,2000));
+  ms=4;renderM();
+}
+
+/* ─── MÉDICO ─── */
+function initMedico(){
+  /* Tab strip */
+  document.querySelectorAll('.tab-strip .tab-btn[data-mp]').forEach(btn=>{
+    btn.onclick=()=>switchMp(btn.dataset.mp);
+  });
+  /* Sidebar nav */
+  document.querySelectorAll('.med-sidebar-nav[data-mp]').forEach(nav=>{
+    nav.onclick=()=>switchMp(nav.dataset.mp);
+  });
+  /* Toggles */
+  document.querySelectorAll('#view-medico .toggle').forEach(t=>{
+    t.onclick=()=>{t.classList.toggle('on');t.classList.toggle('off');};
+  });
+  initAgenda();initExames();initArea();
+}
+function switchMp(mp){
+  document.querySelectorAll('.tab-btn[data-mp],.med-sidebar-nav[data-mp]').forEach(x=>{x.classList.remove('on');});
+  document.querySelectorAll('.mpage').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll(`[data-mp="${mp}"]`).forEach(x=>x.classList.add('on'));
+  document.getElementById('mp-'+mp)?.classList.add('on');
+  if(mp==='agenda')initAgenda();
+}
+function initAgenda(){
+  renderSlots();
+  const p=document.getElementById('btn-prev'),n=document.getElementById('btn-next');
+  if(p&&!p._ok){p._ok=true;p.onclick=()=>{curDay.setDate(curDay.getDate()-1);renderSlots();};}
+  if(n&&!n._ok){n._ok=true;n.onclick=()=>{curDay.setDate(curDay.getDate()+1);renderSlots();};}
+}
+function renderSlots(){
+  const el=document.getElementById('day-lbl');if(!el)return;
+  el.textContent=curDay.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
+  const key=curDay.toDateString();if(!slots[key])slots[key]={};
+  const now=new Date();
+  const list=document.getElementById('slots-list');if(!list)return;
+  list.innerHTML=HORAS.map(h=>{
+    const on=slots[key][h]!==false;
+    const st=new Date(curDay);st.setHours(h,0,0,0);const past=st<now;
+    return`<div class="slot-row" style="${past?'opacity:0.38':''}">
+      <div><div style="font-weight:500;font-size:14px">${String(h).padStart(2,'0')}:00</div><div style="font-size:11px;color:var(--light)">${past?'Passado':on?'Disponível':'Bloqueado'}</div></div>
+      <button class="toggle ${on&&!past?'on':'off'}" data-k="${key}" data-h="${h}" ${past?'disabled':''} style="${past?'opacity:0.3':''}"></button>
+    </div>`;
+  }).join('');
+  list.querySelectorAll('.toggle').forEach(t=>{
+    t.onclick=()=>{const k=t.dataset.k,h=+t.dataset.h;slots[k]=slots[k]||{};slots[k][h]=!t.classList.contains('on');renderSlots();};
+  });
+}
+function initExames(){
+  const g=document.getElementById('exam-list');if(!g)return;
+  g.innerHTML=MEDICOS[0].specs.map(e=>{const ep=EP[e]||{p:'—',d:'—'};
+    return`<div class="exam-item"><div><div class="exam-name">${e}</div><div class="exam-dur">⏱ ${ep.d}</div></div><div class="exam-price">R$ ${ep.p}</div></div>`;
+  }).join('');
+}
+function initArea(){
+  const bc=document.getElementById('bairros-chips'),cc=document.getElementById('cidades-chips');if(!bc||!cc)return;
+  bc.innerHTML=BAIRROS.map(b=>`<div class="area-chip ${blocked.has(b)?'off':'on'}" data-a="${b}"><div class="adot" style="background:${b==='Taquaral'?'var(--plum)':blocked.has(b)?'var(--red)':'var(--sage)'}"></div>${b==='Taquaral'?b+' ★':b}</div>`).join('');
+  cc.innerHTML=CIDADES.map(c=>`<div class="area-chip ${blocked.has(c)?'off':'on'}" data-a="${c}"><div class="adot" style="background:${blocked.has(c)?'var(--red)':'var(--sage)'}"></div>${c}</div>`).join('');
+  document.querySelectorAll('.area-chip[data-a]').forEach(ch=>{
+    if(ch.dataset.a==='Taquaral')return;
+    ch.onclick=()=>{blocked.has(ch.dataset.a)?blocked.delete(ch.dataset.a):blocked.add(ch.dataset.a);initArea();updateAreaStats();};
+  });
+  updateAreaStats();
+}
+function updateAreaStats(){
+  const total=BAIRROS.length+CIDADES.length;
+  const on=document.getElementById('ars-on'),off=document.getElementById('ars-off');
+  if(on)on.textContent=total-blocked.size;if(off)off.textContent=blocked.size;
+}
+function saveArea(){alert('Área salva!');}
+
+/* ─── ADMIN ─── */
+function initAdmin(){
+  document.querySelectorAll('#admin-tabs .tab-btn[data-ap]').forEach(btn=>{btn.onclick=()=>switchAp(btn.dataset.ap);});
+  document.querySelectorAll('.admin-sidebar-nav[data-ap]').forEach(nav=>{nav.onclick=()=>switchAp(nav.dataset.ap);});
+  document.querySelectorAll('#view-admin .toggle').forEach(t=>{t.onclick=()=>{t.classList.toggle('on');t.classList.toggle('off');};});
+}
+function switchAp(ap){
+  document.querySelectorAll('#admin-tabs .tab-btn[data-ap],.admin-sidebar-nav[data-ap]').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.apage').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll(`[data-ap="${ap}"]`).forEach(x=>x.classList.add('on'));
+  document.getElementById('ap-'+ap)?.classList.add('on');
+}
+
+/* ─── INIT ─── */
+renderCards(MEDICOS);
+</script>
+</body>
+</html>

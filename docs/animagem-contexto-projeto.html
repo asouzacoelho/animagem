@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Animagem — Documento de Projeto</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --plum:#4a2d6e;--plum-mid:#7a5aaa;--plum-pale:#f0eaf8;
+  --sage:#3d7a6a;--sage-mid:#5a9e8c;--sage-pale:#e6f4f0;
+  --ink:#0f0a1a;--cream:#faf7f2;--warm:#f5f0e8;--mist:#f8f6f2;
+  --mid:#6a5e7a;--light:#a89ab8;--gold:#c8a84b;
+  --red:#c0392b;--red-pale:#fdecea;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:16px;scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);line-height:1.7;-webkit-font-smoothing:antialiased;}
+
+/* PRINT */
+@media print{
+  .sidebar,.toc-toggle,.print-btn{display:none!important;}
+  .main{margin:0!important;padding:24px!important;}
+  body{background:#fff;}
+  .section{break-inside:avoid;}
+  a{color:inherit;text-decoration:none;}
+}
+
+/* LAYOUT */
+.wrapper{display:flex;min-height:100vh;}
+.sidebar{
+  width:260px;flex-shrink:0;background:var(--ink);
+  position:sticky;top:0;height:100vh;overflow-y:auto;
+  padding:24px 0;display:flex;flex-direction:column;
+}
+.sidebar-logo{padding:0 20px 20px;border-bottom:1px solid rgba(255,255,255,0.08);margin-bottom:12px;}
+.sidebar-logo h1{font-family:'Fraunces',serif;font-size:22px;color:#fff;font-weight:700;letter-spacing:-0.3px;}
+.sidebar-logo h1 span{color:var(--sage-mid);}
+.sidebar-logo p{font-size:11px;color:rgba(255,255,255,0.3);letter-spacing:1.3px;text-transform:uppercase;margin-top:3px;}
+.toc a{display:flex;align-items:center;gap:8px;padding:8px 20px;font-size:12px;color:rgba(255,255,255,0.45);text-decoration:none;transition:all 0.15s;border-left:3px solid transparent;}
+.toc a:hover{color:rgba(255,255,255,0.8);background:rgba(255,255,255,0.04);}
+.toc a.active{color:#fff;background:rgba(255,255,255,0.07);border-left-color:var(--sage-mid);}
+.toc-icon{font-size:14px;flex-shrink:0;}
+.sidebar-foot{margin-top:auto;padding:16px 20px;border-top:1px solid rgba(255,255,255,0.07);font-size:10px;color:rgba(255,255,255,0.2);}
+
+.main{flex:1;padding:48px 56px;max-width:860px;}
+
+/* PRINT BTN */
+.print-btn{
+  position:fixed;bottom:24px;right:24px;z-index:100;
+  background:var(--plum);color:#fff;border:none;border-radius:12px;
+  padding:12px 20px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;
+  cursor:pointer;box-shadow:0 4px 20px rgba(74,45,110,0.3);display:flex;align-items:center;gap:8px;
+  transition:all 0.2s;
+}
+.print-btn:hover{background:var(--plum-mid);transform:translateY(-1px);}
+
+/* HEADER */
+.doc-header{margin-bottom:48px;padding-bottom:32px;border-bottom:2px solid var(--plum-pale);}
+.doc-header h1{font-family:'Fraunces',serif;font-size:48px;font-weight:700;color:var(--plum);line-height:1.1;margin-bottom:8px;}
+.doc-header h1 span{color:var(--sage);}
+.doc-header .subtitle{font-size:18px;color:var(--sage);font-weight:500;margin-bottom:12px;}
+.doc-meta{display:flex;gap:16px;flex-wrap:wrap;margin-top:16px;}
+.doc-meta-item{background:var(--warm);border-radius:8px;padding:6px 14px;font-size:12px;color:var(--mid);font-weight:500;}
+
+/* SECTIONS */
+.section{margin-bottom:56px;scroll-margin-top:24px;}
+.section-header{display:flex;align-items:center;gap:12px;margin-bottom:20px;}
+.section-icon{font-size:24px;}
+.section h2{font-family:'Fraunces',serif;font-size:28px;font-weight:600;color:var(--ink);}
+.section h3{font-family:'Fraunces',serif;font-size:20px;font-weight:500;color:var(--plum);margin:24px 0 12px;}
+
+/* DIVIDER */
+hr{border:none;border-top:1px solid var(--plum-pale);margin:40px 0;}
+
+/* PROSE */
+p{font-size:15px;color:var(--mid);line-height:1.75;margin-bottom:12px;}
+p strong{color:var(--ink);font-weight:600;}
+p em{color:var(--sage);font-style:italic;}
+
+/* HIGHLIGHT BOX */
+.highlight{background:linear-gradient(135deg,var(--plum),var(--sage));border-radius:14px;padding:20px 24px;margin:20px 0;}
+.highlight p{color:rgba(255,255,255,0.85);margin:0;}
+.highlight strong{color:#fff;}
+
+/* INFO GRID */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0;}
+.info-card{background:#fff;border:1.5px solid var(--plum-pale);border-radius:12px;padding:14px 16px;}
+.info-card-label{font-size:10px;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;}
+.info-card-value{font-size:14px;color:var(--ink);font-weight:500;line-height:1.4;}
+
+/* TABLES */
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px;}
+th{background:var(--plum);color:#fff;padding:10px 14px;text-align:left;font-weight:600;font-size:12px;letter-spacing:0.3px;}
+td{padding:10px 14px;border-bottom:1px solid var(--plum-pale);color:var(--mid);vertical-align:top;}
+tr:nth-child(even) td{background:var(--mist);}
+tr:last-child td{border:none;}
+code{background:var(--plum-pale);color:var(--plum);padding:1px 6px;border-radius:4px;font-family:monospace;font-size:12px;}
+
+/* LISTS */
+ul,ol{padding-left:22px;margin:10px 0;}
+li{font-size:14px;color:var(--mid);margin-bottom:6px;line-height:1.6;}
+li strong{color:var(--ink);}
+
+/* CHECK LIST */
+.checklist{list-style:none;padding:0;margin:12px 0;}
+.checklist li{display:flex;align-items:flex-start;gap:10px;padding:8px 12px;border-radius:8px;font-size:14px;color:var(--mid);margin-bottom:4px;}
+.checklist li:hover{background:var(--warm);}
+.check-box{width:20px;height:20px;border:2px solid var(--light);border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px;}
+.check-done .check-box{background:var(--sage);border-color:var(--sage);color:#fff;font-size:11px;}
+.check-todo .check-box{background:#fff;}
+
+/* STATUS BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;}
+.badge-done{background:var(--sage-pale);color:var(--sage);}
+.badge-todo{background:#fffbea;color:#a07010;}
+.badge-open{background:var(--plum-pale);color:var(--plum);}
+
+/* PHASE CARDS */
+.phases{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0;}
+.phase-card{border-radius:12px;padding:16px;border:1.5px solid;}
+.phase-1{background:var(--sage-pale);border-color:rgba(61,122,106,0.2);}
+.phase-2{background:var(--plum-pale);border-color:rgba(74,45,110,0.15);}
+.phase-3{background:var(--warm);border-color:rgba(15,10,26,0.1);}
+.phase-card h4{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;}
+.phase-1 h4{color:var(--sage);}
+.phase-2 h4{color:var(--plum);}
+.phase-3 h4{color:var(--gold);}
+.phase-card .phase-period{font-size:11px;color:var(--light);margin-bottom:8px;}
+.phase-card .phase-val{font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:var(--ink);line-height:1;}
+.phase-card .phase-label{font-size:12px;color:var(--mid);margin-top:3px;}
+
+/* FLOW */
+.flow{display:flex;align-items:center;gap:0;flex-wrap:wrap;margin:16px 0;}
+.flow-step{background:#fff;border:1.5px solid var(--plum-pale);border-radius:10px;padding:10px 14px;font-size:13px;font-weight:500;color:var(--plum);text-align:center;flex:1;min-width:100px;}
+.flow-arrow{color:var(--light);font-size:18px;padding:0 8px;flex-shrink:0;}
+
+/* CODE BLOCK */
+pre{background:var(--ink);border-radius:12px;padding:18px 20px;margin:14px 0;overflow-x:auto;}
+pre code{background:none;color:var(--sage-mid);font-family:'Courier New',monospace;font-size:13px;padding:0;line-height:1.7;}
+
+/* STACK GRID */
+.stack-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0;}
+.stack-item{background:#fff;border:1.5px solid var(--plum-pale);border-radius:10px;padding:12px 14px;display:flex;align-items:flex-start;gap:10px;}
+.stack-icon{font-size:20px;flex-shrink:0;}
+.stack-label{font-size:11px;font-weight:700;color:var(--light);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:3px;}
+.stack-value{font-size:13px;color:var(--ink);font-weight:500;}
+.stack-sub{font-size:11px;color:var(--light);margin-top:1px;}
+
+/* PROFILE CARD */
+.profile-card{background:#fff;border:1.5px solid var(--plum-pale);border-radius:16px;padding:20px 24px;display:flex;gap:20px;align-items:flex-start;margin:16px 0;}
+.profile-avatar{width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,var(--plum-pale),var(--sage-pale));display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;}
+.profile-name{font-family:'Fraunces',serif;font-size:18px;font-weight:600;margin-bottom:3px;}
+.profile-role{font-size:12px;color:var(--sage);font-weight:600;margin-bottom:8px;}
+.profile-info{font-size:13px;color:var(--mid);line-height:1.7;}
+
+/* DECISION CARDS */
+.decisions{display:flex;flex-direction:column;gap:8px;margin:14px 0;}
+.decision{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:10px;font-size:14px;}
+.decision-done{background:var(--sage-pale);}
+.decision-open{background:#fffbea;}
+.decision-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+.decision-done .decision-text{color:var(--sage);}
+.decision-open .decision-text{color:#7a5a10;}
+
+/* DESIGN TOKENS */
+.tokens{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0;}
+.token{display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--plum-pale);border-radius:8px;padding:8px 12px;}
+.token-swatch{width:22px;height:22px;border-radius:5px;flex-shrink:0;border:1px solid rgba(0,0,0,0.08);}
+.token-name{font-size:11px;color:var(--mid);font-weight:500;}
+.token-hex{font-size:10px;color:var(--light);font-family:monospace;}
+
+/* ROADMAP */
+.roadmap{display:flex;flex-direction:column;gap:0;margin:16px 0;position:relative;}
+.roadmap::before{content:'';position:absolute;left:19px;top:24px;bottom:24px;width:2px;background:var(--plum-pale);}
+.roadmap-item{display:flex;gap:16px;align-items:flex-start;padding:12px 0;}
+.roadmap-dot{width:38px;height:38px;border-radius:50%;background:#fff;border:2px solid var(--plum-pale);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--plum);flex-shrink:0;position:relative;z-index:1;}
+.roadmap-item.active .roadmap-dot{background:var(--plum);color:#fff;border-color:var(--plum);}
+.roadmap-content{flex:1;padding-top:6px;}
+.roadmap-period{font-size:11px;font-weight:700;color:var(--plum);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px;}
+.roadmap-text{font-size:13px;color:var(--mid);line-height:1.6;}
+
+/* MOBILE */
+@media(max-width:768px){
+  .sidebar{display:none;}
+  .main{padding:24px 16px;}
+  .phases{grid-template-columns:1fr;}
+  .info-grid{grid-template-columns:1fr;}
+  .stack-grid{grid-template-columns:1fr;}
+  .doc-header h1{font-size:32px;}
+  .flow{flex-direction:column;}
+  .flow-arrow{transform:rotate(90deg);}
+}
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <h1>Anim<span>a</span>gem</h1>
+    <p>Documento de Projeto</p>
+  </div>
+  <div class="toc">
+    <a href="#overview" class="active"><span class="toc-icon">🎯</span> Visão Geral</a>
+    <a href="#equipe"><span class="toc-icon">👤</span> Equipe</a>
+    <a href="#arquivos"><span class="toc-icon">📦</span> Arquivos</a>
+    <a href="#produto"><span class="toc-icon">🖥️</span> Produto</a>
+    <a href="#stack"><span class="toc-icon">🏗️</span> Stack Técnica</a>
+    <a href="#negocio"><span class="toc-icon">💰</span> Modelo de Negócio</a>
+    <a href="#juridico"><span class="toc-icon">🏢</span> Estrutura Jurídica</a>
+    <a href="#roadmap"><span class="toc-icon">🗺️</span> Roadmap</a>
+    <a href="#proximos"><span class="toc-icon">🛠️</span> Próximos Passos</a>
+    <a href="#decisoes"><span class="toc-icon">🔧</span> Decisões</a>
+    <a href="#design"><span class="toc-icon">📐</span> Design System</a>
+    <a href="#contexto"><span class="toc-icon">🤖</span> Contexto Claude</a>
+  </div>
+  <div class="sidebar-foot">André Coelho · Campinas SP · 2025</div>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- HEADER -->
+  <div class="doc-header">
+    <h1>Anim<span>a</span>gem</h1>
+    <div class="subtitle">Portal de Ultrassonografia Veterinária Domiciliar</div>
+    <p>Marketplace digital que conecta médicos veterinários autônomos a tutores de animais que precisam de exames sem sair de casa.</p>
+    <div class="doc-meta">
+      <div class="doc-meta-item">📅 Junho 2025</div>
+      <div class="doc-meta-item">👤 André Coelho</div>
+      <div class="doc-meta-item">🚀 MVP v1.0</div>
+      <div class="doc-meta-item">📍 Campinas, SP</div>
+    </div>
+  </div>
+
+  <!-- 1. VISÃO GERAL -->
+  <div class="section" id="overview">
+    <div class="section-header">
+      <span class="section-icon">🎯</span>
+      <h2>Visão Geral</h2>
+    </div>
+    <div class="highlight">
+      <p><strong>Tagline:</strong> "Encontre o especialista certo para o seu pet"</p>
+      <p>Tutores buscam por exame ou cidade → escolhem o médico → agendam e pagam online → médico vai até a casa.</p>
+    </div>
+    <h3>Problema que resolve</h3>
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-card-label">Do lado do tutor</div>
+        <div class="info-card-value">Difícil encontrar profissional disponível, pets estressados em clínicas, sem visibilidade de preços e horários, agendamento manual e lento.</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-label">Do lado do médico</div>
+        <div class="info-card-value">Dependência de indicações, sem ferramenta para gerenciar agenda e pagamentos, dificuldade de automarketing, agenda imprevisível.</div>
+      </div>
+    </div>
+  </div>
+
+  <hr/>
+
+  <!-- 2. EQUIPE -->
+  <div class="section" id="equipe">
+    <div class="section-header">
+      <span class="section-icon">👤</span>
+      <h2>Equipe</h2>
+    </div>
+    <div class="profile-card">
+      <div class="profile-avatar">💼</div>
+      <div>
+        <div class="profile-name">André Coelho</div>
+        <div class="profile-role">Idealizador & Gestor de Negócio</div>
+        <div class="profile-info">Gestor Nacional de Vendas — Boxer Soldas, Campinas SP<br/>15+ anos de experiência comercial (Bosch, Rheem). Responsável pela estratégia, produto e abertura da empresa.</div>
+      </div>
+    </div>
+    <div class="profile-card">
+      <div class="profile-avatar">🩺</div>
+      <div>
+        <div class="profile-name">Ana Camila V. Augusti</div>
+        <div class="profile-role">Médica Fundadora & Primeira Usuária</div>
+        <div class="profile-info">
+          M.V. Ultrassonografista — Hospital Veterinário Taquaral, Campinas SP<br/>
+          MEI ativo · @animagem_ac · animagem_ac@outlook.com · (19) 99518-8335<br/>
+          Área: Taquaral (base) + domiciliar Campinas + cidades DDD 19
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr/>
+
+  <!-- 3. ARQUIVOS -->
+  <div class="section" id="arquivos">
+    <div class="section-header">
+      <span class="section-icon">📦</span>
+      <h2>Arquivos Entregues</h2>
+    </div>
+    <table>
+      <thead><tr><th>Arquivo</th><th>Descrição</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td><code>animagem-portal.html</code></td><td>Portal completo mobile-first: busca, agendamento 5 passos, PIX/cartão, painel médico, painel admin</td><td><span class="badge badge-done">✅ Pronto</span></td></tr>
+        <tr><td><code>animagem-landing.html</code></td><td>Landing page pública da Ana Camila com hero, serviços, agendamento simplificado</td><td><span class="badge badge-todo">⏸ Stand-by</span></td></tr>
+        <tr><td><code>animagem-admin.html</code></td><td>Painel admin standalone com mapa Leaflet para gestão de área</td><td><span class="badge badge-done">✅ Pronto</span></td></tr>
+        <tr><td><code>animagem-agenda.xlsx</code></td><td>Planilha Google Sheets: Agenda / Agendamentos / Instruções de integração</td><td><span class="badge badge-done">✅ Pronto</span></td></tr>
+        <tr><td><code>animagem-financeiro.xlsx</code></td><td>Plano financeiro 24 meses: implantação, custos mensais, DRE, metas e KPIs</td><td><span class="badge badge-done">✅ Pronto</span></td></tr>
+        <tr><td><code>animagem-area.jsx</code></td><td>Componente React de gestão de área de atendimento (bairros + cidades)</td><td><span class="badge badge-done">✅ Pronto</span></td></tr>
+        <tr><td><code>animagem-projeto.docx</code></td><td>Documento Word completo do projeto (este conteúdo em Word)</td><td><span class="badge badge-done">✅ Pronto</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr/>
+
+  <!-- 4. PRODUTO -->
+  <div class="section" id="produto">
+    <div class="section-header">
+      <span class="section-icon">🖥️</span>
+      <h2>Produto</h2>
+    </div>
+
+    <h3>Três perfis de acesso</h3>
+    <div class="info-grid" style="grid-template-columns:1fr 1fr 1fr;">
+      <div class="info-card">
+        <div class="info-card-label">🐾 Tutor</div>
+        <div class="info-card-value">Busca · Agenda · Paga online · Recebe confirmação</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-label">🩺 Médico</div>
+        <div class="info-card-value">Painel de gestão · Agenda · Área · Exames · Perfil</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-label">⚙️ Admin</div>
+        <div class="info-card-value">Visão geral · Médicos · Comissões · Configurações</div>
+      </div>
+    </div>
+
+    <h3>Fluxo de agendamento (5 passos)</h3>
+    <div class="flow">
+      <div class="flow-step">1. Exame</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">2. Horário</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">3. Dados</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">4. Pagamento</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">5. Confirmação</div>
+    </div>
+
+    <h3>Catálogo de exames</h3>
+    <table>
+      <thead><tr><th>Serviço</th><th>Duração</th><th>Preço ref.</th></tr></thead>
+      <tbody>
+        <tr><td>Ultrassom Abdominal</td><td>30–40 min</td><td>R$ 180</td></tr>
+        <tr><td>Ultrassom Gestacional</td><td>30–45 min</td><td>R$ 200</td></tr>
+        <tr><td>Ecocardiograma</td><td>40–50 min</td><td>R$ 280</td></tr>
+        <tr><td>Ultrassom Ortopédico</td><td>25–35 min</td><td>R$ 160</td></tr>
+        <tr><td>Ultrassom Ocular</td><td>20–30 min</td><td>R$ 150</td></tr>
+        <tr><td>Raio-X Portátil</td><td>20–30 min</td><td>R$ 120</td></tr>
+        <tr><td>Eletrocardiograma</td><td>25–35 min</td><td>R$ 140</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Fluxo de pagamento</h3>
+    <div class="flow" style="flex-direction:column;align-items:flex-start;gap:0;">
+      <div style="display:flex;align-items:center;gap:12px;padding:8px 0;">
+        <div style="width:32px;height:32px;border-radius:50%;background:var(--plum);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">1</div>
+        <div style="font-size:14px;color:var(--mid);">Tutor paga no portal (PIX ou cartão)</div>
+      </div>
+      <div style="width:2px;height:16px;background:var(--plum-pale);margin-left:15px;"></div>
+      <div style="display:flex;align-items:center;gap:12px;padding:8px 0;">
+        <div style="width:32px;height:32px;border-radius:50%;background:var(--plum);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">2</div>
+        <div style="font-size:14px;color:var(--mid);">Dinheiro cai na conta Animagem LTDA (Pagar.me)</div>
+      </div>
+      <div style="width:2px;height:16px;background:var(--plum-pale);margin-left:15px;"></div>
+      <div style="display:flex;align-items:center;gap:12px;padding:8px 0;">
+        <div style="width:32px;height:32px;border-radius:50%;background:var(--plum);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">3</div>
+        <div style="font-size:14px;color:var(--mid);">Portal retém comissão (% configurável)</div>
+      </div>
+      <div style="width:2px;height:16px;background:var(--plum-pale);margin-left:15px;"></div>
+      <div style="display:flex;align-items:center;gap:12px;padding:8px 0;">
+        <div style="width:32px;height:32px;border-radius:50%;background:var(--sage);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">4</div>
+        <div style="font-size:14px;color:var(--mid);">Repasse líquido ao médico — todo dia 5 do mês</div>
+      </div>
+    </div>
+    <p style="font-size:13px;margin-top:10px;"><strong>Regra:</strong> sem pagamento = sem agendamento. PIX reserva o horário por 30 min; se não pago, libera automaticamente.</p>
+  </div>
+
+  <hr/>
+
+  <!-- 5. STACK -->
+  <div class="section" id="stack">
+    <div class="section-header">
+      <span class="section-icon">🏗️</span>
+      <h2>Stack Técnica</h2>
+    </div>
+
+    <h3>Protótipo atual</h3>
+    <div class="stack-grid">
+      <div class="stack-item"><span class="stack-icon">🌐</span><div><div class="stack-label">Frontend</div><div class="stack-value">HTML5 + CSS3 + JS vanilla</div><div class="stack-sub">Mobile-first, sem framework</div></div></div>
+      <div class="stack-item"><span class="stack-icon">🗺️</span><div><div class="stack-label">Mapas</div><div class="stack-value">Leaflet.js</div><div class="stack-sub">Open source, sem API key</div></div></div>
+      <div class="stack-item"><span class="stack-icon">💳</span><div><div class="stack-label">Pagamento</div><div class="stack-value">Simulado (Pagar.me ready)</div><div class="stack-sub">Integração real aguarda CNPJ</div></div></div>
+      <div class="stack-item"><span class="stack-icon">🎨</span><div><div class="stack-label">Design</div><div class="stack-value">DM Sans + Fraunces</div><div class="stack-sub">Paleta roxo + verde-sage</div></div></div>
+    </div>
+
+    <h3>Stack de produção (planejada)</h3>
+    <div class="stack-grid">
+      <div class="stack-item"><span class="stack-icon">⚛️</span><div><div class="stack-label">Frontend</div><div class="stack-value">React + Vite → Vercel</div><div class="stack-sub">Free tier — deploy automático</div></div></div>
+      <div class="stack-item"><span class="stack-icon">🗄️</span><div><div class="stack-label">Backend / DB</div><div class="stack-value">Supabase</div><div class="stack-sub">PostgreSQL + Auth + API REST</div></div></div>
+      <div class="stack-item"><span class="stack-icon">💳</span><div><div class="stack-label">Pagamento</div><div class="stack-value">Pagar.me (Stone)</div><div class="stack-sub">PIX grátis · cartão 3,99% · split nativo</div></div></div>
+      <div class="stack-item"><span class="stack-icon">🔐</span><div><div class="stack-label">Autenticação</div><div class="stack-value">Google Auth</div><div class="stack-sub">Login social para tutores e médicos</div></div></div>
+      <div class="stack-item"><span class="stack-icon">📊</span><div><div class="stack-label">Analytics</div><div class="stack-value">Google Analytics 4</div><div class="stack-sub">Gratuito — métricas de conversão</div></div></div>
+      <div class="stack-item"><span class="stack-icon">📧</span><div><div class="stack-label">Email</div><div class="stack-value">Google Workspace</div><div class="stack-sub">R$ 34/mês — @animagem.com.br</div></div></div>
+    </div>
+
+    <h3>Integrações a implementar</h3>
+    <ol>
+      <li><strong>Google Apps Script</strong> — planilha de horários vira API JSON consumida pelo portal</li>
+      <li><strong>Pagar.me API</strong> — checkout real com webhook de confirmação de pagamento</li>
+      <li><strong>Google Auth</strong> — login social para tutores e médicos</li>
+      <li><strong>WhatsApp Business API</strong> — notificação automática pós-agendamento</li>
+    </ol>
+  </div>
+
+  <hr/>
+
+  <!-- 6. NEGÓCIO -->
+  <div class="section" id="negocio">
+    <div class="section-header">
+      <span class="section-icon">💰</span>
+      <h2>Modelo de Negócio</h2>
+    </div>
+
+    <h3>Monetização em fases</h3>
+    <div class="phases">
+      <div class="phase-card phase-1">
+        <h4>Fase 1 — MVP</h4>
+        <div class="phase-period">M1–M6</div>
+        <div class="phase-val">0%</div>
+        <div class="phase-label">Comissão zero · Validar produto</div>
+      </div>
+      <div class="phase-card phase-2">
+        <h4>Fase 2 — Comissão</h4>
+        <div class="phase-period">M7–M18</div>
+        <div class="phase-val">8–10%</div>
+        <div class="phase-label">Por agendamento · Cobrir custos</div>
+      </div>
+      <div class="phase-card phase-3">
+        <h4>Fase 3 — Escala</h4>
+        <div class="phase-period">M19+</div>
+        <div class="phase-val">Entrada + 12%</div>
+        <div class="phase-label">Taxa entrada + comissão · Renda admin</div>
+      </div>
+    </div>
+
+    <h3>Projeções financeiras (conservadoras)</h3>
+    <table>
+      <thead><tr><th>Indicador</th><th>Fase 1 (M1–M6)</th><th>Fase 2 (M7–M18)</th><th>Fase 3 (M19–M24)</th></tr></thead>
+      <tbody>
+        <tr><td>Médicos ativos</td><td>1–3</td><td>4–15</td><td>16–22</td></tr>
+        <tr><td>Agendamentos/mês</td><td>4–21</td><td>32–180</td><td>240–396</td></tr>
+        <tr><td>Receita Animagem/mês</td><td>R$ 0</td><td>R$ 480–2.720</td><td>R$ 5.616–9.504</td></tr>
+        <tr><td>Custo fixo/mês</td><td>~R$ 310</td><td>~R$ 1.113</td><td>~R$ 2.938</td></tr>
+        <tr><td>EBITDA</td><td>Negativo</td><td>Positivo a partir M10</td><td>R$ 2.678–6.566</td></tr>
+        <tr><td>Pro-labore administrador</td><td>R$ 0</td><td>R$ 2.000 (M7+)</td><td>R$ 5.000 (M19+)</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Break-even projetado: mês 10.</strong> Investimento inicial recomendado: R$ 4.000–6.000.</p>
+  </div>
+
+  <hr/>
+
+  <!-- 7. JURÍDICO -->
+  <div class="section" id="juridico">
+    <div class="section-header">
+      <span class="section-icon">🏢</span>
+      <h2>Estrutura Jurídica</h2>
+    </div>
+    <div class="info-grid">
+      <div class="info-card"><div class="info-card-label">Formato</div><div class="info-card-value">LTDA — 2 sócios ou apenas André</div></div>
+      <div class="info-card"><div class="info-card-label">Regime tributário</div><div class="info-card-value">Simples Nacional — ~6% sobre receita</div></div>
+      <div class="info-card"><div class="info-card-label">CNAEs</div><div class="info-card-value">6319-4/00 (portais) + 7490-1/04 (intermediação)</div></div>
+      <div class="info-card"><div class="info-card-label">Por que não MEI</div><div class="info-card-value">Limite R$81k/ano · sem sócios · atividade não permitida</div></div>
+    </div>
+
+    <h3>Checklist de abertura</h3>
+    <ul class="checklist">
+      <li class="check-todo"><div class="check-box"></div><div>Registrar marca ANIMAGEM no INPI — classes 44 + 42 (~R$ 710–1.200) <strong>· urgente</strong></div></li>
+      <li class="check-todo"><div class="check-box"></div><div>Contratar contador e abrir LTDA (~R$ 500–800 · prazo 30–60 dias)</div></li>
+      <li class="check-todo"><div class="check-box"></div><div>Registrar domínio animagem.com.br no Registro.br — R$ 40/ano</div></li>
+      <li class="check-todo"><div class="check-box"></div><div>Abrir conta PJ (Stone ou Inter — gratuito)</div></li>
+      <li class="check-todo"><div class="check-box"></div><div>Criar conta Pagar.me com CNPJ — gratuito</div></li>
+      <li class="check-todo"><div class="check-box"></div><div>Contratar Google Workspace — R$ 34/mês</div></li>
+    </ul>
+  </div>
+
+  <hr/>
+
+  <!-- 8. ROADMAP -->
+  <div class="section" id="roadmap">
+    <div class="section-header">
+      <span class="section-icon">🗺️</span>
+      <h2>Roadmap Estratégico</h2>
+    </div>
+    <div class="roadmap">
+      <div class="roadmap-item active">
+        <div class="roadmap-dot">M1</div>
+        <div class="roadmap-content">
+          <div class="roadmap-period">M1–M2 — Fundação</div>
+          <div class="roadmap-text">Abrir LTDA · Registrar marca INPI · Domínio · Google Workspace · Portal no ar com Ana Camila</div>
+        </div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot">M3</div>
+        <div class="roadmap-content">
+          <div class="roadmap-period">M3–M4 — Validação</div>
+          <div class="roadmap-text">Captar 2–3 médicos parceiros · Validar fluxo real · Ajustes de UX com feedback</div>
+        </div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot">M5</div>
+        <div class="roadmap-content">
+          <div class="roadmap-period">M5–M6 — Pagamento</div>
+          <div class="roadmap-text">Integrar Pagar.me com CNPJ · Ativar PIX + cartão · Primeiros agendamentos pagos no portal</div>
+        </div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot">M7</div>
+        <div class="roadmap-content">
+          <div class="roadmap-period">M7–M9 — Monetização</div>
+          <div class="roadmap-text">Ligar comissão 8% · Google Ads básico · Meta: 5+ médicos e 50+ agendamentos/mês</div>
+        </div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot">M10</div>
+        <div class="roadmap-content">
+          <div class="roadmap-period">M10–M12 — Break-even</div>
+          <div class="roadmap-text">Break-even operacional · Iniciar pro-labore R$ 2.000 · Meta: 8+ médicos ativos</div>
+        </div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot">M13</div>
+        <div class="roadmap-content">
+          <div class="roadmap-period">M13–M18 — Crescimento</div>
+          <div class="roadmap-text">Comissão 10% · Marketing digital sistemático · Meta: 12+ médicos · Expansão de DDD</div>
+        </div>
+      </div>
+      <div class="roadmap-item">
+        <div class="roadmap-dot">M19</div>
+        <div class="roadmap-content">
+          <div class="roadmap-period">M19–M24 — Escala</div>
+          <div class="roadmap-text">Comissão 12% + taxa de entrada · Pro-labore R$ 5.000 · Avaliar expansão geográfica</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr/>
+
+  <!-- 9. PRÓXIMOS PASSOS -->
+  <div class="section" id="proximos">
+    <div class="section-header">
+      <span class="section-icon">🛠️</span>
+      <h2>Próximos Passos</h2>
+    </div>
+
+    <h3>Técnicos — alta prioridade</h3>
+    <ol>
+      <li><strong>Google Apps Script</strong> — script que transforma planilha de horários em API JSON</li>
+      <li><strong>Pagar.me API</strong> — substituir simulação por chamadas reais (requer CNPJ)</li>
+      <li><strong>Supabase</strong> — banco de dados real: médicos, tutores, agendamentos, pagamentos</li>
+    </ol>
+
+    <h3>Técnicos — médio prazo</h3>
+    <ol start="4">
+      <li><strong>Google Auth</strong> — login social para tutores e médicos</li>
+      <li><strong>Vercel deploy</strong> — portal em domínio real</li>
+      <li><strong>WhatsApp Business API</strong> — notificação automática pós-agendamento</li>
+    </ol>
+
+    <h3>Conteúdo pendente da Ana Camila</h3>
+    <ul>
+      <li>Foto profissional para o portal</li>
+      <li>Bio oficial revisada por ela</li>
+      <li>CRMV-SP real</li>
+      <li>Lista definitiva de bairros e cidades que atende</li>
+      <li>Preços finais validados por tipo de exame</li>
+      <li>Feedback sobre as telas do portal (UX/conteúdo)</li>
+    </ul>
+  </div>
+
+  <hr/>
+
+  <!-- 10. DECISÕES -->
+  <div class="section" id="decisoes">
+    <div class="section-header">
+      <span class="section-icon">🔧</span>
+      <h2>Decisões de Produto</h2>
+    </div>
+
+    <h3>Já definidas</h3>
+    <div class="decisions">
+      <div class="decision decision-done"><div class="decision-icon">✅</div><div class="decision-text"><strong>Pagamento obrigatório</strong> — sem pagamento confirmado, sem agendamento</div></div>
+      <div class="decision decision-done"><div class="decision-icon">✅</div><div class="decision-text"><strong>Pagar.me</strong> como gateway — filha da Stone, split nativo, aceita MEI/CNPJ</div></div>
+      <div class="decision decision-done"><div class="decision-icon">✅</div><div class="decision-text"><strong>Split de pagamento</strong> — dinheiro passa pela Animagem, repasse mensal ao médico</div></div>
+      <div class="decision decision-done"><div class="decision-icon">✅</div><div class="decision-text"><strong>Agenda no portal</strong> como padrão — Google Calendar opcional no futuro</div></div>
+      <div class="decision decision-done"><div class="decision-icon">✅</div><div class="decision-text"><strong>Mobile-first</strong> — navegação inferior no mobile, sidebar no desktop</div></div>
+      <div class="decision decision-done"><div class="decision-icon">✅</div><div class="decision-text"><strong>Antecedência mínima 60 min</strong> — configurável por médico</div></div>
+      <div class="decision decision-done"><div class="decision-icon">✅</div><div class="decision-text"><strong>PIX sem taxa extra</strong> — cartão crédito = 3,99%</div></div>
+      <div class="decision decision-done"><div class="decision-icon">✅</div><div class="decision-text"><strong>Comissão MVP = 0%</strong> — ativa a partir do M7</div></div>
+    </div>
+
+    <h3>Ainda em aberto</h3>
+    <div class="decisions">
+      <div class="decision decision-open"><div class="decision-icon">❓</div><div class="decision-text">Domínio final: <code>animagem.com.br</code> ou <code>animagemvet.com.br</code>?</div></div>
+      <div class="decision decision-open"><div class="decision-icon">❓</div><div class="decision-text">Ana Camila será sócia da LTDA ou apenas médica parceira?</div></div>
+      <div class="decision decision-open"><div class="decision-icon">❓</div><div class="decision-text">Preços dos exames — validar com a Ana Camila</div></div>
+      <div class="decision decision-open"><div class="decision-icon">❓</div><div class="decision-text">Contrato padrão de parceria com médicos veterinários</div></div>
+    </div>
+  </div>
+
+  <hr/>
+
+  <!-- 11. DESIGN SYSTEM -->
+  <div class="section" id="design">
+    <div class="section-header">
+      <span class="section-icon">📐</span>
+      <h2>Design System</h2>
+    </div>
+
+    <h3>Paleta de cores</h3>
+    <div class="tokens">
+      <div class="token"><div class="token-swatch" style="background:#4a2d6e"></div><div><div class="token-name">plum</div><div class="token-hex">#4A2D6E</div></div></div>
+      <div class="token"><div class="token-swatch" style="background:#7a5aaa"></div><div><div class="token-name">plum-mid</div><div class="token-hex">#7A5AAA</div></div></div>
+      <div class="token"><div class="token-swatch" style="background:#f0eaf8"></div><div><div class="token-name">plum-pale</div><div class="token-hex">#F0EAF8</div></div></div>
+      <div class="token"><div class="token-swatch" style="background:#3d7a6a"></div><div><div class="token-name">sage</div><div class="token-hex">#3D7A6A</div></div></div>
+      <div class="token"><div class="token-swatch" style="background:#5a9e8c"></div><div><div class="token-name">sage-mid</div><div class="token-hex">#5A9E8C</div></div></div>
+      <div class="token"><div class="token-swatch" style="background:#e6f4f0"></div><div><div class="token-name">sage-pale</div><div class="token-hex">#E6F4F0</div></div></div>
+      <div class="token"><div class="token-swatch" style="background:#0f0a1a"></div><div><div class="token-name">ink</div><div class="token-hex">#0F0A1A</div></div></div>
+      <div class="token"><div class="token-swatch" style="background:#faf7f2;border:1px solid #e0d8e8"></div><div><div class="token-name">cream</div><div class="token-hex">#FAF7F2</div></div></div>
+    </div>
+
+    <h3>Tipografia e regras</h3>
+    <div class="info-grid">
+      <div class="info-card"><div class="info-card-label">Fonte display</div><div class="info-card-value" style="font-family:'Fraunces',serif;font-size:18px">Fraunces — títulos, preços, números</div></div>
+      <div class="info-card"><div class="info-card-label">Fonte corpo</div><div class="info-card-value">DM Sans — texto, labels, botões</div></div>
+      <div class="info-card"><div class="info-card-label">Botões mobile</div><div class="info-card-value">min-height: 50px (touch target)</div></div>
+      <div class="info-card"><div class="info-card-label">Inputs</div><div class="info-card-value">font-size: 16px (evita zoom iOS)</div></div>
+    </div>
+  </div>
+
+  <hr/>
+
+  <!-- 12. CONTEXTO CLAUDE -->
+  <div class="section" id="contexto">
+    <div class="section-header">
+      <span class="section-icon">🤖</span>
+      <h2>Contexto para Claude Projects</h2>
+    </div>
+    <div class="highlight">
+      <p><strong>Como usar:</strong> Faça upload do arquivo <code>animagem-contexto-projeto.md</code> como documento do Claude Project. O Claude terá todo este contexto carregado automaticamente em cada nova conversa do projeto.</p>
+    </div>
+
+    <h3>Resumo para nova sessão</h3>
+    <ul>
+      <li><strong>Projeto:</strong> Animagem — marketplace de ultrassonografia veterinária domiciliar</li>
+      <li><strong>Stack atual:</strong> HTML/CSS/JS vanilla (protótipo) → migrar para React + Supabase + Vercel</li>
+      <li><strong>Médica fundadora:</strong> Ana Camila V. Augusti, @animagem_ac, Campinas SP</li>
+      <li><strong>Gateway:</strong> Pagar.me (split de pagamento, CNPJ necessário)</li>
+      <li><strong>Modelo:</strong> 0% MVP → 8% M7 → 10% M13 → 12% + entrada M19</li>
+      <li><strong>3 perfis:</strong> tutor (busca/agenda), médico (painel gestão), admin (visão geral + comissões)</li>
+      <li><strong>Fluxo:</strong> exame → horário → dados → pagamento PIX/cartão → confirmação</li>
+      <li><strong>Próximo técnico:</strong> Google Apps Script + Pagar.me API + Supabase + Google Auth + Vercel</li>
+      <li><strong>Próximo negócio:</strong> INPI + LTDA + domínio + onboarding de novos médicos</li>
+    </ul>
+  </div>
+
+  <div style="text-align:center;padding:32px 0;color:var(--light);font-size:12px;border-top:1px solid var(--plum-pale);margin-top:40px;">
+    Documento gerado por Claude Sonnet 4.6 · Sessão de desenvolvimento Animagem · André Coelho · 2025
+  </div>
+
+</main>
+</div>
+
+<button class="print-btn" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+
+<script>
+// Active TOC on scroll
+const sections = document.querySelectorAll('.section[id]');
+const links = document.querySelectorAll('.toc a');
+window.addEventListener('scroll', () => {
+  let cur = '';
+  sections.forEach(s => { if(window.scrollY >= s.offsetTop - 80) cur = s.id; });
+  links.forEach(l => {
+    l.classList.toggle('active', l.getAttribute('href') === '#' + cur);
+  });
+}, { passive: true });
+</script>
+</body>
+</html>
