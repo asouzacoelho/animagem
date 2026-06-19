@@ -795,11 +795,12 @@ function showView(v){
 /* ─── TUTOR ─── */
 function buscar(){
   const ex=document.getElementById('s-exame').value;
-  const ci=document.getElementById('s-cidade').value.toLowerCase();
+  const ciRaw=document.getElementById('s-cidade').value.toLowerCase();
+  const ci=ciRaw.split(',')[0].trim();
   const nm=document.getElementById('s-nome').value.toLowerCase();
   const f=MEDICOS.filter(m=>
     (!ex||m.specs.includes(ex))&&
-    (!ci||m.cidade.toLowerCase().includes(ci)||m.estado.toLowerCase().includes(ci))&&
+    (!ci||m.cidade.toLowerCase().includes(ci)||ci.includes(m.cidade.toLowerCase())||m.estado.toLowerCase().includes(ci))&&
     (!nm||m.nome.toLowerCase().includes(nm))
   );
   renderCards(f);
