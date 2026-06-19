@@ -400,7 +400,7 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
       <p class="hero-p">Médicos veterinários que atendem na sua casa. Agende online em minutos.</p>
       <div class="sbox">
         <div class="sf"><label class="sf-label">Tipo de exame</label>
-          <select class="si" id="s-exame">
+          <select class="si" id="s-exame" onchange="renderWhy(this.value)">
             <option value="">Todos os exames</option>
             <option>Ultrassom Abdominal</option><option>Ultrassom Gestacional</option>
             <option>Ecocardiograma</option><option>Ultrassom Ortopédico</option>
@@ -419,24 +419,19 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
     </div>
   </div>
 
+  <!-- POR QUE ATENDIMENTO DOMICILIAR — varia conforme o exame selecionado -->
+  <div class="why-wrap" style="max-width:900px;margin:0 auto;padding:8px 16px 24px">
+    <div id="why-title" style="font-family:'Fraunces',serif;font-size:20px;font-weight:600;margin-bottom:14px">Por que atendimento domiciliar?</div>
+    <div id="why-bullets" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px"></div>
+    <a href="landing.html" style="font-size:12px;color:var(--plum);font-weight:600;text-decoration:underline">Conheça a Animagem em detalhes →</a>
+  </div>
+
   <div class="results-wrap">
     <div class="results-head">
       <div class="results-title" id="res-title">Médicos disponíveis</div>
       <div class="results-count" id="res-count">3 encontrados</div>
     </div>
     <div class="dcards" id="dcards"></div>
-  </div>
-
-  <!-- POR QUE ULTRASSOM DOMICILIAR -->
-  <div class="why-wrap" style="max-width:900px;margin:0 auto;padding:8px 16px 28px">
-    <div style="font-family:'Fraunces',serif;font-size:20px;font-weight:600;margin-bottom:14px">Por que ultrassom domiciliar?</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px">
-      <div style="background:#fff;border:1px solid rgba(15,10,26,0.08);border-radius:14px;padding:14px"><div style="font-size:22px;margin-bottom:6px">🏠</div><div style="font-weight:600;font-size:13px;margin-bottom:3px">Sem deslocamento</div><div style="font-size:12px;color:var(--light)">O pet faz o exame no ambiente dele, sem o estresse da viagem até a clínica.</div></div>
-      <div style="background:#fff;border:1px solid rgba(15,10,26,0.08);border-radius:14px;padding:14px"><div style="font-size:22px;margin-bottom:6px">🩺</div><div style="font-weight:600;font-size:13px;margin-bottom:3px">Mesma qualidade clínica</div><div style="font-size:12px;color:var(--light)">Equipamento e laudo no mesmo padrão de uma clínica especializada.</div></div>
-      <div style="background:#fff;border:1px solid rgba(15,10,26,0.08);border-radius:14px;padding:14px"><div style="font-size:22px;margin-bottom:6px">✅</div><div style="font-weight:600;font-size:13px;margin-bottom:3px">CRMV verificado</div><div style="font-size:12px;color:var(--light)">Todo médico é aprovado manualmente antes de aparecer nas buscas.</div></div>
-      <div style="background:#fff;border:1px solid rgba(15,10,26,0.08);border-radius:14px;padding:14px"><div style="font-size:22px;margin-bottom:6px">⏱</div><div style="font-weight:600;font-size:13px;margin-bottom:3px">Agendamento rápido</div><div style="font-size:12px;color:var(--light)">Escolha o horário, pague e o médico já fica notificado.</div></div>
-    </div>
-    <a href="landing.html" style="font-size:12px;color:var(--plum);font-weight:600;text-decoration:underline">Conheça a Animagem em detalhes →</a>
   </div>
 
   <!-- ESPAÇO PATROCINADO -->
@@ -818,9 +813,61 @@ function showView(v){
   if(v==='admin')initAdmin();
 }
 
+/* ─── POR QUE DOMICILIAR (varia por exame) ─── */
+const WHY_CONTENT={
+  '':{titulo:'Por que atendimento domiciliar?',itens:[
+    ['🏠','Sem deslocamento','O pet faz o exame no ambiente dele, sem o estresse da viagem até a clínica.'],
+    ['🩺','Mesma qualidade clínica','Equipamento e laudo no mesmo padrão de uma clínica especializada.'],
+    ['✅','CRMV verificado','Todo médico é aprovado manualmente antes de aparecer nas buscas.'],
+    ['⏱','Agendamento rápido','Escolha o horário, pague e o médico já fica notificado.']]},
+  'Ultrassom Abdominal':{titulo:'Por que ultrassom abdominal domiciliar?',itens:[
+    ['🏠','Sem jejum estressante fora de casa','O pet já chega preparado no ambiente onde se sente seguro.'],
+    ['🩺','Mesma qualidade clínica','Equipamento e laudo no mesmo padrão de uma clínica especializada.'],
+    ['✅','CRMV verificado','Todo médico é aprovado manualmente antes de aparecer nas buscas.'],
+    ['⏱','Agendamento rápido','Escolha o horário, pague e o médico já fica notificado.']]},
+  'Ultrassom Gestacional':{titulo:'Por que ultrassom gestacional domiciliar?',itens:[
+    ['🐾','Menos estresse pra fêmea prenha','Ambiente calmo ajuda a avaliar a gestação com mais precisão.'],
+    ['🩺','Mesma qualidade clínica','Equipamento e laudo no mesmo padrão de uma clínica especializada.'],
+    ['✅','CRMV verificado','Todo médico é aprovado manualmente antes de aparecer nas buscas.'],
+    ['⏱','Agendamento rápido','Escolha o horário, pague e o médico já fica notificado.']]},
+  'Ecocardiograma':{titulo:'Por que ecocardiograma domiciliar?',itens:[
+    ['❤️','Frequência cardíaca mais real','Em casa, sem o estresse da clínica, a leitura do coração é mais fiel.'],
+    ['🩺','Mesma qualidade clínica','Equipamento e laudo no mesmo padrão de uma clínica especializada.'],
+    ['✅','CRMV verificado','Todo médico é aprovado manualmente antes de aparecer nas buscas.'],
+    ['⏱','Agendamento rápido','Escolha o horário, pague e o médico já fica notificado.']]},
+  'Ultrassom Ortopédico':{titulo:'Por que ultrassom ortopédico domiciliar?',itens:[
+    ['🦴','Sem mover um pet com dor','Evita o desconforto de carregar ou transportar um animal machucado.'],
+    ['🩺','Mesma qualidade clínica','Equipamento e laudo no mesmo padrão de uma clínica especializada.'],
+    ['✅','CRMV verificado','Todo médico é aprovado manualmente antes de aparecer nas buscas.'],
+    ['⏱','Agendamento rápido','Escolha o horário, pague e o médico já fica notificado.']]},
+  'Ultrassom Ocular':{titulo:'Por que ultrassom ocular domiciliar?',itens:[
+    ['👁','Ambiente mais controlado','Menos agitação ajuda a manter o olho estável durante o exame.'],
+    ['🩺','Mesma qualidade clínica','Equipamento e laudo no mesmo padrão de uma clínica especializada.'],
+    ['✅','CRMV verificado','Todo médico é aprovado manualmente antes de aparecer nas buscas.'],
+    ['⏱','Agendamento rápido','Escolha o horário, pague e o médico já fica notificado.']]},
+  'Raio-X Portátil':{titulo:'Por que raio-X portátil domiciliar?',itens:[
+    ['🚗','Sem transportar um pet ferido','Evita agravar lesões com o deslocamento até uma clínica.'],
+    ['🩺','Mesma qualidade clínica','Equipamento portátil com o mesmo padrão de imagem.'],
+    ['✅','CRMV verificado','Todo médico é aprovado manualmente antes de aparecer nas buscas.'],
+    ['⏱','Agendamento rápido','Escolha o horário, pague e o médico já fica notificado.']]},
+  'Eletrocardiograma':{titulo:'Por que eletrocardiograma domiciliar?',itens:[
+    ['💓','Leitura sem ansiedade de clínica','Pet calmo em casa, batimento mais próximo do real.'],
+    ['🩺','Mesma qualidade clínica','Equipamento e laudo no mesmo padrão de uma clínica especializada.'],
+    ['✅','CRMV verificado','Todo médico é aprovado manualmente antes de aparecer nas buscas.'],
+    ['⏱','Agendamento rápido','Escolha o horário, pague e o médico já fica notificado.']]}
+};
+function renderWhy(exame){
+  const c=WHY_CONTENT[exame]||WHY_CONTENT[''];
+  document.getElementById('why-title').textContent=c.titulo;
+  document.getElementById('why-bullets').innerHTML=c.itens.map(([icon,tit,desc])=>
+    `<div style="background:#fff;border:1px solid rgba(15,10,26,0.08);border-radius:14px;padding:14px"><div style="font-size:22px;margin-bottom:6px">${icon}</div><div style="font-weight:600;font-size:13px;margin-bottom:3px">${tit}</div><div style="font-size:12px;color:var(--light)">${desc}</div></div>`
+  ).join('');
+}
+
 /* ─── TUTOR ─── */
 function buscar(){
   const ex=document.getElementById('s-exame').value;
+  renderWhy(ex);
   const ciRaw=document.getElementById('s-cidade').value.toLowerCase();
   const ci=ciRaw.split(',')[0].trim();
   const nm=document.getElementById('s-nome').value.toLowerCase();
@@ -1176,6 +1223,7 @@ function switchAp(ap){
 
 /* ─── INIT ─── */
 async function init(){
+  renderWhy('');
   renderAuthSlot();
   const {data:s}=await sb.auth.getSession();
   session=s.session;
