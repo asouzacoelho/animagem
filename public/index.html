@@ -778,11 +778,18 @@ async function submitAuth(){
     const role=authMode==='cadastro_medico'?'medico':'tutor';
     const {data,error}=await sb.auth.signUp({email,password:senha});
     if(error){errEl.textContent=error.message;return;}
+    // signUp com e-mail já cadastrado retorna 200 sem criar nada (proteção contra enumeração de e-mail)
+    if(data.user&&data.user.identities&&data.user.identities.length===0){
+      errEl.textContent='Esse e-mail já está cadastrado. Use "Entrar" com a senha existente.';
+      return;
+    }
     const uid=data.user?.id;
     if(uid){
-      await sb.from('profiles').insert({id:uid,role,nome,email});
+      const {error:perr}=await sb.from('profiles').insert({id:uid,role,nome,email});
+      if(perr){errEl.textContent='Conta criada, mas falhou ao salvar o perfil: '+perr.message;return;}
       if(role==='medico'){
-        await sb.from('medicos').insert({id:uid,crmv:'A definir',cidade:'Campinas',estado:'SP',ativo:false});
+        const {error:merr}=await sb.from('medicos').insert({id:uid,crmv:'A definir',cidade:'Campinas',estado:'SP',ativo:false});
+        if(merr){errEl.textContent='Perfil criado, mas falhou ao salvar dados de médico: '+merr.message;return;}
       }
     }
   }
