@@ -711,7 +711,8 @@ async function loadMedicos(){
   const {data,error}=await sb.from('medicos').select(`
     id,crmv,bio,cidade,estado,
     profiles(nome),
-    medico_exames(preco,exames_catalogo(nome))
+    medico_exames(preco,exames_catalogo(nome)),
+    medico_area(tipo,nome,ativo)
   `).eq('ativo',true);
   if(error){console.error('medicos',error);return;}
   MEDICOS=(data||[]).map(m=>({
@@ -721,11 +722,18 @@ async function loadMedicos(){
     em:'🩺',
     specs:(m.medico_exames||[]).map(x=>x.exames_catalogo?.nome).filter(Boolean),
     cidade:m.cidade,estado:m.estado,
+    areas:(m.medico_area||[]).filter(a=>a.ativo).map(a=>a.nome),
     min:Math.min(...(m.medico_exames||[]).map(x=>Number(x.preco))||[0]),
     atende:'Domiciliar',
     avail:'Consulte disponibilidade',
     wa:''
   }));
+}
+function areaOk(med,bairro,cidade){
+  const areas=med.areas||[];
+  const b=(bairro||'').trim().toLowerCase(),c=(cidade||'').trim().toLowerCase();
+  if(!areas.length)return c===((med.cidade||'').toLowerCase());
+  return areas.some(a=>a.toLowerCase()===b||a.toLowerCase()===c);
 }
 
 /* ─── AUTENTICAÇÃO ─── */
@@ -900,6 +908,7 @@ function renderCards(list){
           <div class="dname">${m.nome}</div>
           <div class="dcrmv">${m.crmv}</div>
           <div class="dtags">${m.specs.slice(0,2).map(s=>`<span class="dtag">${s}</span>`).join('')}${m.specs.length>2?`<span class="dtag">+${m.specs.length-2}</span>`:''}</div>
+          ${m.areas?.length?`<div style="font-size:11px;color:var(--light);margin-top:4px">📍 Atende: ${m.areas.join(', ')}</div>`:''}
         </div>
       </div>
       <div class="dcard-foot">
@@ -930,6 +939,8 @@ function gByDay(sl){const m={};sl.forEach(s=>{const k=s.toDateString();if(!m[k])
 function openModal(id){
   if(!session){openAuth('login');return;}
   mMed=MEDICOS.find(x=>x.id===id);ms=0;mServ=null;mSlot=null;mForm={};mPay=null;mPix=null;
+  const exFiltro=document.getElementById('s-exame')?.value;
+  if(exFiltro&&mMed.specs.includes(exFiltro))mServ=exFiltro;
   document.getElementById('m-title').textContent='Agendar com '+mMed.nome.split(' ').slice(0,2).join(' ');
   document.getElementById('m-sub').textContent=mMed.crmv+' · '+mMed.cidade;
   document.getElementById('overlay').classList.add('on');
@@ -950,7 +961,9 @@ function renderM(){
   const b=document.getElementById('m-body');
   /* STEP 0 */
   if(ms===0){
-    b.innerHTML=prog(0)+'<p style="font-size:13px;color:var(--light);margin-bottom:12px">Escolha o exame</p>'+
+    b.innerHTML=prog(0)+
+    (mServ?'<p style="font-size:12px;color:var(--sage);margin-bottom:8px">✓ Você já escolheu este exame na busca. Pode trocar abaixo ou continuar.</p>':'')+
+    '<p style="font-size:13px;color:var(--light);margin-bottom:12px">Escolha o exame</p>'+
     '<div style="display:flex;flex-direction:column;gap:8px">'+
     mMed.specs.map(e=>{const ep=EP[e]||{p:'—',d:'—'};
       return`<button onclick="selE('${e}')" style="display:flex;justify-content:space-between;align-items:center;padding:13px 14px;border-radius:12px;border:2px solid ${mServ===e?'var(--plum)':'rgba(15,10,26,0.09)'};background:${mServ===e?'var(--plum-pale)':'#fff'};cursor:pointer;font-family:inherit;min-height:54px;width:100%"><div style="text-align:left"><div style="font-weight:600;font-size:14px">${e}</div><div style="font-size:11px;color:var(--light)">⏱ ${ep.d}</div></div><div style="font-family:'Fraunces',serif;font-size:19px;font-weight:600;color:var(--sage);flex-shrink:0">R$ ${ep.p}</div></button>`;
@@ -973,13 +986,17 @@ function renderM(){
   else if(ms===2){
     const f=mForm;
     b.innerHTML=prog(2)+
-    `<div class="fgrid2"><div class="frow"><label class="flabel">Nome *</label><input class="finput" id="fn" value="${f.nome||''}" placeholder="Maria Silva"/></div><div class="frow"><label class="flabel">WhatsApp *</label><input class="finput" id="ft" value="${f.tel||''}" placeholder="(19) 99999-9999" type="tel"/></div></div>
+    `<div class="fgrid2"><div class="frow"><label class="flabel">Nome *</label><input class="finput" id="fn" value="${f.nome||''}" placeholder="Maria Silva"/></div><div class="frow"><label class="flabel">WhatsApp *</label><input class="finput" id="ft" value="${f.tel||''}" placeholder="(19) 99999-9999" type="tel" oninput="fmtTel(this)"/></div></div>
     <div class="frow"><label class="flabel">E-mail *</label><input class="finput" id="fe" value="${f.email||''}" placeholder="seu@email.com" type="email"/></div>
     <div class="fgrid2"><div class="frow"><label class="flabel">Nome do pet *</label><input class="finput" id="fp" value="${f.pet||''}" placeholder="Thor"/></div><div class="frow"><label class="flabel">Raça</label><input class="finput" id="fr" value="${f.raca||''}" placeholder="Golden"/></div></div>
     <div class="frow"><label class="flabel">Espécie *</label><div class="chips">${ESP.map(e=>`<div class="chip ${f.esp===e?'on':''}" onclick="selEsp('${e}')">${e}</div>`).join('')}</div></div>
-    <div class="frow"><label class="flabel">Endereço completo *</label><input class="finput" id="fend" value="${f.end||''}" placeholder="Rua, nº, bairro, cidade"/></div>
+    <div class="fgrid2"><div class="frow"><label class="flabel">Rua / Avenida *</label><input class="finput" id="f-rua" value="${f.rua||''}" placeholder="Av. Engenheiro Augusto"/></div><div class="frow"><label class="flabel">Número *</label><input class="finput" id="f-numero" value="${f.numero||''}" placeholder="123"/></div></div>
+    <div class="fgrid2"><div class="frow"><label class="flabel">Complemento</label><input class="finput" id="f-complemento" value="${f.complemento||''}" placeholder="Apto, bloco (opcional)"/></div><div class="frow"><label class="flabel">CEP *</label><input class="finput" id="f-cep" value="${f.cep||''}" placeholder="00000-000" maxlength="9" oninput="fmtCEP(this)"/></div></div>
+    <div class="fgrid2"><div class="frow"><label class="flabel">Bairro *</label><input class="finput" id="f-bairro" value="${f.bairro||''}" placeholder="Taquaral"/></div><div class="frow"><label class="flabel">Cidade *</label><input class="finput" id="f-cidade" value="${f.cidade||''}" placeholder="Campinas"/></div></div>
+    <div class="frow" style="max-width:120px"><label class="flabel">Estado *</label><input class="finput" id="f-estado" value="${f.estado||'SP'}" placeholder="SP" maxlength="2" style="text-transform:uppercase"/></div>
     <div class="frow"><label class="flabel">Observações</label><textarea class="finput" id="fobs" rows="2" placeholder="Motivo do exame">${f.obs||''}</textarea></div>
-    <div class="brow"><button class="btn-b" onclick="ms=1;renderM()">← Voltar</button><button class="btn-p" style="flex:1;margin-top:0" onclick="saveForm()">Ir para pagamento →</button></div>`;
+    <div style="font-size:11px;color:var(--gold);margin-bottom:10px">⚠ O médico atenderá <strong>exatamente neste endereço</strong> — confira antes de avançar.</div>
+    <div class="brow"><button class="btn-b" onclick="syncFormFields();ms=1;renderM()">← Voltar</button><button class="btn-p" style="flex:1;margin-top:0" onclick="saveForm()">Ir para pagamento →</button></div>`;
   }
   /* STEP 3 — pagamento */
   else if(ms===3){
@@ -1049,8 +1066,10 @@ function renderM(){
         <div class="rrow"><div class="rrow-lbl">Exame</div><div class="rrow-val">${mServ}</div></div>
         <div class="rrow"><div class="rrow-lbl">Data/hora</div><div class="rrow-val">${fD(mSlot)} ${fH(mSlot)}</div></div>
         <div class="rrow"><div class="rrow-lbl">Pet</div><div class="rrow-val">${mForm.pet}</div></div>
+        <div class="rrow"><div class="rrow-lbl">Endereço</div><div class="rrow-val">${mForm.end}</div></div>
         <div class="rrow"><div class="rrow-lbl">Status</div><div class="rrow-val" style="color:var(--gold);font-weight:700">Reservado · aguardando pagamento</div></div>
       </div>
+      <p style="font-size:11px;color:var(--gold);margin-bottom:10px">⚠ O médico irá <strong>exatamente a este endereço</strong> e a nenhum outro local. Confira se está correto.</p>
       <p style="font-size:12px;color:var(--light);margin-bottom:14px">Confirmação enviada para <strong>${mForm.email||''}</strong></p>
       <a href="https://wa.me/${mMed.wa}?text=${encodeURIComponent(msg)}" target="_blank" class="btn-wa">💬 Falar com o médico</a>
       <button class="btn-b" style="width:100%;margin-top:8px" onclick="closeModal();ms=0;mPay=null;mPix=null;">Fechar</button>
@@ -1060,18 +1079,39 @@ function renderM(){
 
 function selE(e){mServ=e;renderM();}
 function selS(t){mSlot=new Date(t);renderM();}
-function selEsp(e){mForm.esp=e;renderM();}
+/* lê os campos atualmente na tela e grava em mForm — chamado SEMPRE antes de qualquer
+   re-render do passo 2, senão o innerHTML é trocado e o que foi digitado se perde */
+function syncFormFields(){
+  const g=id=>document.getElementById(id)?.value;
+  const map={nome:'fn',tel:'ft',email:'fe',pet:'fp',raca:'fr',rua:'f-rua',numero:'f-numero',complemento:'f-complemento',cep:'f-cep',bairro:'f-bairro',cidade:'f-cidade',estado:'f-estado',obs:'fobs'};
+  Object.entries(map).forEach(([k,id])=>{const v=g(id);if(v!==undefined)mForm[k]=v;});
+}
+function selEsp(e){syncFormFields();mForm.esp=e;renderM();}
 function selPay(m){mPay=m;renderM();}
+function fmtTel(inp){
+  let v=inp.value.replace(/\D/g,'').slice(0,11);
+  if(v.length>10)v=v.replace(/(\d{2})(\d{5})(\d{4})/,'($1) $2-$3');
+  else if(v.length>6)v=v.replace(/(\d{2})(\d{4})(\d{0,4})/,'($1) $2-$3');
+  else if(v.length>2)v=v.replace(/(\d{2})(\d{0,5})/,'($1) $2');
+  else if(v.length>0)v='('+v;
+  inp.value=v;
+}
+function fmtCEP(inp){
+  let v=inp.value.replace(/\D/g,'').slice(0,8);
+  if(v.length>5)v=v.replace(/(\d{5})(\d{0,3})/,'$1-$2');
+  inp.value=v;
+}
 function saveForm(){
-  mForm.nome=document.getElementById('fn')?.value;
-  mForm.tel=document.getElementById('ft')?.value;
-  mForm.email=document.getElementById('fe')?.value;
-  mForm.pet=document.getElementById('fp')?.value;
-  mForm.raca=document.getElementById('fr')?.value;
-  mForm.end=document.getElementById('fend')?.value;
-  mForm.obs=document.getElementById('fobs')?.value;
-  if(mForm.nome&&mForm.tel&&mForm.email&&mForm.pet&&mForm.esp&&mForm.end){ms=3;renderM();}
-  else alert('Preencha todos os campos obrigatórios (*)');
+  syncFormFields();
+  const obrig=['nome','tel','email','pet','esp','rua','numero','cep','bairro','cidade','estado'];
+  const faltando=obrig.filter(k=>!mForm[k]);
+  if(faltando.length){alert('Preencha todos os campos obrigatórios (*)');return;}
+  if(!areaOk(mMed,mForm.bairro,mForm.cidade)){
+    alert(`Esse médico não atende ${mForm.bairro}/${mForm.cidade}. Verifique a área de atendimento dele ou escolha outro médico.`);
+    return;
+  }
+  mForm.end=`${mForm.rua}, ${mForm.numero}${mForm.complemento?' - '+mForm.complemento:''} - ${mForm.bairro}, ${mForm.cidade} - ${mForm.estado.toUpperCase()}, CEP ${mForm.cep}`;
+  ms=3;renderM();
 }
 function avancarPag(){
   if(!mPay)return;
