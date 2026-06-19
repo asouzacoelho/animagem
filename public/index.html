@@ -1008,19 +1008,30 @@ async function pagarCC(){
 }
 
 let mAgendamento=null;
+async function obterOuCriarPet(){
+  // procura um pet do próprio tutor com o mesmo nome+espécie para manter histórico em vez de duplicar
+  const {data:existente}=await sb.from('pets').select('id')
+    .eq('tutor_id',session.user.id).ilike('nome',mForm.pet).eq('especie',mForm.esp).maybeSingle();
+  if(existente)return existente.id;
+  const {data:novo,error}=await sb.from('pets').insert({
+    tutor_id:session.user.id,nome:mForm.pet,especie:mForm.esp,raca:mForm.raca||null
+  }).select().single();
+  if(error)throw error;
+  return novo.id;
+}
 async function criarAgendamento(){
   if(!session){openAuth('login');return;}
   const exameId=EP[mServ]?.id;
   if(!exameId){alert('Exame não encontrado no catálogo.');return;}
+  let petId;
+  try{petId=await obterOuCriarPet();}catch(e){alert('Não foi possível salvar o pet: '+e.message);return;}
   const {data,error}=await sb.from('agendamentos').insert({
     tutor_id:session.user.id,
     medico_id:mMed.id,
     exame_id:exameId,
     horario:mSlot.toISOString(),
     endereco:mForm.end,
-    pet_nome:mForm.pet,
-    pet_especie:mForm.esp,
-    pet_raca:mForm.raca||null,
+    pet_id:petId,
     observacoes:mForm.obs||null,
     valor:EP[mServ].p // será revalidado/recalculado pelo trigger no banco
   }).select().single();
