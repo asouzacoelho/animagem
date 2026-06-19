@@ -381,6 +381,7 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
     <button class="topnav-btn" onclick="showView('medico')">🩺 Área do médico</button>
     <button class="topnav-btn adm" onclick="showView('admin')">⚙️ Admin</button>
   </div>
+  <div id="auth-slot" style="display:flex;align-items:center;gap:8px"></div>
 </div>
 
 <!-- BOTTOM NAV -->
@@ -442,6 +443,17 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
       <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
     <div class="modal-body" id="m-body"></div>
+  </div>
+</div>
+
+<!-- AUTH MODAL -->
+<div class="overlay" id="auth-overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div><h3 id="auth-title">Entrar</h3><p>Acesso de tutor ou médico</p></div>
+      <button class="modal-close" onclick="closeAuth()">✕</button>
+    </div>
+    <div class="modal-body" id="auth-body"></div>
   </div>
 </div>
 
@@ -654,18 +666,115 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
-/* ─── DATA ─── */
-const MEDICOS=[
-  {id:1,nome:"Ana Camila V. Augusti",crmv:"CRMV-SP XXXXX",em:"🩺",specs:["Ultrassom Abdominal","Ultrassom Gestacional","Ecocardiograma","Ultrassom Ortopédico","Ultrassom Ocular"],cidade:"Campinas",estado:"SP",min:150,atende:"Domiciliar + Clínicas",avail:"Hoje às 14h",wa:"5519995188335"},
-  {id:2,nome:"Carlos Henrique M.",crmv:"CRMV-SP YYYYY",em:"🔬",specs:["Raio-X Portátil","Ultrassom Abdominal","Eletrocardiograma"],cidade:"Valinhos",estado:"SP",min:120,atende:"Domiciliar",avail:"Amanhã às 09h",wa:"551999990000"},
-  {id:3,nome:"Rodrigo Fonseca",crmv:"CRMV-SP WWWWW",em:"❤️",specs:["Ecocardiograma","Eletrocardiograma","Ultrassom Ortopédico"],cidade:"Americana",estado:"SP",min:160,atende:"Clínicas parceiras",avail:"Sex às 10h",wa:"551999991111"},
-];
-const EP={"Ultrassom Abdominal":{p:180,d:"30–40 min"},"Ultrassom Gestacional":{p:200,d:"30–45 min"},"Ecocardiograma":{p:280,d:"40–50 min"},"Ultrassom Ortopédico":{p:160,d:"25–35 min"},"Ultrassom Ocular":{p:150,d:"20–30 min"},"Raio-X Portátil":{p:120,d:"20–30 min"},"Eletrocardiograma":{p:140,d:"25–35 min"}};
+/* ─── SUPABASE ─── */
+const SUPABASE_URL='https://xtmuffomynrwpxswrdvy.supabase.co';
+const SUPABASE_KEY='sb_publishable_l8gbwcyIhtBFxZ1uSyp_lA_QJu95j4Y';
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let session=null,profile=null;
+
+/* ─── DATA (carregada do Supabase; arrays ficam vazios até a query responder) ─── */
+let MEDICOS=[];
+let CATALOGO=[]; // [{id,nome,duracao_min,preco_base}]
+const EP={}; // nome do exame -> {p,d} — preenchido a partir de CATALOGO
 const BAIRROS=["Taquaral","Cambuí","Bosque","Centro","Guanabara","Nova Campinas","Barão Geraldo","Parque Prado","Alphaville","Sousas","Jardim Chapadão","Cidade Universitária"];
 const CIDADES=["Valinhos","Vinhedo","Paulínia","Sumaré","Hortolândia","Indaiatuba","Americana","Cosmópolis","Itatiba","Jaguariúna"];
 const ESP=["Cão","Gato","Coelho","Ave","Réptil","Outro"];
 const HORAS=[8,9,10,11,14,15,16,17];
+
+async function loadCatalogo(){
+  const {data,error}=await sb.from('exames_catalogo').select('*').order('nome');
+  if(error){console.error('catalogo',error);return;}
+  CATALOGO=data||[];
+  Object.keys(EP).forEach(k=>delete EP[k]);
+  CATALOGO.forEach(e=>{EP[e.nome]={p:Number(e.preco_base),d:e.duracao_min+' min',id:e.id};});
+}
+
+async function loadMedicos(){
+  const {data,error}=await sb.from('medicos').select(`
+    id,crmv,bio,cidade,estado,
+    profiles(nome),
+    medico_exames(preco,exames_catalogo(nome))
+  `).eq('ativo',true);
+  if(error){console.error('medicos',error);return;}
+  MEDICOS=(data||[]).map(m=>({
+    id:m.id,
+    nome:m.profiles?.nome||'Médico',
+    crmv:m.crmv,
+    em:'🩺',
+    specs:(m.medico_exames||[]).map(x=>x.exames_catalogo?.nome).filter(Boolean),
+    cidade:m.cidade,estado:m.estado,
+    min:Math.min(...(m.medico_exames||[]).map(x=>Number(x.preco))||[0]),
+    atende:'Domiciliar',
+    avail:'Consulte disponibilidade',
+    wa:''
+  }));
+}
+
+/* ─── AUTENTICAÇÃO ─── */
+async function refreshProfile(){
+  if(!session){profile=null;return;}
+  const {data}=await sb.from('profiles').select('*').eq('id',session.user.id).maybeSingle();
+  profile=data;
+}
+function renderAuthSlot(){
+  const el=document.getElementById('auth-slot');if(!el)return;
+  if(session&&profile){
+    el.innerHTML=`<span style="font-size:12px;color:var(--mid)">${profile.nome.split(' ')[0]} · ${profile.role}</span><button class="topnav-btn" onclick="logout()">Sair</button>`;
+  }else{
+    el.innerHTML=`<button class="topnav-btn" onclick="openAuth()">Entrar</button>`;
+  }
+}
+async function logout(){await sb.auth.signOut();session=null;profile=null;renderAuthSlot();}
+function openAuth(mode){authMode=mode||'login';renderAuth();document.getElementById('auth-overlay').classList.add('on');}
+function closeAuth(){document.getElementById('auth-overlay').classList.remove('on');}
+let authMode='login';
+function renderAuth(){
+  const b=document.getElementById('auth-body');
+  document.getElementById('auth-title').textContent=authMode==='login'?'Entrar':'Criar conta';
+  b.innerHTML=`
+    <div class="chips" style="margin-bottom:12px">
+      <div class="chip ${authMode==='login'?'on':''}" onclick="authMode='login';renderAuth()">Entrar</div>
+      <div class="chip ${authMode==='cadastro_tutor'?'on':''}" onclick="authMode='cadastro_tutor';renderAuth()">Cadastrar (tutor)</div>
+      <div class="chip ${authMode==='cadastro_medico'?'on':''}" onclick="authMode='cadastro_medico';renderAuth()">Cadastrar (médico)</div>
+    </div>
+    ${authMode!=='login'?'<div class="frow"><label class="flabel">Nome completo *</label><input class="finput" id="au-nome" placeholder="Seu nome"/></div>':''}
+    <div class="frow"><label class="flabel">E-mail *</label><input class="finput" id="au-email" type="email" placeholder="seu@email.com"/></div>
+    <div class="frow"><label class="flabel">Senha *</label><input class="finput" id="au-senha" type="password" placeholder="mín. 6 caracteres"/></div>
+    <div id="au-err" style="color:var(--red);font-size:12px;margin-bottom:8px"></div>
+    <button class="btn-p" onclick="submitAuth()">${authMode==='login'?'Entrar':'Criar conta'}</button>`;
+}
+async function submitAuth(){
+  const email=document.getElementById('au-email').value.trim();
+  const senha=document.getElementById('au-senha').value;
+  const errEl=document.getElementById('au-err');
+  errEl.textContent='';
+  if(!email||!senha){errEl.textContent='Preencha e-mail e senha.';return;}
+  if(authMode==='login'){
+    const {error}=await sb.auth.signInWithPassword({email,password:senha});
+    if(error){errEl.textContent=error.message;return;}
+  }else{
+    const nome=document.getElementById('au-nome').value.trim();
+    if(!nome){errEl.textContent='Preencha o nome.';return;}
+    const role=authMode==='cadastro_medico'?'medico':'tutor';
+    const {data,error}=await sb.auth.signUp({email,password:senha});
+    if(error){errEl.textContent=error.message;return;}
+    const uid=data.user?.id;
+    if(uid){
+      await sb.from('profiles').insert({id:uid,role,nome,email});
+      if(role==='medico'){
+        await sb.from('medicos').insert({id:uid,crmv:'A definir',cidade:'Campinas',estado:'SP',ativo:false});
+      }
+    }
+  }
+  const {data:s}=await sb.auth.getSession();
+  session=s.session;
+  await refreshProfile();
+  renderAuthSlot();
+  closeAuth();
+  if(profile?.role==='medico')alert('Conta criada! Um admin precisa aprovar seu cadastro (campo "ativo") antes de você aparecer nas buscas.');
+}
 
 /* ─── STATE ─── */
 let blocked=new Set();
@@ -704,7 +813,7 @@ function renderCards(list){
   const c=document.getElementById('dcards');
   if(!list.length){c.innerHTML='<div style="text-align:center;padding:36px 16px;color:var(--light)"><div style="font-size:36px;margin-bottom:10px">🔍</div><div style="font-family:Fraunces,serif;font-size:18px;margin-bottom:5px">Nenhum médico encontrado</div><div style="font-size:13px">Tente outra especialidade ou cidade</div></div>';return;}
   c.innerHTML=list.map(m=>`
-    <div class="dcard" onclick="openModal(${m.id})">
+    <div class="dcard" onclick="openModal('${m.id}')">
       <div class="dcard-head">
         <div class="davatar">${m.em}</div>
         <div>
@@ -739,6 +848,7 @@ const fH=d=>d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
 function gByDay(sl){const m={};sl.forEach(s=>{const k=s.toDateString();if(!m[k])m[k]=[];m[k].push(s);});return m;}
 
 function openModal(id){
+  if(!session){openAuth('login');return;}
   mMed=MEDICOS.find(x=>x.id===id);ms=0;mServ=null;mSlot=null;mForm={};mPay=null;mPix=null;
   document.getElementById('m-title').textContent='Agendar com '+mMed.nome.split(' ').slice(0,2).join(' ');
   document.getElementById('m-sub').textContent=mMed.crmv+' · '+mMed.cidade;
@@ -801,7 +911,7 @@ function renderM(){
       <div class="pix-box"><div class="pix-box-lbl">Código PIX — copia e cola</div><div class="pix-code">${mPix}</div><button class="btn-copy" onclick="navigator.clipboard.writeText('${mPix}');this.textContent='✓ Copiado!'">Copiar código PIX</button></div>
       <div class="resumo"><div class="rrow"><div class="rrow-lbl">Valor</div><div class="rrow-val" style="color:var(--sage);font-weight:700;font-size:17px">R$ ${pr},00</div></div><div class="rrow"><div class="rrow-lbl">Beneficiário</div><div class="rrow-val">Animagem Ltda.</div></div><div class="rrow"><div class="rrow-lbl">Validade</div><div class="rrow-val">30 minutos</div></div></div>
       <div class="notice-pay">⏱ O horário fica <strong>reservado por 30 min</strong>. Sem confirmação, o slot é liberado automaticamente.</div>
-      <button class="btn-p" onclick="ms=4;renderM()">✓ Já paguei — confirmar agendamento</button>
+      <button class="btn-p" onclick="criarAgendamento()">✓ Já paguei — confirmar agendamento</button>
       <button class="btn-b" style="width:100%;margin-top:8px" onclick="mPay=null;mPix=null;renderM()">← Outra forma</button>`;
       return;
     }
@@ -815,7 +925,7 @@ function renderM(){
       <div class="fgrid2"><div class="frow"><label class="flabel">Validade</label><input class="finput" id="ccv" placeholder="MM/AA" maxlength="5" inputmode="numeric"/></div><div class="frow"><label class="flabel">CVV</label><input class="finput" id="ccc" placeholder="123" maxlength="4" type="password" inputmode="numeric"/></div></div>
       <div class="frow"><label class="flabel">Parcelamento</label><select class="finput" id="ccp"><option>1x de R$ ${pr},00 (sem juros)</option><option>2x de R$ ${(pr/2).toFixed(2)}</option><option>3x de R$ ${(pr/3).toFixed(2)}</option></select></div>
       <p style="font-size:11px;color:var(--light);margin-bottom:10px">🔒 Dados criptografados. Animagem não armazena dados do cartão.</p>
-      <button class="btn-p" id="btn-pay-cc" onclick="pagarCC()">Pagar R$ ${pr},00</button>
+      <button class="btn-p" id="btn-pay-cc" onclick="pagarCC()">Confirmar — R$ ${pr},00</button>
       <button class="btn-b" style="width:100%;margin-top:8px" onclick="mPay=null;renderM()">← Outra forma</button>`;
       return;
     }
@@ -850,16 +960,16 @@ function renderM(){
   /* STEP 4 — confirmação */
   else if(ms===4){
     const ep=EP[mServ]||{p:0};
-    const msg=`Animagem ✓\n\n📋 ${mServ}\n📅 ${fD(mSlot)} às ${fH(mSlot)}\n🐾 ${mForm.pet} (${mForm.esp})\n📍 ${mForm.end}\n💳 R$ ${ep.p},00 — PAGO`;
+    const msg=`Animagem\n\n📋 ${mServ}\n📅 ${fD(mSlot)} às ${fH(mSlot)}\n🐾 ${mForm.pet} (${mForm.esp})\n📍 ${mForm.end}\n💰 R$ ${ep.p},00 — reservado, aguardando confirmação de pagamento`;
     b.innerHTML=`<div class="confirm-box">
       <div class="confirm-ring">✓</div>
-      <div class="confirm-title">Confirmado!</div>
-      <p class="confirm-sub">Pagamento aprovado. O médico foi notificado e seu horário está garantido.</p>
+      <div class="confirm-title">Horário reservado!</div>
+      <p class="confirm-sub">Reservado por 30 minutos. A confirmação do pagamento ainda depende da integração com o gateway (em desenvolvimento) — o médico será notificado quando o pagamento for confirmado.</p>
       <div class="resumo" style="text-align:left;margin-bottom:14px">
         <div class="rrow"><div class="rrow-lbl">Exame</div><div class="rrow-val">${mServ}</div></div>
         <div class="rrow"><div class="rrow-lbl">Data/hora</div><div class="rrow-val">${fD(mSlot)} ${fH(mSlot)}</div></div>
         <div class="rrow"><div class="rrow-lbl">Pet</div><div class="rrow-val">${mForm.pet}</div></div>
-        <div class="rrow"><div class="rrow-lbl">Pagamento</div><div class="rrow-val" style="color:var(--sage);font-weight:700">R$ ${ep.p},00 ✓</div></div>
+        <div class="rrow"><div class="rrow-lbl">Status</div><div class="rrow-val" style="color:var(--gold);font-weight:700">Reservado · aguardando pagamento</div></div>
       </div>
       <p style="font-size:12px;color:var(--light);margin-bottom:14px">Confirmação enviada para <strong>${mForm.email||''}</strong></p>
       <a href="https://wa.me/${mMed.wa}?text=${encodeURIComponent(msg)}" target="_blank" class="btn-wa">💬 Falar com o médico</a>
@@ -895,7 +1005,33 @@ async function pagarCC(){
   const btn=document.getElementById('btn-pay-cc');
   if(!document.getElementById('ccn')?.value.replace(/\s/g,'').length===16){alert('Número do cartão inválido.');return;}
   if(btn){btn.disabled=true;btn.textContent='Processando...';}
-  await new Promise(r=>setTimeout(r,2000));
+  await criarAgendamento();
+  if(btn){btn.disabled=false;btn.textContent='Confirmar — R$ '+(EP[mServ]?.p||0)+',00';}
+}
+
+let mAgendamento=null;
+async function criarAgendamento(){
+  if(!session){openAuth('login');return;}
+  const exameId=EP[mServ]?.id;
+  if(!exameId){alert('Exame não encontrado no catálogo.');return;}
+  const {data,error}=await sb.from('agendamentos').insert({
+    tutor_id:session.user.id,
+    medico_id:mMed.id,
+    exame_id:exameId,
+    horario:mSlot.toISOString(),
+    endereco:mForm.end,
+    pet_nome:mForm.pet,
+    pet_especie:mForm.esp,
+    pet_raca:mForm.raca||null,
+    observacoes:mForm.obs||null,
+    valor:EP[mServ].p // será revalidado/recalculado pelo trigger no banco
+  }).select().single();
+  if(error){
+    if(error.code==='23505')alert('Esse horário acabou de ser reservado por outro tutor. Escolha outro horário.');
+    else alert('Não foi possível confirmar: '+error.message);
+    return;
+  }
+  mAgendamento=data;
   ms=4;renderM();
 }
 
@@ -948,7 +1084,7 @@ function renderSlots(){
 }
 function initExames(){
   const g=document.getElementById('exam-list');if(!g)return;
-  g.innerHTML=MEDICOS[0].specs.map(e=>{const ep=EP[e]||{p:'—',d:'—'};
+  g.innerHTML=(MEDICOS[0]?.specs||[]).map(e=>{const ep=EP[e]||{p:'—',d:'—'};
     return`<div class="exam-item"><div><div class="exam-name">${e}</div><div class="exam-dur">⏱ ${ep.d}</div></div><div class="exam-price">R$ ${ep.p}</div></div>`;
   }).join('');
 }
@@ -983,7 +1119,17 @@ function switchAp(ap){
 }
 
 /* ─── INIT ─── */
-renderCards(MEDICOS);
+async function init(){
+  renderAuthSlot();
+  const {data:s}=await sb.auth.getSession();
+  session=s.session;
+  await refreshProfile();
+  renderAuthSlot();
+  sb.auth.onAuthStateChange((_e,sess)=>{session=sess;refreshProfile().then(renderAuthSlot);});
+  await Promise.all([loadCatalogo(),loadMedicos()]);
+  renderCards(MEDICOS);
+}
+init();
 </script>
 </body>
 </html>
