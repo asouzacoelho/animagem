@@ -9,6 +9,7 @@ Itens identificados que precisam ser resolvidos antes de abrir o sistema para us
 5. **Backups / Point-in-Time Recovery no Supabase** — o plano Free não tem PITR; revisar ao migrar para plano pago, antes de ter dados reais de pessoas.
 6. **Monitoramento de erros e logs em produção** (ex: Sentry) — para saber quando algo quebra sem depender de reclamação de usuário.
 7. **LGPD** — política de privacidade real, consentimento explícito para guardar endereço residencial e dados de pet/tutor, mecanismo de exclusão de conta/dados.
+8. **Monetização por publicidade** — estrutura de dados e UI já criadas (ver seção detalhada abaixo), venda ainda não ativada. Falta: tela de admin para cadastrar patrocinador sem SQL, modelo de cobrança, critério de quem pode anunciar, limite de slots por página.
 
 **Contexto:** essas pendências foram levantadas depois da Fase 0 (repo GitHub + schema Supabase com RLS + deploy Netlify), quando ficou claro que o frontend ainda não fala de fato com o banco — é a Fase 1 que vai expor esses riscos na prática.
 
