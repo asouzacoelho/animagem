@@ -539,22 +539,17 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
         <div class="mpage" id="mp-exames">
           <div class="ptitle">Meus Exames</div><div class="psub">Exames que você realiza</div>
           <div class="exam-list" id="exam-list"></div>
-          <div class="notice">💡 Para adicionar ou remover exames, entre em contato com a administração do portal.</div>
+          <button class="btn-save" style="margin-top:14px" onclick="abrirFormExame()">+ Adicionar / editar exame</button>
+          <div id="exame-form-wrap" style="margin-top:14px"></div>
         </div>
         <!-- AREA -->
         <div class="mpage" id="mp-area">
-          <div class="ptitle">Área de Atendimento</div><div class="psub">Toque para ativar ou bloquear</div>
-          <div class="area-stats">
-            <div class="area-stat"><div class="area-stat-val" id="ars-on" style="color:var(--sage-light)">22</div><div class="area-stat-lbl">Ativas</div></div>
-            <div class="area-stat"><div class="area-stat-val" id="ars-off" style="color:#f4b942">0</div><div class="area-stat-lbl">Bloqueadas</div></div>
-            <div class="area-stat"><div class="area-stat-val" style="color:rgba(255,255,255,0.4)">22</div><div class="area-stat-lbl">Total</div></div>
-          </div>
+          <div class="ptitle">Área de Atendimento</div><div class="psub">Bairros e cidades onde você atende</div>
           <div class="tcard">
-            <div class="area-sec">Bairros — Campinas</div>
-            <div class="area-chips" id="bairros-chips"></div>
-            <div class="area-sec">Cidades — DDD 19</div>
-            <div class="area-chips" id="cidades-chips"></div>
-            <button class="btn-save" onclick="saveArea()">Salvar área</button>
+            <div class="area-sec">Suas áreas cadastradas</div>
+            <div id="area-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px"></div>
+            <button class="btn-save" onclick="abrirFormArea()">+ Incluir área</button>
+            <div id="area-form-wrap" style="margin-top:14px"></div>
           </div>
         </div>
         <!-- PERFIL -->
@@ -836,7 +831,6 @@ async function submitAuth(){
 }
 
 /* ─── STATE ─── */
-let blocked=new Set();
 let slots={};
 let curDay=new Date();
 let ms=0,mMed=null,mServs=[],mSlot=null,mForm={},mPay=null,mPix=null;
@@ -1268,28 +1262,124 @@ function renderSlots(){
     t.onclick=()=>{const k=t.dataset.k,h=+t.dataset.h;slots[k]=slots[k]||{};slots[k][h]=!t.classList.contains('on');renderSlots();};
   });
 }
-function initExames(){
-  const g=document.getElementById('exam-list');if(!g)return;
-  g.innerHTML=(MEDICOS[0]?.specs||[]).map(e=>{const ep=EP[e]||{p:'—',d:'—'};
-    return`<div class="exam-item"><div><div class="exam-name">${e}</div><div class="exam-dur">⏱ ${ep.d}</div></div><div class="exam-price">R$ ${ep.p}</div></div>`;
+/* ─── MEUS EXAMES (médico) ─── */
+async function initExames(){
+  const g=document.getElementById('exam-list');if(!g||!session)return;
+  const {data,error}=await sb.from('medico_exames').select('exame_id,preco,preco_fim_de_semana,preco_noturno,duracao_min,pre_requisitos,exames_catalogo(nome,duracao_min)').eq('medico_id',session.user.id);
+  if(error){g.innerHTML='Erro ao carregar exames: '+error.message;return;}
+  if(!data.length){g.innerHTML='<p style="font-size:13px;color:var(--light)">Nenhum exame cadastrado ainda.</p>';return;}
+  g.innerHTML=data.map(r=>{
+    const nome=r.exames_catalogo?.nome||'—';
+    const dur=r.duracao_min||r.exames_catalogo?.duracao_min;
+    let precos=`R$ ${r.preco}`;
+    if(r.preco_fim_de_semana)precos+=` · fds R$ ${r.preco_fim_de_semana}`;
+    if(r.preco_noturno)precos+=` · noturno R$ ${r.preco_noturno}`;
+    return`<div class="exam-item" style="flex-direction:column;align-items:stretch;gap:6px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div><div class="exam-name">${nome}</div><div class="exam-dur">⏱ ${dur||'—'} min</div></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="exam-price">${precos}</div>
+          <button class="btn-b" onclick='abrirFormExame(${JSON.stringify(r).replace(/'/g,"&#39;")})'>Editar</button>
+          <button class="btn-b" style="color:var(--red)" onclick="removerExame('${r.exame_id}')">Remover</button>
+        </div>
+      </div>
+      ${r.pre_requisitos?`<div style="font-size:12px;color:var(--mid)">📋 ${r.pre_requisitos}</div>`:''}
+    </div>`;
   }).join('');
 }
-function initArea(){
-  const bc=document.getElementById('bairros-chips'),cc=document.getElementById('cidades-chips');if(!bc||!cc)return;
-  bc.innerHTML=BAIRROS.map(b=>`<div class="area-chip ${blocked.has(b)?'off':'on'}" data-a="${b}"><div class="adot" style="background:${b==='Taquaral'?'var(--plum)':blocked.has(b)?'var(--red)':'var(--sage)'}"></div>${b==='Taquaral'?b+' ★':b}</div>`).join('');
-  cc.innerHTML=CIDADES.map(c=>`<div class="area-chip ${blocked.has(c)?'off':'on'}" data-a="${c}"><div class="adot" style="background:${blocked.has(c)?'var(--red)':'var(--sage)'}"></div>${c}</div>`).join('');
-  document.querySelectorAll('.area-chip[data-a]').forEach(ch=>{
-    if(ch.dataset.a==='Taquaral')return;
-    ch.onclick=()=>{blocked.has(ch.dataset.a)?blocked.delete(ch.dataset.a):blocked.add(ch.dataset.a);initArea();updateAreaStats();};
-  });
-  updateAreaStats();
+function abrirFormExame(existente){
+  const w=document.getElementById('exame-form-wrap');
+  const ex=existente||{};
+  w.innerHTML=`<div class="tcard" style="padding:14px">
+    <div class="frow"><label class="flabel">Exame *</label>
+      <select class="finput" id="ex-id" ${ex.exame_id?'disabled':''}>${CATALOGO.map(c=>`<option value="${c.id}" ${ex.exame_id===c.id?'selected':''}>${c.nome}</option>`).join('')}</select>
+    </div>
+    <div class="fgrid2">
+      <div class="frow"><label class="flabel">Preço (dia de semana) *</label><input class="finput" id="ex-preco" type="number" value="${ex.preco??''}" placeholder="180"/></div>
+      <div class="frow"><label class="flabel">Tempo médio (min)</label><input class="finput" id="ex-dur" type="number" value="${ex.duracao_min??''}" placeholder="usa o padrão do catálogo"/></div>
+    </div>
+    <div class="fgrid2">
+      <div class="frow"><label class="flabel">Preço fim de semana</label><input class="finput" id="ex-preco-fds" type="number" value="${ex.preco_fim_de_semana??''}" placeholder="opcional"/></div>
+      <div class="frow"><label class="flabel">Preço noturno (após 19h)</label><input class="finput" id="ex-preco-not" type="number" value="${ex.preco_noturno??''}" placeholder="opcional"/></div>
+    </div>
+    <div class="frow"><label class="flabel">Pré-requisitos</label><textarea class="finput" id="ex-prereq" rows="2" placeholder="Ex: jejum de 8h">${ex.pre_requisitos||''}</textarea></div>
+    <div class="brow"><button class="btn-b" onclick="document.getElementById('exame-form-wrap').innerHTML=''">Cancelar</button><button class="btn-p" style="flex:1;margin-top:0" onclick="salvarExame()">Salvar</button></div>
+  </div>`;
 }
-function updateAreaStats(){
-  const total=BAIRROS.length+CIDADES.length;
-  const on=document.getElementById('ars-on'),off=document.getElementById('ars-off');
-  if(on)on.textContent=total-blocked.size;if(off)off.textContent=blocked.size;
+async function salvarExame(){
+  const exame_id=document.getElementById('ex-id').value;
+  const preco=parseFloat(document.getElementById('ex-preco').value);
+  if(!exame_id||!preco){alert('Selecione o exame e informe o preço.');return;}
+  const payload={
+    medico_id:session.user.id,exame_id,preco,
+    preco_fim_de_semana:document.getElementById('ex-preco-fds').value?parseFloat(document.getElementById('ex-preco-fds').value):null,
+    preco_noturno:document.getElementById('ex-preco-not').value?parseFloat(document.getElementById('ex-preco-not').value):null,
+    duracao_min:document.getElementById('ex-dur').value?parseInt(document.getElementById('ex-dur').value):null,
+    pre_requisitos:document.getElementById('ex-prereq').value||null
+  };
+  const {error}=await sb.from('medico_exames').upsert(payload,{onConflict:'medico_id,exame_id'});
+  if(error){alert('Erro ao salvar: '+error.message);return;}
+  document.getElementById('exame-form-wrap').innerHTML='';
+  initExames();
 }
-function saveArea(){alert('Área salva!');}
+async function removerExame(exame_id){
+  if(!confirm('Remover este exame da sua lista?'))return;
+  const {error}=await sb.from('medico_exames').delete().eq('medico_id',session.user.id).eq('exame_id',exame_id);
+  if(error){alert('Erro: '+error.message);return;}
+  initExames();
+}
+
+/* ─── ÁREA DE ATENDIMENTO (médico) ─── */
+async function initArea(){
+  const l=document.getElementById('area-list');if(!l||!session)return;
+  const {data,error}=await sb.from('medico_area').select('*').eq('medico_id',session.user.id).order('tipo').order('nome');
+  if(error){l.innerHTML='Erro: '+error.message;return;}
+  if(!data.length){l.innerHTML='<p style="font-size:13px;color:var(--light)">Nenhuma área cadastrada ainda.</p>';return;}
+  l.innerHTML=data.map(a=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border:1px solid rgba(15,10,26,0.08);border-radius:10px">
+      <div><strong>${a.nome}</strong> <span style="font-size:11px;color:var(--light)">(${a.tipo==='cidade'?'cidade toda':'bairro'})</span></div>
+      <div style="display:flex;gap:8px">
+        <button class="toggle ${a.ativo?'on':'off'}" onclick="toggleArea('${a.id}',${!a.ativo})"></button>
+        <button class="btn-b" style="color:var(--red)" onclick="removerArea('${a.id}')">Remover</button>
+      </div>
+    </div>`).join('');
+}
+function abrirFormArea(){
+  const w=document.getElementById('area-form-wrap');
+  w.innerHTML=`<div class="tcard" style="padding:14px">
+    <div class="frow"><label class="flabel">Cidade *</label>
+      <select class="finput" id="ar-cidade">${[...new Set([mMed?.cidade,...CIDADES,'Campinas'])].filter(Boolean).map(c=>`<option>${c}</option>`).join('')}</select>
+    </div>
+    <div class="frow"><label class="flabel">Bairro</label>
+      <select class="finput" id="ar-bairro">
+        <option value="">Toda a cidade (sem bairro específico)</option>
+        ${BAIRROS.map(b=>`<option>${b}</option>`).join('')}
+      </select>
+    </div>
+    <div class="brow"><button class="btn-b" onclick="document.getElementById('area-form-wrap').innerHTML=''">Cancelar</button><button class="btn-p" style="flex:1;margin-top:0" onclick="salvarArea()">Salvar</button></div>
+  </div>`;
+}
+async function salvarArea(){
+  const cidade=document.getElementById('ar-cidade').value;
+  const bairro=document.getElementById('ar-bairro').value;
+  const tipo=bairro?'bairro':'cidade';
+  const nome=bairro||cidade;
+  const {error}=await sb.from('medico_area').upsert({medico_id:session.user.id,tipo,nome,ativo:true},{onConflict:'medico_id,tipo,nome'});
+  if(error){alert('Erro ao salvar: '+error.message);return;}
+  document.getElementById('area-form-wrap').innerHTML='';
+  initArea();
+}
+async function toggleArea(id,novoAtivo){
+  const {error}=await sb.from('medico_area').update({ativo:novoAtivo}).eq('id',id);
+  if(error){alert('Erro: '+error.message);return;}
+  initArea();
+}
+async function removerArea(id){
+  if(!confirm('Remover esta área?'))return;
+  const {error}=await sb.from('medico_area').delete().eq('id',id);
+  if(error){alert('Erro: '+error.message);return;}
+  initArea();
+}
 
 /* ─── ADMIN ─── */
 function initAdmin(){
