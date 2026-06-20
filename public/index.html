@@ -1082,9 +1082,10 @@ function renderM(){
     <div class="fgrid2"><div class="frow"><label class="flabel">Complemento</label><input class="finput" id="f-complemento" value="${f.complemento||''}" placeholder="Apto, bloco (opcional)"/></div><div class="frow"><label class="flabel">CEP *</label><input class="finput" id="f-cep" value="${f.cep||''}" placeholder="00000-000" maxlength="9" oninput="fmtCEP(this)"/></div></div>
     <div class="fgrid2">
       <div class="frow"><label class="flabel">Bairro ${mMed.areaBairros?.length?'*':'(opcional)'}</label>
-        ${mMed.areaBairros?.length
-          ?`<select class="finput" id="f-bairro">${mMed.areaBairros.map(b=>`<option ${f.bairro===b?'selected':''}>${b}</option>`).join('')}</select>`
-          :`<input class="finput" id="f-bairro" value="${f.bairro||''}" placeholder="Ex: Taquaral"/>`}
+        <select class="finput" id="f-bairro">
+          <option value="">Não informado</option>
+          ${(mMed.areaBairros?.length?mMed.areaBairros:BAIRROS).map(b=>`<option ${f.bairro===b?'selected':''}>${b}</option>`).join('')}
+        </select>
       </div>
       <div class="frow"><label class="flabel">Cidade *</label>
         <select class="finput" id="f-cidade">${(mMed.areaCidades||[mMed.cidade]).map(c=>`<option ${f.cidade===c?'selected':''}>${c}</option>`).join('')}</select>
