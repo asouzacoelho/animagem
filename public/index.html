@@ -804,6 +804,28 @@ function closeAuth(){document.getElementById('auth-overlay').classList.remove('o
 let authMode='login';
 function renderAuth(){
   const b=document.getElementById('auth-body');
+  /* TELA: recuperação por e-mail */
+  if(authMode==='recuperar'){
+    document.getElementById('auth-title').textContent='Recuperar senha';
+    b.innerHTML=`
+      <p style="font-size:12px;color:var(--light);margin-bottom:10px">Informe seu e-mail. Vamos enviar um link para você criar uma nova senha.</p>
+      <div class="frow"><label class="flabel">E-mail *</label><input class="finput" id="au-email" type="email" placeholder="seu@email.com"/></div>
+      <div id="au-err" style="color:var(--red);font-size:12px;margin-bottom:8px"></div>
+      <div id="au-ok" style="color:var(--sage);font-size:12px;margin-bottom:8px"></div>
+      <button class="btn-p" onclick="enviarRecuperacao()">Enviar link de recuperação</button>
+      <button class="btn-b" style="width:100%;margin-top:8px" onclick="authMode='login';renderAuth()">← Voltar para entrar</button>`;
+    return;
+  }
+  /* TELA: definir nova senha (chegou pelo link do e-mail) */
+  if(authMode==='nova_senha'){
+    document.getElementById('auth-title').textContent='Criar nova senha';
+    b.innerHTML=`
+      <p style="font-size:12px;color:var(--light);margin-bottom:10px">Defina a nova senha da sua conta.</p>
+      <div class="frow"><label class="flabel">Nova senha *</label><input class="finput" id="au-senha-nova" type="password" placeholder="mín. 6 caracteres"/></div>
+      <div id="au-err" style="color:var(--red);font-size:12px;margin-bottom:8px"></div>
+      <button class="btn-p" onclick="salvarNovaSenha()">Salvar nova senha</button>`;
+    return;
+  }
   document.getElementById('auth-title').textContent=authMode==='login'?'Entrar':'Criar conta';
   b.innerHTML=`
     <div class="chips" style="margin-bottom:12px">
@@ -814,15 +836,38 @@ function renderAuth(){
     ${authMode!=='login'?'<div class="frow"><label class="flabel">Nome completo *</label><input class="finput" id="au-nome" placeholder="Seu nome"/></div>':''}
     <div class="frow"><label class="flabel">E-mail *</label><input class="finput" id="au-email" type="email" placeholder="seu@email.com"/></div>
     <div class="frow"><label class="flabel">Senha *</label><input class="finput" id="au-senha" type="password" placeholder="mín. 6 caracteres"/></div>
+    ${authMode==='login'?'<div style="text-align:right;margin-bottom:10px"><a href="#" style="font-size:12px;color:var(--plum)" onclick="authMode=\'recuperar\';renderAuth();return false;">Esqueci minha senha</a></div>':''}
     ${authMode==='cadastro_medico'?TERMOS_MEDICO_HTML:''}
     <div id="au-err" style="color:var(--red);font-size:12px;margin-bottom:8px"></div>
     <button class="btn-p" onclick="submitAuth()">${authMode==='login'?'Entrar':'Criar conta'}</button>`;
+}
+async function enviarRecuperacao(){
+  const email=document.getElementById('au-email').value.trim();
+  const errEl=document.getElementById('au-err'),okEl=document.getElementById('au-ok');
+  errEl.textContent='';okEl.textContent='';
+  if(!email){errEl.textContent='Informe o e-mail.';return;}
+  const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+window.location.pathname});
+  if(error){errEl.textContent=error.message;return;}
+  okEl.textContent='Se esse e-mail estiver cadastrado, um link de recuperação foi enviado. Verifique também o spam.';
+}
+async function salvarNovaSenha(){
+  const senha=document.getElementById('au-senha-nova').value;
+  const errEl=document.getElementById('au-err');
+  errEl.textContent='';
+  if(!senha||senha.length<6){errEl.textContent='A senha precisa ter no mínimo 6 caracteres.';return;}
+  const {error}=await sb.auth.updateUser({password:senha});
+  if(error){errEl.textContent=error.message;return;}
+  authMode='login';
+  closeAuth();
+  alert('Senha atualizada com sucesso. Você já está conectado(a).');
 }
 const TERMOS_VERSAO='2026-06-20';
 const TERMOS_MEDICO_HTML=`
   <div class="frow"><label class="flabel">CRMV *</label><input class="finput" id="au-crmv" placeholder="CRMV-SP 00000"/></div>
   <div class="frow"><label class="flabel">Telefone/WhatsApp *</label><input class="finput" id="au-tel" placeholder="(19) 99999-9999" oninput="fmtTel(this)"/></div>
-  <div class="frow"><label class="flabel">Documento (CRMV ou identidade) *</label><input class="finput" id="au-doc" type="file" accept="image/*,.pdf"/></div>
+  <div class="frow"><label class="flabel">Tipo de documento *</label><select class="finput" id="au-doc-tipo"><option value="">Selecione</option><option value="CRMV">Carteira CRMV</option><option value="RG">RG</option><option value="CPF">CPF</option></select></div>
+  <div class="frow"><label class="flabel">Arquivo do documento *</label><input class="finput" id="au-doc" type="file" accept="image/*,.pdf"/></div>
+  <div class="frow"><label class="flabel">Outro documento (opcional)</label><input class="finput" id="au-doc-extra" type="file" accept="image/*,.pdf"/></div>
   <div style="font-size:11px;color:var(--light);margin:4px 0 10px">Sua conta fica <strong>pendente de aprovação</strong> da administração após o envio. Você só aparece nas buscas depois de aprovado.</div>
   <label style="display:flex;gap:8px;font-size:12px;margin-bottom:6px;align-items:flex-start"><input type="checkbox" id="au-t1" style="margin-top:2px"/> Entendo como o Animagem funciona (marketplace que conecta tutores a médicos veterinários para atendimento domiciliar) e estou de acordo com as responsabilidades de um médico parceiro, incluindo atender exatamente no endereço informado pelo tutor.</label>
   <label style="display:flex;gap:8px;font-size:12px;margin-bottom:6px;align-items:flex-start"><input type="checkbox" id="au-t2" style="margin-top:2px"/> Autorizo o uso do meu nome, CRMV, foto e descrição profissional para divulgação no portal e em materiais de marketing do Animagem.</label>
@@ -840,15 +885,18 @@ async function submitAuth(){
     const nome=document.getElementById('au-nome').value.trim();
     if(!nome){errEl.textContent='Preencha o nome.';return;}
     const role=authMode==='cadastro_medico'?'medico':'tutor';
-    let crmv,tel,docFile;
+    let crmv,tel,docTipo,docFile,docExtraFile;
     if(role==='medico'){
       crmv=document.getElementById('au-crmv').value.trim();
       tel=document.getElementById('au-tel').value.trim();
+      docTipo=document.getElementById('au-doc-tipo').value;
       docFile=document.getElementById('au-doc').files[0];
+      docExtraFile=document.getElementById('au-doc-extra').files[0];
       const t1=document.getElementById('au-t1').checked,t2=document.getElementById('au-t2').checked,t3=document.getElementById('au-t3').checked;
       if(!crmv){errEl.textContent='Preencha o CRMV.';return;}
       if(!tel){errEl.textContent='Preencha o telefone.';return;}
-      if(!docFile){errEl.textContent='Envie o documento (CRMV ou identidade).';return;}
+      if(!docTipo){errEl.textContent='Selecione o tipo de documento (CRMV, RG ou CPF).';return;}
+      if(!docFile){errEl.textContent='Envie o arquivo do documento selecionado.';return;}
       if(!(t1&&t2&&t3)){errEl.textContent='É necessário aceitar todos os termos para se cadastrar como médico.';return;}
     }
     const {data,error}=await sb.auth.signUp({email,password:senha});
@@ -866,14 +914,19 @@ async function submitAuth(){
         const {error:merr}=await sb.from('medicos').insert({id:uid,crmv,cidade:'Campinas',estado:'SP',ativo:false});
         if(merr){errEl.textContent='Perfil criado, mas falhou ao salvar dados de médico: '+merr.message;return;}
         // sessão recém-criada já está ativa após signUp (confirmação de e-mail desligada), então o upload pode usar o uid no path com segurança via RLS
-        let docPath=null;
+        let docPath=null,docExtraPath=null;
         if(docFile){
           docPath=`${uid}/${Date.now()}_${docFile.name}`;
           const {error:uperr}=await sb.storage.from('documentos-medicos').upload(docPath,docFile);
           if(uperr){errEl.textContent='Conta criada, mas falhou o envio do documento: '+uperr.message;return;}
         }
+        if(docExtraFile){
+          docExtraPath=`${uid}/${Date.now()}_extra_${docExtraFile.name}`;
+          const {error:uperr2}=await sb.storage.from('documentos-medicos').upload(docExtraPath,docExtraFile);
+          if(uperr2){errEl.textContent='Conta criada, mas falhou o envio do documento extra: '+uperr2.message;return;}
+        }
         const {error:oerr}=await sb.from('medico_onboarding').insert({
-          medico_id:uid,telefone:tel,documento_path:docPath,
+          medico_id:uid,telefone:tel,documento_tipo:docTipo,documento_path:docPath,documento_extra_path:docExtraPath,
           termos_versao:TERMOS_VERSAO,termos_aceitos_em:new Date().toISOString(),status:'pendente'
         });
         if(oerr){errEl.textContent='Conta criada, mas falhou ao registrar onboarding: '+oerr.message;return;}
@@ -1550,7 +1603,7 @@ function initAdmin(){
 }
 async function loadAdminMedicos(){
   const tbody=document.getElementById('admin-medicos-tbody');if(!tbody)return;
-  const {data,error}=await sb.from('medicos').select('id,crmv,cidade,ativo,profiles(nome),medico_onboarding(telefone,documento_path,status,termos_aceitos_em,termos_versao)').order('cidade');
+  const {data,error}=await sb.from('medicos').select('id,crmv,cidade,ativo,profiles(nome),medico_onboarding(telefone,documento_tipo,documento_path,documento_extra_path,status,termos_aceitos_em,termos_versao)').order('cidade');
   if(error){tbody.innerHTML=`<tr><td colspan="6">Erro: ${error.message}</td></tr>`;return;}
   if(!data.length){tbody.innerHTML='<tr><td colspan="6">Nenhum médico cadastrado ainda.</td></tr>';return;}
   tbody.innerHTML=data.map(m=>{
@@ -1560,7 +1613,8 @@ async function loadAdminMedicos(){
       <td><strong>${m.profiles?.nome||'—'}</strong><br/><span style="font-size:11px;color:var(--light)">${ob?.telefone||''}</span></td>
       <td>${m.crmv||'—'}</td>
       <td>${m.cidade||'—'}</td>
-      <td>${ob?.documento_path?`<button class="topnav-btn" onclick="verDocMedico('${ob.documento_path}')">Ver doc.</button>`:'<span style="font-size:11px;color:var(--light)">sem doc.</span>'}<br/><span style="font-size:11px;color:var(--light)">${ob?.termos_aceitos_em?'termos v.'+ob.termos_versao+' ✓':'sem termos'}</span></td>
+      <td>${ob?.documento_path?`<button class="topnav-btn" onclick="verDocMedico('${ob.documento_path}')">Ver ${ob.documento_tipo||'doc.'}</button>`:'<span style="font-size:11px;color:var(--light)">sem doc.</span>'}
+        ${ob?.documento_extra_path?`<button class="topnav-btn" onclick="verDocMedico('${ob.documento_extra_path}')">Ver extra</button>`:''}<br/><span style="font-size:11px;color:var(--light)">${ob?.termos_aceitos_em?'termos v.'+ob.termos_versao+' ✓':'sem termos'}</span></td>
       <td>${m.ativo?'<span class="sdot sdot-ok"></span>Ativo':'<span class="sdot sdot-pend"></span>Pendente'}</td>
       <td><button class="topnav-btn" onclick="toggleMedicoAtivo('${m.id}',${!m.ativo})">${m.ativo?'Desativar':'Aprovar'}</button></td>
     </tr>`;}).join('');
@@ -1593,7 +1647,11 @@ async function init(){
   session=s.session;
   await refreshProfile();
   renderAuthSlot();
-  sb.auth.onAuthStateChange((_e,sess)=>{session=sess;refreshProfile().then(renderAuthSlot);});
+  sb.auth.onAuthStateChange((evt,sess)=>{
+    session=sess;
+    refreshProfile().then(renderAuthSlot);
+    if(evt==='PASSWORD_RECOVERY'){authMode='nova_senha';renderAuth();document.getElementById('auth-overlay').classList.add('on');}
+  });
   await Promise.all([loadCatalogo(),loadMedicos(),loadSponsor()]);
   renderCards(MEDICOS);
 }
