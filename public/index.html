@@ -933,12 +933,13 @@ async function submitAuth(){
       }
     }
   }
+  const eraCadastroMedico=authMode==='cadastro_medico';
   const {data:s}=await sb.auth.getSession();
   session=s.session;
   await refreshProfile();
   renderAuthSlot();
   closeAuth();
-  if(profile?.role==='medico')alert('Conta criada! Sua documentação e termos foram registrados. Um admin precisa aprovar seu cadastro antes de você aparecer nas buscas.');
+  if(eraCadastroMedico)alert('Conta criada! Sua documentação e termos foram registrados. Um admin precisa aprovar seu cadastro antes de você aparecer nas buscas.');
 }
 
 /* ─── STATE ─── */
