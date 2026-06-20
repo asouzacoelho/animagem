@@ -416,8 +416,16 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
             <option>Eletrocardiograma</option>
           </select>
         </div>
-        <div class="sf"><label class="sf-label">Cidade / Estado</label>
-          <input class="si" id="s-cidade" placeholder="Ex: Campinas, SP" value="Campinas, SP"/>
+        <div class="sf"><label class="sf-label">Estado</label>
+          <select class="si" id="s-estado">
+            <option value="SP">SP</option>
+          </select>
+        </div>
+        <div class="sf"><label class="sf-label">Cidade</label>
+          <input class="si" id="s-cidade" placeholder="Ex: Campinas" value="Campinas"/>
+        </div>
+        <div class="sf"><label class="sf-label">Bairro (opcional)</label>
+          <input class="si" id="s-bairro" placeholder="Ex: Taquaral"/>
         </div>
         <div class="sf"><label class="sf-label">Nome do médico</label>
           <input class="si" id="s-nome" placeholder="Opcional"/>
@@ -884,22 +892,26 @@ function renderWhy(exame){
 function buscar(){
   const ex=document.getElementById('s-exame').value;
   renderWhy(ex);
-  const ciRaw=document.getElementById('s-cidade').value.toLowerCase();
-  const ci=ciRaw.split(',')[0].trim();
+  const es=document.getElementById('s-estado').value.toLowerCase();
+  const ci=document.getElementById('s-cidade').value.toLowerCase().trim();
+  const ba=document.getElementById('s-bairro').value.toLowerCase().trim();
   const nm=document.getElementById('s-nome').value.toLowerCase();
   const f=MEDICOS.filter(m=>
     (!ex||m.specs.includes(ex))&&
-    (!ci||m.cidade.toLowerCase().includes(ci)||ci.includes(m.cidade.toLowerCase())||m.estado.toLowerCase().includes(ci))&&
+    (!es||m.estado.toLowerCase()===es)&&
+    (!ci||m.cidade.toLowerCase().includes(ci)||ci.includes(m.cidade.toLowerCase()))&&
+    (!ba||areaOk(m,ba,ci))&&
     (!nm||m.nome.toLowerCase().includes(nm))
   );
-  renderCards(f);
+  renderCards(f,ba);
   document.getElementById('res-count').textContent=f.length+' encontrado'+(f.length!==1?'s':'');
   document.getElementById('res-title').textContent=ex||ci?((ex||'')+(ci?' em '+ci:'')):('Todos os médicos');
 }
 
-function renderCards(list){
+function renderCards(list,bairroBuscado){
   const c=document.getElementById('dcards');
-  if(!list.length){c.innerHTML='<div style="text-align:center;padding:36px 16px;color:var(--light)"><div style="font-size:36px;margin-bottom:10px">🔍</div><div style="font-family:Fraunces,serif;font-size:18px;margin-bottom:5px">Nenhum médico encontrado</div><div style="font-size:13px">Tente outra especialidade ou cidade</div></div>';return;}
+  if(!list.length){c.innerHTML='<div style="text-align:center;padding:36px 16px;color:var(--light)"><div style="font-size:36px;margin-bottom:10px">🔍</div><div style="font-family:Fraunces,serif;font-size:18px;margin-bottom:5px">Nenhum médico encontrado</div><div style="font-size:13px">Tente outra especialidade, cidade ou bairro</div></div>';return;}
+  const bb=(bairroBuscado||'').toLowerCase();
   c.innerHTML=list.map(m=>`
     <div class="dcard" onclick="openModal('${m.id}')">
       <div class="dcard-head">
@@ -908,7 +920,7 @@ function renderCards(list){
           <div class="dname">${m.nome}</div>
           <div class="dcrmv">${m.crmv}</div>
           <div class="dtags">${m.specs.slice(0,2).map(s=>`<span class="dtag">${s}</span>`).join('')}${m.specs.length>2?`<span class="dtag">+${m.specs.length-2}</span>`:''}</div>
-          ${m.areas?.length?`<div style="font-size:11px;color:var(--light);margin-top:4px">📍 Atende: ${m.areas.join(', ')}</div>`:''}
+          ${m.areas?.length?`<div style="font-size:11px;color:var(--light);margin-top:4px">📍 Atende: ${m.areas.map(a=>bb&&a.toLowerCase()===bb?`<strong style="color:var(--sage)">${a}</strong>`:a).join(', ')}</div>`:''}
         </div>
       </div>
       <div class="dcard-foot">
@@ -941,6 +953,10 @@ function openModal(id){
   mMed=MEDICOS.find(x=>x.id===id);ms=0;mServ=null;mSlot=null;mForm={};mPay=null;mPix=null;
   const exFiltro=document.getElementById('s-exame')?.value;
   if(exFiltro&&mMed.specs.includes(exFiltro))mServ=exFiltro;
+  mForm.estado=document.getElementById('s-estado')?.value||'SP';
+  mForm.cidade=document.getElementById('s-cidade')?.value||mMed.cidade;
+  const baFiltro=document.getElementById('s-bairro')?.value;
+  if(baFiltro)mForm.bairro=baFiltro;
   document.getElementById('m-title').textContent='Agendar com '+mMed.nome.split(' ').slice(0,2).join(' ');
   document.getElementById('m-sub').textContent=mMed.crmv+' · '+mMed.cidade;
   document.getElementById('overlay').classList.add('on');
