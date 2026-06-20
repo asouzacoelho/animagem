@@ -4,9 +4,17 @@ Tudo abaixo é trabalho que **só você pode fazer** (decisões de negócio, pag
 
 ---
 
-## 1. Abrir a empresa (LTDA) — bloqueia tudo que envolve dinheiro real
+## ⚠ Decisão tomada em 2026-06-20: LTDA fica para depois
 
-**Por que é o primeiro:** sem CNPJ, não dá para abrir conta PJ, não dá para abrir conta no gateway de pagamento (Pagar.me), e sem isso o sistema nunca vai processar um pagamento real — por mais que eu evolua o código, essa pendência (a de maior risco no projeto, #4 em `docs/PENDENCIAS.md`) fica travada esperando isso.
+André decidiu **não abrir a LTDA agora**. Avaliamos usar o MEI da Ana Camila como alternativa, mas não serve para a Animagem como plataforma — MEI não permite a atividade de intermediação/portal (CNAE 6319-4/00 e 7490-1/04) e tem teto de R$81 mil/ano. O MEI dela continua válido **só para os próprios atendimentos dela** como médica, não para a empresa por trás do marketplace.
+
+**Como isso foi resolvido sem travar o projeto:** a comissão da Animagem é 0% na fase MVP (ver tabela de monetização). Como não há dinheiro a reter, **decidimos manter o pagamento simulado no sistema até o CNPJ existir**, em vez de já mudar a arquitetura para pagamento direto tutor→médico. Ou seja: o item 1 abaixo deixa de ser bloqueante imediato — ele só volta a ser urgente quando vocês decidirem ativar comissão (fase pós-MVP) ou formalizar a empresa por outro motivo (ex: o investidor exigir).
+
+---
+
+## 1. Abrir a empresa (LTDA) — pausado por decisão do André em 2026-06-20
+
+**Por que ainda fica registrado aqui:** sem CNPJ, não dá para abrir conta PJ, não dá para abrir conta no gateway de pagamento (Pagar.me), e sem isso o sistema nunca vai processar um pagamento real — por mais que eu evolua o código, essa pendência (a de maior risco no projeto, #4 em `docs/PENDENCIAS.md`) continua dependendo disso quando chegar a hora.
 
 **Como fazer:**
 1. Contratar um contador (pode ser remoto — existem serviços como Contabilizei, Agilize, Sirena, ou um contador local de Campinas). Custo de referência: ~R$500–800 de honorário de abertura + ~R$150–250/mês de mensalidade contábil recorrente.
@@ -47,12 +55,9 @@ Tudo abaixo é trabalho que **só você pode fazer** (decisões de negócio, pag
 
 **Por que importa:** sem isso, qualquer um pode registrar "Animagem" antes de você e te impedir de usar o próprio nome depois que o produto crescer. Não bloqueia nada tecnicamente, mas é risco que cresce com o tempo — quanto mais o produto for visível, mais vale a pena já ter isso resolvido.
 
-**Como fazer:**
-1. Verificar se o nome já está livre: https://busca.inpi.gov.br
-2. Registrar nas classes recomendadas: **44** (serviços médicos/veterinários) e **42** (serviços de tecnologia/SaaS). Custo de referência: R$710–1.200 (taxas do INPI + eventual despachante/advogado de PI).
-3. Pode ser feito direto pelo site do INPI ou via um especialista em propriedade industrial (mais seguro se quiser evitar erro de classificação).
+**Decisão em 2026-06-20:** André vai fazer a busca e o protocolo ele mesmo, sem despachante. Roteiro completo passo a passo em [`docs/GUIA_MARCA_INPI.md`](GUIA_MARCA_INPI.md) — inclui onde fazer a busca gratuita de disponibilidade, quais classes registrar (44, 42, 35), como pagar a GRU e como acompanhar o processo depois de protocolado.
 
-**Prazo típico:** o registro em si é rápido de protocolar, mas a análise e concessão pelo INPI pode levar de 12 a 24 meses — quanto mais cedo protocolar, melhor, mesmo sabendo que a aprovação é lenta.
+**Prazo típico:** o registro em si é rápido de protocolar, mas a análise e concessão pelo INPI pode levar de 12 a 24 meses — quanto mais cedo protocolar, melhor, mesmo sabendo que a aprovação é lenta. Como o titular do pedido será o CPF do André (não há CNPJ ainda), depois que a LTDA existir é possível transferir a titularidade da marca para a empresa (averbação de cessão), sem precisar registrar de novo.
 
 ---
 
