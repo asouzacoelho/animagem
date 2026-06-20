@@ -15,7 +15,9 @@ Itens identificados que precisam ser resolvidos antes de abrir o sistema para us
 11. ~~**Cadastro de médico sem validação de documentos**~~ — ✅ resolvido em 2026-06-20: cadastro de médico agora exige CRMV, telefone, upload de documento (CRMV ou identidade, guardado em bucket privado `documentos-medicos` no Storage, só o próprio médico e o admin conseguem abrir) e aceite explícito de 3 termos. O admin vê tudo isso na aba Médicos antes de aprovar (botão "Ver doc."). Continua **pendente revisão jurídica do texto dos termos** (ver pendência 7).
 12. **Validação de cartão de crédito ainda é só de formato** — corrigido em 2026-06-20 o bug em que o número do cartão nunca era validado de fato (erro de precedência de operador no código). Agora número, nome, CPF (com dígito verificador), validade e CVV são obrigatórios e validados no formato — mas isso é só validação de formulário; **não há gateway de pagamento real ligado ainda** (mesma pendência 4). Em produção, esses dados devem ir direto para o gateway (tokenização), nunca passar pelo nosso backend.
 
-**Contexto:** essas pendências foram levantadas depois da Fase 0 (repo GitHub + schema Supabase com RLS + deploy Netlify), quando ficou claro que o frontend ainda não fala de fato com o banco — é a Fase 1 que vai expor esses riscos na prática.
+**Contexto:** essas pendências foram levantadas depois da Fase 0 (repo GitHub + schema Supabase com RLS + deploy estático), quando ficou claro que o frontend ainda não fala de fato com o banco — é a Fase 1 que vai expor esses riscos na prática.
+
+**Nota de infraestrutura (2026-06-20):** o deploy migrou do Netlify para o **Cloudflare Pages** (https://animagem.pages.dev), porque a conta do Netlify ficou sem créditos e bloqueou deploys de produção sem aviso — vários ajustes feitos numa sessão não foram publicados de fato, mesmo eu confirmando "publicado". Cloudflare Pages está conectado ao GitHub (`asouzacoelho/animagem`, branch `main`, publish directory `public`), com deploy automático a cada push, sem esse risco de créditos.
 
 ---
 
