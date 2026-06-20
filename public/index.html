@@ -378,7 +378,7 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
   <div class="logo" onclick="showView('tutor')">Anim<span>a</span>gem</div>
   <div class="topnav-desktop">
     <button class="topnav-btn on" onclick="showView('tutor')">🐾 Buscar exame</button>
-    <button class="topnav-btn" onclick="showView('medico')">🩺 Área do médico</button>
+    <button class="topnav-btn med" onclick="showView('medico')">🩺 Área do médico</button>
     <button class="topnav-btn adm" onclick="showView('admin')">⚙️ Admin</button>
   </div>
   <div id="auth-slot" style="display:flex;align-items:center;gap:8px"></div>
@@ -556,13 +556,21 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
         <div class="mpage" id="mp-perfil">
           <div class="ptitle">Meu Perfil</div><div class="psub">Dados exibidos no portal</div>
           <div class="tcard">
-            <div class="pfrow"><label class="flabel">Nome completo</label><input class="finput" value="Ana Camila V. Augusti"/></div>
-            <div class="pfrow"><label class="flabel">CRMV</label><input class="finput" value="CRMV-SP XXXXX"/></div>
-            <div class="pfrow"><label class="flabel">WhatsApp</label><input class="finput" value="(19) 99518-8335" type="tel"/></div>
-            <div class="pfrow"><label class="flabel">E-mail</label><input class="finput" value="animagem_ac@outlook.com" type="email"/></div>
-            <div class="pfrow"><label class="flabel">Apresentação</label><textarea class="finput" rows="3">Médica veterinária especializada em ultrassonografia. Atendimento domiciliar humanizado em Campinas e região.</textarea></div>
-            <div class="pfrow"><label class="flabel">Instagram</label><input class="finput" value="@animagem_ac"/></div>
-            <button class="btn-save" style="margin-top:14px">Salvar perfil</button>
+            <div class="pfrow"><label class="flabel">Nome completo</label><input class="finput" id="pf-nome"/></div>
+            <div class="pfrow"><label class="flabel">CRMV</label><input class="finput" id="pf-crmv"/></div>
+            <div class="pfrow"><label class="flabel">Apresentação</label><textarea class="finput" id="pf-bio" rows="3"></textarea></div>
+            <div class="pfrow"><label class="flabel">Instagram</label><input class="finput" id="pf-insta"/></div>
+            <button class="btn-save" style="margin-top:14px" onclick="salvarPerfil()">Salvar perfil</button>
+          </div>
+          <div class="tcard" style="margin-top:14px">
+            <div class="tcard-title">Dados bancários para repasse</div>
+            <p style="font-size:11px;color:var(--light);margin-bottom:10px">🔒 Visível só para você e a administração — nunca aparece no portal público.</p>
+            <div class="pfrow"><label class="flabel">Chave PIX</label><input class="finput" id="pf-pix" placeholder="CPF/CNPJ, e-mail, telefone ou chave aleatória"/></div>
+            <div class="pfrow"><label class="flabel">Nome do titular</label><input class="finput" id="pf-tit-nome"/></div>
+            <div class="pfrow"><label class="flabel">CPF/CNPJ do titular</label><input class="finput" id="pf-tit-doc"/></div>
+            <div class="fgrid2"><div class="frow"><label class="flabel">Banco</label><input class="finput" id="pf-banco"/></div><div class="frow"><label class="flabel">Tipo de conta</label><select class="finput" id="pf-conta-tipo"><option value="">Selecione</option><option>Corrente</option><option>Poupança</option></select></div></div>
+            <div class="fgrid2"><div class="frow"><label class="flabel">Agência</label><input class="finput" id="pf-agencia"/></div><div class="frow"><label class="flabel">Conta</label><input class="finput" id="pf-conta"/></div></div>
+            <button class="btn-save" style="margin-top:14px" onclick="salvarDadosBancarios()">Salvar dados bancários</button>
           </div>
         </div>
       </div>
@@ -613,8 +621,8 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
           <div class="tcard">
             <div class="tbl-wrap">
               <table class="tbl">
-                <thead><tr><th>Médico</th><th>CRMV</th><th>Cidade</th><th>Status</th><th>Ação</th></tr></thead>
-                <tbody id="admin-medicos-tbody"><tr><td colspan="5">Carregando…</td></tr></tbody>
+                <thead><tr><th>Médico</th><th>CRMV</th><th>Cidade</th><th>Documentação</th><th>Status</th><th>Ação</th></tr></thead>
+                <tbody id="admin-medicos-tbody"><tr><td colspan="6">Carregando…</td></tr></tbody>
               </table>
             </div>
           </div>
@@ -688,6 +696,20 @@ let CATALOGO=[]; // [{id,nome,duracao_min,preco_base}]
 const EP={}; // nome do exame -> {p,d} — preenchido a partir de CATALOGO
 const BAIRROS=["Taquaral","Cambuí","Bosque","Centro","Guanabara","Nova Campinas","Barão Geraldo","Parque Prado","Alphaville","Sousas","Jardim Chapadão","Cidade Universitária"];
 const CIDADES=["Valinhos","Vinhedo","Paulínia","Sumaré","Hortolândia","Indaiatuba","Americana","Cosmópolis","Itatiba","Jaguariúna"];
+const ESTADOS_IBGE=[["AC","Acre"],["AL","Alagoas"],["AP","Amapá"],["AM","Amazonas"],["BA","Bahia"],["CE","Ceará"],["DF","Distrito Federal"],["ES","Espírito Santo"],["GO","Goiás"],["MA","Maranhão"],["MT","Mato Grosso"],["MS","Mato Grosso do Sul"],["MG","Minas Gerais"],["PA","Pará"],["PB","Paraíba"],["PR","Paraná"],["PE","Pernambuco"],["PI","Piauí"],["RJ","Rio de Janeiro"],["RN","Rio Grande do Norte"],["RS","Rio Grande do Sul"],["RO","Rondônia"],["RR","Roraima"],["SC","Santa Catarina"],["SP","São Paulo"],["SE","Sergipe"],["TO","Tocantins"]];
+const _municipiosCache={};
+async function municipiosDoEstado(uf){
+  if(_municipiosCache[uf])return _municipiosCache[uf];
+  try{
+    const r=await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${uf}/municipios`);
+    const data=await r.json();
+    const nomes=data.map(m=>m.nome).sort((a,b)=>a.localeCompare(b,'pt-BR'));
+    _municipiosCache[uf]=nomes;
+    return nomes;
+  }catch(e){
+    return uf==='SP'?['Campinas',...CIDADES]:[];
+  }
+}
 const ESP=["Cão","Gato","Coelho","Ave","Réptil","Outro"];
 const HORAS=[8,9,10,11,14,15,16,17];
 
@@ -770,8 +792,11 @@ function renderAuthSlot(){
     el.innerHTML=`<button class="topnav-btn" onclick="openAuth()">Entrar</button>`;
   }
   const isAdmin=profile?.role==='admin';
+  const isMedico=profile?.role==='medico';
   document.querySelectorAll('.topnav-btn.adm').forEach(x=>x.style.display=isAdmin?'':'none');
+  document.querySelectorAll('.topnav-btn.med').forEach(x=>x.style.display=isMedico?'':'none');
   const bnAdmin=document.getElementById('bn-admin');if(bnAdmin)bnAdmin.style.display=isAdmin?'':'none';
+  const bnMedico=document.getElementById('bn-medico');if(bnMedico)bnMedico.style.display=isMedico?'':'none';
 }
 async function logout(){await sb.auth.signOut();session=null;profile=null;renderAuthSlot();}
 function openAuth(mode){authMode=mode||'login';renderAuth();document.getElementById('auth-overlay').classList.add('on');}
@@ -789,9 +814,19 @@ function renderAuth(){
     ${authMode!=='login'?'<div class="frow"><label class="flabel">Nome completo *</label><input class="finput" id="au-nome" placeholder="Seu nome"/></div>':''}
     <div class="frow"><label class="flabel">E-mail *</label><input class="finput" id="au-email" type="email" placeholder="seu@email.com"/></div>
     <div class="frow"><label class="flabel">Senha *</label><input class="finput" id="au-senha" type="password" placeholder="mín. 6 caracteres"/></div>
+    ${authMode==='cadastro_medico'?TERMOS_MEDICO_HTML:''}
     <div id="au-err" style="color:var(--red);font-size:12px;margin-bottom:8px"></div>
     <button class="btn-p" onclick="submitAuth()">${authMode==='login'?'Entrar':'Criar conta'}</button>`;
 }
+const TERMOS_VERSAO='2026-06-20';
+const TERMOS_MEDICO_HTML=`
+  <div class="frow"><label class="flabel">CRMV *</label><input class="finput" id="au-crmv" placeholder="CRMV-SP 00000"/></div>
+  <div class="frow"><label class="flabel">Telefone/WhatsApp *</label><input class="finput" id="au-tel" placeholder="(19) 99999-9999" oninput="fmtTel(this)"/></div>
+  <div class="frow"><label class="flabel">Documento (CRMV ou identidade) *</label><input class="finput" id="au-doc" type="file" accept="image/*,.pdf"/></div>
+  <div style="font-size:11px;color:var(--light);margin:4px 0 10px">Sua conta fica <strong>pendente de aprovação</strong> da administração após o envio. Você só aparece nas buscas depois de aprovado.</div>
+  <label style="display:flex;gap:8px;font-size:12px;margin-bottom:6px;align-items:flex-start"><input type="checkbox" id="au-t1" style="margin-top:2px"/> Entendo como o Animagem funciona (marketplace que conecta tutores a médicos veterinários para atendimento domiciliar) e estou de acordo com as responsabilidades de um médico parceiro, incluindo atender exatamente no endereço informado pelo tutor.</label>
+  <label style="display:flex;gap:8px;font-size:12px;margin-bottom:6px;align-items:flex-start"><input type="checkbox" id="au-t2" style="margin-top:2px"/> Autorizo o uso do meu nome, CRMV, foto e descrição profissional para divulgação no portal e em materiais de marketing do Animagem.</label>
+  <label style="display:flex;gap:8px;font-size:12px;margin-bottom:10px;align-items:flex-start"><input type="checkbox" id="au-t3" style="margin-top:2px"/> Estou de acordo com a forma de pagamento e repasse: o tutor paga pelo portal, o Animagem retém a comissão vigente (hoje 0%, fase MVP) e repassa o restante para a chave PIX/conta que eu cadastrar.</label>`;
 async function submitAuth(){
   const email=document.getElementById('au-email').value.trim();
   const senha=document.getElementById('au-senha').value;
@@ -805,6 +840,17 @@ async function submitAuth(){
     const nome=document.getElementById('au-nome').value.trim();
     if(!nome){errEl.textContent='Preencha o nome.';return;}
     const role=authMode==='cadastro_medico'?'medico':'tutor';
+    let crmv,tel,docFile;
+    if(role==='medico'){
+      crmv=document.getElementById('au-crmv').value.trim();
+      tel=document.getElementById('au-tel').value.trim();
+      docFile=document.getElementById('au-doc').files[0];
+      const t1=document.getElementById('au-t1').checked,t2=document.getElementById('au-t2').checked,t3=document.getElementById('au-t3').checked;
+      if(!crmv){errEl.textContent='Preencha o CRMV.';return;}
+      if(!tel){errEl.textContent='Preencha o telefone.';return;}
+      if(!docFile){errEl.textContent='Envie o documento (CRMV ou identidade).';return;}
+      if(!(t1&&t2&&t3)){errEl.textContent='É necessário aceitar todos os termos para se cadastrar como médico.';return;}
+    }
     const {data,error}=await sb.auth.signUp({email,password:senha});
     if(error){errEl.textContent=error.message;return;}
     // signUp com e-mail já cadastrado retorna 200 sem criar nada (proteção contra enumeração de e-mail)
@@ -817,8 +863,20 @@ async function submitAuth(){
       const {error:perr}=await sb.from('profiles').insert({id:uid,role,nome,email});
       if(perr){errEl.textContent='Conta criada, mas falhou ao salvar o perfil: '+perr.message;return;}
       if(role==='medico'){
-        const {error:merr}=await sb.from('medicos').insert({id:uid,crmv:'A definir',cidade:'Campinas',estado:'SP',ativo:false});
+        const {error:merr}=await sb.from('medicos').insert({id:uid,crmv,cidade:'Campinas',estado:'SP',ativo:false});
         if(merr){errEl.textContent='Perfil criado, mas falhou ao salvar dados de médico: '+merr.message;return;}
+        // sessão recém-criada já está ativa após signUp (confirmação de e-mail desligada), então o upload pode usar o uid no path com segurança via RLS
+        let docPath=null;
+        if(docFile){
+          docPath=`${uid}/${Date.now()}_${docFile.name}`;
+          const {error:uperr}=await sb.storage.from('documentos-medicos').upload(docPath,docFile);
+          if(uperr){errEl.textContent='Conta criada, mas falhou o envio do documento: '+uperr.message;return;}
+        }
+        const {error:oerr}=await sb.from('medico_onboarding').insert({
+          medico_id:uid,telefone:tel,documento_path:docPath,
+          termos_versao:TERMOS_VERSAO,termos_aceitos_em:new Date().toISOString(),status:'pendente'
+        });
+        if(oerr){errEl.textContent='Conta criada, mas falhou ao registrar onboarding: '+oerr.message;return;}
       }
     }
   }
@@ -827,7 +885,7 @@ async function submitAuth(){
   await refreshProfile();
   renderAuthSlot();
   closeAuth();
-  if(profile?.role==='medico')alert('Conta criada! Um admin precisa aprovar seu cadastro (campo "ativo") antes de você aparecer nas buscas.');
+  if(profile?.role==='medico')alert('Conta criada! Sua documentação e termos foram registrados. Um admin precisa aprovar seu cadastro antes de você aparecer nas buscas.');
 }
 
 /* ─── STATE ─── */
@@ -845,6 +903,7 @@ function showView(v){
   const bn=document.getElementById('bn-'+v);if(bn)bn.classList.add('on');
   document.querySelectorAll(`.topnav-btn[onclick*="'${v}'"]`).forEach(x=>x.classList.add('on'));
   if(v==='admin'&&profile?.role!=='admin'){alert('Acesso restrito a administradores.');showView('tutor');return;}
+  if(v==='medico'&&profile?.role!=='medico'){alert('Acesso restrito a médicos cadastrados.');showView('tutor');return;}
   if(v==='medico')initMedico();
   if(v==='admin')initAdmin();
 }
@@ -1058,9 +1117,10 @@ function renderM(){
       b.innerHTML=prog(3)+
       `<div style="margin-bottom:12px"><div style="font-family:'Fraunces',serif;font-size:18px;font-weight:600;margin-bottom:3px">Dados do cartão</div><p style="font-size:12px;color:var(--light)">Processado com segurança via Pagar.me</p></div>
       <div class="resumo" style="margin-bottom:12px"><div class="rrow"><div class="rrow-lbl">Exames</div><div class="rrow-val">${examesTxt}</div></div><div class="rrow"><div class="rrow-lbl">Data</div><div class="rrow-val">${fD(mSlot)} ${fH(mSlot)}</div></div><div class="rrow"><div class="rrow-lbl">Total</div><div class="rrow-val" style="color:var(--sage);font-weight:700;font-size:16px">R$ ${pr},00</div></div></div>
-      <div class="frow"><label class="flabel">Número do cartão</label><input class="finput" id="ccn" placeholder="0000 0000 0000 0000" maxlength="19" oninput="fmtCC(this)" inputmode="numeric"/></div>
-      <div class="frow"><label class="flabel">Nome no cartão</label><input class="finput" id="ccnm" placeholder="MARIA SILVA" style="text-transform:uppercase"/></div>
-      <div class="fgrid2"><div class="frow"><label class="flabel">Validade</label><input class="finput" id="ccv" placeholder="MM/AA" maxlength="5" inputmode="numeric"/></div><div class="frow"><label class="flabel">CVV</label><input class="finput" id="ccc" placeholder="123" maxlength="4" type="password" inputmode="numeric"/></div></div>
+      <div class="frow"><label class="flabel">Número do cartão *</label><input class="finput" id="ccn" placeholder="0000 0000 0000 0000" maxlength="19" oninput="fmtCC(this)" inputmode="numeric"/></div>
+      <div class="frow"><label class="flabel">Nome no cartão *</label><input class="finput" id="ccnm" placeholder="MARIA SILVA" style="text-transform:uppercase"/></div>
+      <div class="frow"><label class="flabel">CPF do titular *</label><input class="finput" id="cccpf" placeholder="000.000.000-00" maxlength="14" oninput="fmtCPF(this)" inputmode="numeric"/></div>
+      <div class="fgrid2"><div class="frow"><label class="flabel">Validade *</label><input class="finput" id="ccv" placeholder="MM/AA" maxlength="5" inputmode="numeric" oninput="fmtValidade(this)"/></div><div class="frow"><label class="flabel">CVV *</label><input class="finput" id="ccc" placeholder="123" maxlength="4" type="password" inputmode="numeric"/></div></div>
       <div class="frow"><label class="flabel">Parcelamento</label><select class="finput" id="ccp"><option>1x de R$ ${pr},00 (sem juros)</option><option>2x de R$ ${(pr/2).toFixed(2)}</option><option>3x de R$ ${(pr/3).toFixed(2)}</option></select></div>
       <p style="font-size:11px;color:var(--light);margin-bottom:10px">🔒 Dados criptografados. Animagem não armazena dados do cartão.</p>
       <button class="btn-p" id="btn-pay-cc" onclick="pagarCC()">Confirmar — R$ ${pr},00</button>
@@ -1162,9 +1222,44 @@ function avancarPag(){
   }else{renderM();}
 }
 function fmtCC(inp){let v=inp.value.replace(/\D/g,'').slice(0,16);inp.value=v.replace(/(.{4})/g,'$1 ').trim();}
+function fmtCPF(inp){
+  let v=inp.value.replace(/\D/g,'').slice(0,11);
+  if(v.length>9)v=v.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/,'$1.$2.$3-$4');
+  else if(v.length>6)v=v.replace(/(\d{3})(\d{3})(\d{0,3})/,'$1.$2.$3');
+  else if(v.length>3)v=v.replace(/(\d{3})(\d{0,3})/,'$1.$2');
+  inp.value=v;
+}
+function fmtValidade(inp){
+  let v=inp.value.replace(/\D/g,'').slice(0,4);
+  if(v.length>2)v=v.replace(/(\d{2})(\d{0,2})/,'$1/$2');
+  inp.value=v;
+}
+function validarCPF(cpf){
+  cpf=cpf.replace(/\D/g,'');
+  if(cpf.length!==11||/^(\d)\1{10}$/.test(cpf))return false;
+  for(let t=9;t<11;t++){
+    let soma=0;
+    for(let i=0;i<t;i++)soma+=parseInt(cpf[i])*(t+1-i);
+    let d=(soma*10)%11;if(d===10)d=0;
+    if(d!==parseInt(cpf[t]))return false;
+  }
+  return true;
+}
 async function pagarCC(){
   const btn=document.getElementById('btn-pay-cc');
-  if(!document.getElementById('ccn')?.value.replace(/\s/g,'').length===16){alert('Número do cartão inválido.');return;}
+  const ccn=document.getElementById('ccn')?.value.replace(/\s/g,'')||'';
+  const ccnm=document.getElementById('ccnm')?.value.trim()||'';
+  const cccpf=document.getElementById('cccpf')?.value||'';
+  const ccv=document.getElementById('ccv')?.value||'';
+  const ccc=document.getElementById('ccc')?.value||'';
+  if(ccn.length!==16){alert('Número do cartão inválido — informe os 16 dígitos.');return;}
+  if(!ccnm){alert('Informe o nome impresso no cartão.');return;}
+  if(!validarCPF(cccpf)){alert('CPF do titular inválido.');return;}
+  const mv=ccv.match(/^(\d{2})\/(\d{2})$/);
+  if(!mv||parseInt(mv[1])<1||parseInt(mv[1])>12){alert('Validade inválida — use o formato MM/AA.');return;}
+  const venc=new Date(2000+parseInt(mv[2]),parseInt(mv[1]),0);
+  if(venc<new Date()){alert('Cartão vencido — verifique a validade.');return;}
+  if(ccc.length<3){alert('CVV inválido.');return;}
   if(btn){btn.disabled=true;btn.textContent='Processando...';}
   await criarAgendamento();
   if(btn){btn.disabled=false;btn.textContent='Confirmar — R$ '+mTotal()+',00';}
@@ -1229,7 +1324,53 @@ function initMedico(){
   document.querySelectorAll('#view-medico .toggle').forEach(t=>{
     t.onclick=()=>{t.classList.toggle('on');t.classList.toggle('off');};
   });
-  initAgenda();initExames();initArea();
+  initAgenda();initExames();initArea();initPerfil();
+}
+async function initPerfil(){
+  if(!session)return;
+  const {data:med}=await sb.from('medicos').select('crmv,bio,instagram').eq('id',session.user.id).maybeSingle();
+  document.getElementById('pf-nome').value=profile?.nome||'';
+  document.getElementById('pf-crmv').value=med?.crmv||'';
+  document.getElementById('pf-bio').value=med?.bio||'';
+  document.getElementById('pf-insta').value=med?.instagram||'';
+  const {data:banc}=await sb.from('medico_dados_bancarios').select('*').eq('medico_id',session.user.id).maybeSingle();
+  if(banc){
+    document.getElementById('pf-pix').value=banc.pix_chave||'';
+    document.getElementById('pf-tit-nome').value=banc.titular_nome||'';
+    document.getElementById('pf-tit-doc').value=banc.titular_cpf_cnpj||'';
+    document.getElementById('pf-banco').value=banc.banco||'';
+    document.getElementById('pf-conta-tipo').value=banc.conta_tipo||'';
+    document.getElementById('pf-agencia').value=banc.agencia||'';
+    document.getElementById('pf-conta').value=banc.conta||'';
+  }
+}
+async function salvarPerfil(){
+  const nome=document.getElementById('pf-nome').value.trim();
+  const {error:e1}=await sb.from('profiles').update({nome}).eq('id',session.user.id);
+  const {error:e2}=await sb.from('medicos').update({
+    crmv:document.getElementById('pf-crmv').value.trim(),
+    bio:document.getElementById('pf-bio').value.trim(),
+    instagram:document.getElementById('pf-insta').value.trim()
+  }).eq('id',session.user.id);
+  if(e1||e2){alert('Erro ao salvar: '+(e1||e2).message);return;}
+  profile.nome=nome;renderAuthSlot();
+  alert('Perfil atualizado.');
+}
+async function salvarDadosBancarios(){
+  const payload={
+    medico_id:session.user.id,
+    pix_chave:document.getElementById('pf-pix').value.trim()||null,
+    titular_nome:document.getElementById('pf-tit-nome').value.trim()||null,
+    titular_cpf_cnpj:document.getElementById('pf-tit-doc').value.trim()||null,
+    banco:document.getElementById('pf-banco').value.trim()||null,
+    conta_tipo:document.getElementById('pf-conta-tipo').value||null,
+    agencia:document.getElementById('pf-agencia').value.trim()||null,
+    conta:document.getElementById('pf-conta').value.trim()||null,
+    updated_at:new Date().toISOString()
+  };
+  const {error}=await sb.from('medico_dados_bancarios').upsert(payload,{onConflict:'medico_id'});
+  if(error){alert('Erro ao salvar: '+error.message);return;}
+  alert('Dados bancários atualizados.');
 }
 function switchMp(mp){
   document.querySelectorAll('.tab-btn[data-mp],.med-sidebar-nav[data-mp]').forEach(x=>{x.classList.remove('on');});
@@ -1344,11 +1485,15 @@ async function initArea(){
       </div>
     </div>`).join('');
 }
-function abrirFormArea(){
+async function abrirFormArea(){
   const w=document.getElementById('area-form-wrap');
+  const ufIni=(mMed?.estado)||'SP';
   w.innerHTML=`<div class="tcard" style="padding:14px">
+    <div class="frow"><label class="flabel">Estado *</label>
+      <select class="finput" id="ar-estado" onchange="onEstadoArea()">${ESTADOS_IBGE.map(([uf,nome])=>`<option value="${uf}" ${uf===ufIni?'selected':''}>${nome} (${uf})</option>`).join('')}</select>
+    </div>
     <div class="frow"><label class="flabel">Cidade *</label>
-      <select class="finput" id="ar-cidade">${[...new Set([mMed?.cidade,...CIDADES,'Campinas'])].filter(Boolean).map(c=>`<option>${c}</option>`).join('')}</select>
+      <select class="finput" id="ar-cidade"><option>Carregando...</option></select>
     </div>
     <div class="frow"><label class="flabel">Bairro</label>
       <select class="finput" id="ar-bairro">
@@ -1358,6 +1503,14 @@ function abrirFormArea(){
     </div>
     <div class="brow"><button class="btn-b" onclick="document.getElementById('area-form-wrap').innerHTML=''">Cancelar</button><button class="btn-p" style="flex:1;margin-top:0" onclick="salvarArea()">Salvar</button></div>
   </div>`;
+  await onEstadoArea();
+}
+async function onEstadoArea(){
+  const uf=document.getElementById('ar-estado').value;
+  const sel=document.getElementById('ar-cidade');
+  const cidades=await municipiosDoEstado(uf);
+  const ini=mMed?.cidade;
+  sel.innerHTML=cidades.map(c=>`<option ${c===ini?'selected':''}>${c}</option>`).join('');
 }
 async function salvarArea(){
   const cidade=document.getElementById('ar-cidade').value;
@@ -1390,21 +1543,32 @@ function initAdmin(){
 }
 async function loadAdminMedicos(){
   const tbody=document.getElementById('admin-medicos-tbody');if(!tbody)return;
-  const {data,error}=await sb.from('medicos').select('id,crmv,cidade,ativo,profiles(nome)').order('cidade');
-  if(error){tbody.innerHTML=`<tr><td colspan="5">Erro: ${error.message}</td></tr>`;return;}
-  if(!data.length){tbody.innerHTML='<tr><td colspan="5">Nenhum médico cadastrado ainda.</td></tr>';return;}
-  tbody.innerHTML=data.map(m=>`
+  const {data,error}=await sb.from('medicos').select('id,crmv,cidade,ativo,profiles(nome),medico_onboarding(telefone,documento_path,status,termos_aceitos_em,termos_versao)').order('cidade');
+  if(error){tbody.innerHTML=`<tr><td colspan="6">Erro: ${error.message}</td></tr>`;return;}
+  if(!data.length){tbody.innerHTML='<tr><td colspan="6">Nenhum médico cadastrado ainda.</td></tr>';return;}
+  tbody.innerHTML=data.map(m=>{
+    const ob=Array.isArray(m.medico_onboarding)?m.medico_onboarding[0]:m.medico_onboarding;
+    return `
     <tr>
-      <td><strong>${m.profiles?.nome||'—'}</strong></td>
+      <td><strong>${m.profiles?.nome||'—'}</strong><br/><span style="font-size:11px;color:var(--light)">${ob?.telefone||''}</span></td>
       <td>${m.crmv||'—'}</td>
       <td>${m.cidade||'—'}</td>
+      <td>${ob?.documento_path?`<button class="topnav-btn" onclick="verDocMedico('${ob.documento_path}')">Ver doc.</button>`:'<span style="font-size:11px;color:var(--light)">sem doc.</span>'}<br/><span style="font-size:11px;color:var(--light)">${ob?.termos_aceitos_em?'termos v.'+ob.termos_versao+' ✓':'sem termos'}</span></td>
       <td>${m.ativo?'<span class="sdot sdot-ok"></span>Ativo':'<span class="sdot sdot-pend"></span>Pendente'}</td>
       <td><button class="topnav-btn" onclick="toggleMedicoAtivo('${m.id}',${!m.ativo})">${m.ativo?'Desativar':'Aprovar'}</button></td>
-    </tr>`).join('');
+    </tr>`;}).join('');
+}
+async function verDocMedico(path){
+  const {data,error}=await sb.storage.from('documentos-medicos').createSignedUrl(path,120);
+  if(error){alert('Erro ao abrir documento: '+error.message);return;}
+  window.open(data.signedUrl,'_blank');
 }
 async function toggleMedicoAtivo(id,novoAtivo){
   const {error}=await sb.from('medicos').update({ativo:novoAtivo}).eq('id',id);
   if(error){alert('Falha: '+error.message);return;}
+  if(novoAtivo){
+    await sb.from('medico_onboarding').update({status:'aprovado'}).eq('medico_id',id);
+  }
   loadAdminMedicos();
 }
 function switchAp(ap){
