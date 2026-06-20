@@ -1626,10 +1626,16 @@ async function verDocMedico(path){
   window.open(data.signedUrl,'_blank');
 }
 async function toggleMedicoAtivo(id,novoAtivo){
-  const {error}=await sb.from('medicos').update({ativo:novoAtivo}).eq('id',id);
-  if(error){alert('Falha: '+error.message);return;}
   if(novoAtivo){
-    await sb.from('medico_onboarding').update({status:'aprovado'}).eq('medico_id',id);
+    // precisa aprovar o onboarding ANTES de ativar — o banco agora bloqueia ativo=true sem onboarding aprovado
+    const {error:oerr}=await sb.from('medico_onboarding').update({status:'aprovado'}).eq('medico_id',id);
+    if(oerr){alert('Falha ao aprovar onboarding: '+oerr.message);return;}
+  }
+  const {error}=await sb.from('medicos').update({ativo:novoAtivo}).eq('id',id);
+  if(error){
+    if(novoAtivo)alert('Falha ao ativar: este médico não tem documentação/termos registrados (sem linha em medico_onboarding). Cadastros antigos precisam ser regularizados manualmente. Detalhe: '+error.message);
+    else alert('Falha: '+error.message);
+    return;
   }
   loadAdminMedicos();
 }
