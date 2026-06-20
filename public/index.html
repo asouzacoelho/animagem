@@ -893,6 +893,8 @@ let slots={};
 let curDay=new Date();
 let ms=0,mMed=null,mServs=[],mSlot=null,mForm={},mPay=null,mPix=null;
 const mTotal=()=>mServs.reduce((s,e)=>s+(EP[e]?.p||0),0);
+const TAXA_CARTAO=0.0399;
+const valorFinal=()=>mPay==='cartao'?+(mTotal()*(1+TAXA_CARTAO)).toFixed(2):mTotal();
 
 /* ─── VIEWS ─── */
 function showView(v){
@@ -1115,16 +1117,18 @@ function renderM(){
     }
     /* Cartão form */
     if(mPay==='cartao'){
+      const prCC=valorFinal();
+      const fmt=v=>v.toFixed(2).replace('.',',');
       b.innerHTML=prog(3)+
       `<div style="margin-bottom:12px"><div style="font-family:'Fraunces',serif;font-size:18px;font-weight:600;margin-bottom:3px">Dados do cartão</div><p style="font-size:12px;color:var(--light)">Processado com segurança via Pagar.me</p></div>
-      <div class="resumo" style="margin-bottom:12px"><div class="rrow"><div class="rrow-lbl">Exames</div><div class="rrow-val">${examesTxt}</div></div><div class="rrow"><div class="rrow-lbl">Data</div><div class="rrow-val">${fD(mSlot)} ${fH(mSlot)}</div></div><div class="rrow"><div class="rrow-lbl">Total</div><div class="rrow-val" style="color:var(--sage);font-weight:700;font-size:16px">R$ ${pr},00</div></div></div>
+      <div class="resumo" style="margin-bottom:12px"><div class="rrow"><div class="rrow-lbl">Exames</div><div class="rrow-val">${examesTxt}</div></div><div class="rrow"><div class="rrow-lbl">Data</div><div class="rrow-val">${fD(mSlot)} ${fH(mSlot)}</div></div><div class="rrow"><div class="rrow-lbl">Subtotal</div><div class="rrow-val">R$ ${fmt(pr)}</div></div><div class="rrow"><div class="rrow-lbl">Taxa do cartão (${(TAXA_CARTAO*100).toFixed(2).replace('.',',')}%)</div><div class="rrow-val">R$ ${fmt(prCC-pr)}</div></div><div class="rrow"><div class="rrow-lbl">Total</div><div class="rrow-val" style="color:var(--sage);font-weight:700;font-size:16px">R$ ${fmt(prCC)}</div></div></div>
       <div class="frow"><label class="flabel">Número do cartão *</label><input class="finput" id="ccn" placeholder="0000 0000 0000 0000" maxlength="19" oninput="fmtCC(this)" inputmode="numeric"/></div>
       <div class="frow"><label class="flabel">Nome no cartão *</label><input class="finput" id="ccnm" placeholder="MARIA SILVA" style="text-transform:uppercase"/></div>
       <div class="frow"><label class="flabel">CPF do titular *</label><input class="finput" id="cccpf" placeholder="000.000.000-00" maxlength="14" oninput="fmtCPF(this)" inputmode="numeric"/></div>
       <div class="fgrid2"><div class="frow"><label class="flabel">Validade *</label><input class="finput" id="ccv" placeholder="MM/AA" maxlength="5" inputmode="numeric" oninput="fmtValidade(this)"/></div><div class="frow"><label class="flabel">CVV *</label><input class="finput" id="ccc" placeholder="123" maxlength="4" type="password" inputmode="numeric"/></div></div>
-      <div class="frow"><label class="flabel">Parcelamento</label><select class="finput" id="ccp"><option>1x de R$ ${pr},00 (sem juros)</option><option>2x de R$ ${(pr/2).toFixed(2)}</option><option>3x de R$ ${(pr/3).toFixed(2)}</option></select></div>
+      <div class="frow"><label class="flabel">Parcelamento</label><select class="finput" id="ccp"><option>1x de R$ ${fmt(prCC)} (sem juros)</option><option>2x de R$ ${fmt(prCC/2)}</option><option>3x de R$ ${fmt(prCC/3)}</option></select></div>
       <p style="font-size:11px;color:var(--light);margin-bottom:10px">🔒 Dados criptografados. Animagem não armazena dados do cartão.</p>
-      <button class="btn-p" id="btn-pay-cc" onclick="pagarCC()">Confirmar — R$ ${pr},00</button>
+      <button class="btn-p" id="btn-pay-cc" onclick="pagarCC()">Confirmar — R$ ${fmt(prCC)}</button>
       <button class="btn-b" style="width:100%;margin-top:8px" onclick="mPay=null;renderM()">← Outra forma</button>`;
       return;
     }
@@ -1158,7 +1162,8 @@ function renderM(){
   }
   /* STEP 4 — confirmação */
   else if(ms===4){
-    const msg=`Animagem\n\n📋 ${mServs.join(', ')}\n📅 ${fD(mSlot)} às ${fH(mSlot)}\n🐾 ${mForm.pet} (${mForm.esp})\n📍 ${mForm.end}\n💰 R$ ${mTotal()},00 — reservado, aguardando confirmação de pagamento`;
+    const vf=valorFinal().toFixed(2).replace('.',',');
+    const msg=`Animagem\n\n📋 ${mServs.join(', ')}\n📅 ${fD(mSlot)} às ${fH(mSlot)}\n🐾 ${mForm.pet} (${mForm.esp})\n📍 ${mForm.end}\n💰 R$ ${vf}${mPay==='cartao'?' (com taxa do cartão)':''} — reservado, aguardando confirmação de pagamento`;
     b.innerHTML=`<div class="confirm-box">
       <div class="confirm-ring">✓</div>
       <div class="confirm-title">Horário reservado!</div>
@@ -1168,6 +1173,7 @@ function renderM(){
         <div class="rrow"><div class="rrow-lbl">Data/hora</div><div class="rrow-val">${fD(mSlot)} ${fH(mSlot)}</div></div>
         <div class="rrow"><div class="rrow-lbl">Pet</div><div class="rrow-val">${mForm.pet}</div></div>
         <div class="rrow"><div class="rrow-lbl">Endereço</div><div class="rrow-val">${mForm.end}</div></div>
+        <div class="rrow"><div class="rrow-lbl">Valor${mPay==='cartao'?' (com taxa do cartão)':''}</div><div class="rrow-val" style="color:var(--sage);font-weight:700">R$ ${vf}</div></div>
         <div class="rrow"><div class="rrow-lbl">Status</div><div class="rrow-val" style="color:var(--gold);font-weight:700">Reservado · aguardando pagamento</div></div>
       </div>
       <p style="font-size:11px;color:var(--gold);margin-bottom:10px">⚠ O médico irá <strong>exatamente a este endereço</strong> e a nenhum outro local. Confira se está correto.</p>
@@ -1263,7 +1269,7 @@ async function pagarCC(){
   if(ccc.length<3){alert('CVV inválido.');return;}
   if(btn){btn.disabled=true;btn.textContent='Processando...';}
   await criarAgendamento();
-  if(btn){btn.disabled=false;btn.textContent='Confirmar — R$ '+mTotal()+',00';}
+  if(btn){btn.disabled=false;btn.textContent='Confirmar — R$ '+valorFinal().toFixed(2).replace('.',',');}
 }
 
 let mAgendamento=null;
