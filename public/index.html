@@ -484,6 +484,7 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
       <div class="med-sidebar-logo"><div class="logo" style="font-size:16px">Animagem</div><p>Área do Médico</p></div>
       <div class="med-sidebar-nav on" data-mp="dash">📊 Dashboard</div>
       <div class="med-sidebar-nav" data-mp="agenda">📅 Agenda</div>
+      <div class="med-sidebar-nav" data-mp="historico">📜 Histórico</div>
       <div class="med-sidebar-nav" data-mp="exames">🔬 Meus Exames</div>
       <div class="med-sidebar-nav" data-mp="area">📍 Área</div>
       <div class="med-sidebar-nav" data-mp="perfil">👤 Perfil</div>
@@ -495,6 +496,7 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
       <div class="tab-strip">
         <button class="tab-btn on" data-mp="dash">📊 Dashboard</button>
         <button class="tab-btn" data-mp="agenda">📅 Agenda</button>
+        <button class="tab-btn" data-mp="historico">📜 Histórico</button>
         <button class="tab-btn" data-mp="exames">🔬 Exames</button>
         <button class="tab-btn" data-mp="area">📍 Área</button>
         <button class="tab-btn" data-mp="perfil">👤 Perfil</button>
@@ -502,18 +504,16 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
       <div class="mpages">
         <!-- DASH -->
         <div class="mpage on" id="mp-dash">
-          <div class="ptitle">Dashboard</div><div class="psub">Resumo da semana</div>
+          <div class="ptitle">Dashboard</div><div class="psub">Resumo da sua atividade</div>
           <div class="scards">
-            <div class="scard"><div class="scard-val" style="color:var(--plum)">4</div><div class="scard-lbl">Agendamentos</div></div>
-            <div class="scard"><div class="scard-val" style="color:var(--sage)">R$820</div><div class="scard-lbl">Receita prevista</div></div>
-            <div class="scard"><div class="scard-val" style="color:#f4b942">1</div><div class="scard-lbl">Pendentes</div></div>
-            <div class="scard"><div class="scard-val" style="color:var(--mid)">14</div><div class="scard-lbl">Slots livres</div></div>
+            <div class="scard"><div class="scard-val" id="sc-proximos" style="color:var(--plum)">—</div><div class="scard-lbl">Próximos agendamentos</div></div>
+            <div class="scard"><div class="scard-val" id="sc-receita-prevista" style="color:var(--sage)">—</div><div class="scard-lbl">Receita prevista</div></div>
+            <div class="scard"><div class="scard-val" id="sc-atendidos-mes" style="color:#f4b942">—</div><div class="scard-lbl">Atendidos este mês</div></div>
+            <div class="scard"><div class="scard-val" id="sc-recebido-mes" style="color:var(--mid)">—</div><div class="scard-lbl">Recebido este mês</div></div>
           </div>
           <div class="tcard">
             <div class="tcard-title">Próximos agendamentos</div>
-            <div class="agitem"><div class="agitem-top"><div><div class="ag-h4">🐕 Rex — Ultrassom Abdominal</div><div class="ag-p">📅 Qui 24/04 · 09:00 · 📍 Taquaral<br/>👤 João Silva · (19) 99999-1111</div></div><div class="agright"><div class="agprice">R$180</div><span class="badge bok">confirmado</span></div></div><a href="#" class="btn-wasm">💬 WhatsApp</a></div>
-            <div class="agitem"><div class="agitem-top"><div><div class="ag-h4">🐈 Luna — Ecocardiograma</div><div class="ag-p">📅 Sex 25/04 · 14:00 · 📍 Cambuí<br/>👤 Maria Souza · (19) 99999-2222</div></div><div class="agright"><div class="agprice">R$280</div><span class="badge bok">confirmado</span></div></div><a href="#" class="btn-wasm">💬 WhatsApp</a></div>
-            <div class="agitem"><div class="agitem-top"><div><div class="ag-h4">🐕 Mel — Ultrassom Gestacional</div><div class="ag-p">📅 Sáb 26/04 · 10:00 · 📍 Bosque<br/>👤 Carlos Pereira · (19) 99999-3333</div></div><div class="agright"><div class="agprice">R$200</div><span class="badge bpend">pendente</span></div></div><a href="#" class="btn-wasm">💬 WhatsApp</a></div>
+            <div id="dash-proximos"><p style="font-size:13px;color:var(--light)">Carregando…</p></div>
           </div>
         </div>
         <!-- AGENDA -->
@@ -533,6 +533,18 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
             <div class="slot-row"><div><div style="font-weight:500;font-size:14px">Antecedência mínima</div><div style="font-size:11px;color:var(--light)">Antes do horário</div></div><div style="display:flex;align-items:center;gap:5px"><input type="number" value="60" style="width:52px;padding:8px;border:1.5px solid #e0d8ec;border-radius:8px;font-size:16px;text-align:center;outline:none;-webkit-appearance:none"/><span style="font-size:12px;color:var(--light)">min</span></div></div>
             <div class="slot-row"><div style="font-weight:500;font-size:14px">Aceitar fins de semana</div><button class="toggle off" id="tgl-fds"></button></div>
             <div class="slot-row"><div style="font-weight:500;font-size:14px">Aceitar noturno (após 18h)</div><button class="toggle off" id="tgl-not"></button></div>
+          </div>
+        </div>
+        <!-- HISTÓRICO / EXTRATO -->
+        <div class="mpage" id="mp-historico">
+          <div class="ptitle">Histórico</div><div class="psub">Extrato de tudo que foi atendido e o que você tem a receber</div>
+          <div class="scards">
+            <div class="scard"><div class="scard-val" id="hist-total-atend" style="color:var(--plum)">—</div><div class="scard-lbl">Total de atendimentos</div></div>
+            <div class="scard"><div class="scard-val" id="hist-total-valor" style="color:var(--sage)">—</div><div class="scard-lbl">Valor total acumulado</div></div>
+          </div>
+          <div class="tcard">
+            <div class="tcard-title">Extrato</div>
+            <div id="hist-lista"><p style="font-size:13px;color:var(--light)">Carregando…</p></div>
           </div>
         </div>
         <!-- EXAMES -->
@@ -633,13 +645,8 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
           <div class="tcard">
             <div class="tbl-wrap">
               <table class="tbl">
-                <thead><tr><th>Data</th><th>Pet / Exame</th><th>Médico</th><th>Valor</th><th>Status</th></tr></thead>
-                <tbody>
-                  <tr><td>24/04</td><td>Rex · US Abdominal</td><td>Ana Camila</td><td>R$180</td><td><span class="badge bok">confirmado</span></td></tr>
-                  <tr><td>24/04</td><td>Mia · Ecocardiograma</td><td>Carlos H.</td><td>R$280</td><td><span class="badge bok">confirmado</span></td></tr>
-                  <tr><td>25/04</td><td>Thor · Gestacional</td><td>Ana Camila</td><td>R$200</td><td><span class="badge bpend">pendente</span></td></tr>
-                  <tr><td>26/04</td><td>Mel · Ortopédico</td><td>Rodrigo F.</td><td>R$160</td><td><span class="badge bok">confirmado</span></td></tr>
-                </tbody>
+                <thead><tr><th>Data</th><th>Tutor / Pet / Exame</th><th>Médico</th><th>Valor</th><th>Status</th><th>Ação</th></tr></thead>
+                <tbody id="admin-agendamentos-tbody"><tr><td colspan="6">Carregando…</td></tr></tbody>
               </table>
             </div>
           </div>
@@ -1387,7 +1394,45 @@ function initMedico(){
   document.querySelectorAll('#view-medico .toggle').forEach(t=>{
     t.onclick=()=>{t.classList.toggle('on');t.classList.toggle('off');};
   });
-  initAgenda();initExames();initArea();initPerfil();
+  initAgenda();initExames();initArea();initPerfil();initDashMedico();initHistorico();
+}
+function fmtMoeda(v){return 'R$ '+Number(v||0).toFixed(2).replace('.',',');}
+async function carregarAgendamentosMedico(){
+  const {data,error}=await sb.from('agendamentos')
+    .select('id,horario,endereco,valor,status,profiles:tutor_id(nome,telefone),pets(nome,especie),agendamento_exames(exames_catalogo(nome))')
+    .eq('medico_id',session.user.id)
+    .order('horario',{ascending:false});
+  if(error){console.error(error);return [];}
+  return data;
+}
+function renderItemAgendamento(a){
+  const exames=(a.agendamento_exames||[]).map(e=>e.exames_catalogo?.nome).filter(Boolean).join(', ')||'Exame';
+  const pet=a.pets?`${a.pets.especie==='Gato'?'🐈':'🐕'} ${a.pets.nome}`:'Pet';
+  const dt=new Date(a.horario);
+  const dataFmt=dt.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
+  const horaFmt=dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const badge=a.status==='pago'?'<span class="badge bok">pago</span>':'<span class="badge bok">confirmado</span>';
+  return `<div class="agitem"><div class="agitem-top"><div><div class="ag-h4">${pet} — ${exames}</div><div class="ag-p">📅 ${dataFmt} · ${horaFmt} · 📍 ${a.endereco||'—'}<br/>👤 ${a.profiles?.nome||'—'} · ${a.profiles?.telefone||'—'}</div></div><div class="agright"><div class="agprice">${fmtMoeda(a.valor)}</div>${badge}</div></div></div>`;
+}
+async function initDashMedico(){
+  const box=document.getElementById('dash-proximos');if(!box)return;
+  const todos=await carregarAgendamentosMedico();
+  const agora=new Date();
+  const proximos=todos.filter(a=>new Date(a.horario)>=agora).sort((a,b)=>new Date(a.horario)-new Date(b.horario));
+  const inicioMes=new Date(agora.getFullYear(),agora.getMonth(),1);
+  const atendidosMes=todos.filter(a=>new Date(a.horario)<agora&&new Date(a.horario)>=inicioMes);
+  document.getElementById('sc-proximos').textContent=proximos.length;
+  document.getElementById('sc-receita-prevista').textContent=fmtMoeda(proximos.reduce((s,a)=>s+Number(a.valor||0),0));
+  document.getElementById('sc-atendidos-mes').textContent=atendidosMes.length;
+  document.getElementById('sc-recebido-mes').textContent=fmtMoeda(atendidosMes.reduce((s,a)=>s+Number(a.valor||0),0));
+  box.innerHTML=proximos.length?proximos.slice(0,8).map(renderItemAgendamento).join(''):'<p style="font-size:13px;color:var(--light)">Nenhum agendamento confirmado nos próximos dias.</p>';
+}
+async function initHistorico(){
+  const box=document.getElementById('hist-lista');if(!box)return;
+  const todos=await carregarAgendamentosMedico();
+  document.getElementById('hist-total-atend').textContent=todos.length;
+  document.getElementById('hist-total-valor').textContent=fmtMoeda(todos.reduce((s,a)=>s+Number(a.valor||0),0));
+  box.innerHTML=todos.length?todos.map(renderItemAgendamento).join(''):'<p style="font-size:13px;color:var(--light)">Nenhum agendamento pago/confirmado ainda. Assim que um tutor pagar e o admin confirmar, aparece aqui.</p>';
 }
 async function initPerfil(){
   if(!session)return;
@@ -1602,7 +1647,39 @@ function initAdmin(){
   document.querySelectorAll('#admin-tabs .tab-btn[data-ap]').forEach(btn=>{btn.onclick=()=>switchAp(btn.dataset.ap);});
   document.querySelectorAll('.admin-sidebar-nav[data-ap]').forEach(nav=>{nav.onclick=()=>switchAp(nav.dataset.ap);});
   document.querySelectorAll('#view-admin .toggle').forEach(t=>{t.onclick=()=>{t.classList.toggle('on');t.classList.toggle('off');};});
-  loadAdminMedicos();
+  loadAdminMedicos();loadAdminAgendamentos();
+}
+async function loadAdminAgendamentos(){
+  const tbody=document.getElementById('admin-agendamentos-tbody');if(!tbody)return;
+  const {data,error}=await sb.from('agendamentos')
+    .select('id,horario,endereco,valor,status,profiles:tutor_id(nome),pets(nome),medicos(profiles(nome)),agendamento_exames(exames_catalogo(nome))')
+    .order('horario',{ascending:false});
+  if(error){tbody.innerHTML=`<tr><td colspan="6">Erro: ${error.message}</td></tr>`;return;}
+  if(!data.length){tbody.innerHTML='<tr><td colspan="6">Nenhum agendamento ainda.</td></tr>';return;}
+  const badge=s=>({
+    pago:'<span class="badge bok">pago</span>',
+    confirmado:'<span class="badge bok">confirmado</span>',
+    reservado:'<span class="badge bpend">reservado · aguardando pagamento</span>',
+    expirado:'<span class="badge" style="background:#f0e6e6;color:#a55">expirado</span>'
+  }[s]||s);
+  tbody.innerHTML=data.map(a=>{
+    const exames=(a.agendamento_exames||[]).map(e=>e.exames_catalogo?.nome).filter(Boolean).join(', ')||'—';
+    const dt=new Date(a.horario).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+    return `<tr>
+      <td>${dt}</td>
+      <td>${a.profiles?.nome||'—'} · ${a.pets?.nome||'—'} · ${exames}</td>
+      <td>${a.medicos?.profiles?.nome||'—'}</td>
+      <td>${fmtMoeda(a.valor)}</td>
+      <td>${badge(a.status)}</td>
+      <td>${a.status==='reservado'?`<button class="topnav-btn" onclick="marcarComoPago('${a.id}')">Marcar como pago</button>`:'—'}</td>
+    </tr>`;
+  }).join('');
+}
+async function marcarComoPago(id){
+  if(!confirm('Confirma que o pagamento deste agendamento foi recebido? Isso libera os dados do tutor/pet para o médico (uso provisório enquanto não há gateway de pagamento real).'))return;
+  const {error}=await sb.from('agendamentos').update({status:'pago'}).eq('id',id);
+  if(error){alert('Erro: '+error.message);return;}
+  loadAdminAgendamentos();
 }
 async function loadAdminMedicos(){
   const tbody=document.getElementById('admin-medicos-tbody');if(!tbody)return;
