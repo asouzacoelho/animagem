@@ -799,7 +799,8 @@ function renderAuthSlot(){
   const bnMedico=document.getElementById('bn-medico');if(bnMedico)bnMedico.style.display=isMedico?'':'none';
 }
 async function logout(){await sb.auth.signOut();session=null;profile=null;renderAuthSlot();}
-function openAuth(mode){authMode=mode||'login';renderAuth();document.getElementById('auth-overlay').classList.add('on');}
+let authContextoAgendamento=false;
+function openAuth(mode,contextoAgendamento){authMode=mode||'login';authContextoAgendamento=!!contextoAgendamento;renderAuth();document.getElementById('auth-overlay').classList.add('on');}
 function closeAuth(){document.getElementById('auth-overlay').classList.remove('on');}
 let authMode='login';
 function renderAuth(){
@@ -826,12 +827,13 @@ function renderAuth(){
       <button class="btn-p" onclick="salvarNovaSenha()">Salvar nova senha</button>`;
     return;
   }
+  if(authContextoAgendamento&&authMode==='cadastro_medico')authMode='cadastro_tutor';
   document.getElementById('auth-title').textContent=authMode==='login'?'Entrar':'Criar conta';
   b.innerHTML=`
     <div class="chips" style="margin-bottom:12px">
       <div class="chip ${authMode==='login'?'on':''}" onclick="authMode='login';renderAuth()">Entrar</div>
       <div class="chip ${authMode==='cadastro_tutor'?'on':''}" onclick="authMode='cadastro_tutor';renderAuth()">Cadastrar (tutor)</div>
-      <div class="chip ${authMode==='cadastro_medico'?'on':''}" onclick="authMode='cadastro_medico';renderAuth()">Cadastrar (médico)</div>
+      ${authContextoAgendamento?'':'<div class="chip '+(authMode==='cadastro_medico'?'on':'')+'" onclick="authMode=\'cadastro_medico\';renderAuth()">Cadastrar (médico)</div>'}
     </div>
     ${authMode!=='login'?'<div class="frow"><label class="flabel">Nome completo *</label><input class="finput" id="au-nome" placeholder="Seu nome"/></div>':''}
     <div class="frow"><label class="flabel">E-mail *</label><input class="finput" id="au-email" type="email" placeholder="seu@email.com"/></div>
@@ -1076,7 +1078,7 @@ const fH=d=>d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
 function gByDay(sl){const m={};sl.forEach(s=>{const k=s.toDateString();if(!m[k])m[k]=[];m[k].push(s);});return m;}
 
 function openModal(id){
-  if(!session){openAuth('login');return;}
+  if(!session){openAuth('login',true);return;}
   mMed=MEDICOS.find(x=>x.id===id);ms=0;mServs=[];mSlot=null;mForm={};mPay=null;mPix=null;
   const exFiltro=document.getElementById('s-exame')?.value;
   if(exFiltro&&mMed.specs.includes(exFiltro))mServs=[exFiltro];
@@ -1339,7 +1341,7 @@ async function obterOuCriarPet(){
   return novo.id;
 }
 async function criarAgendamento(){
-  if(!session){openAuth('login');return;}
+  if(!session){openAuth('login',true);return;}
   if(!mServs.length){alert('Escolha pelo menos um exame.');return;}
   const exameIds=mServs.map(e=>EP[e]?.id);
   if(exameIds.some(id=>!id)){alert('Exame não encontrado no catálogo.');return;}
