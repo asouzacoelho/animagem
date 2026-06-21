@@ -1421,6 +1421,7 @@ async function criarAgendamento(){
   }).select().single();
   if(error){
     if(error.code==='23505')alert('Esse horário acabou de ser reservado por outro tutor. Escolha outro horário.');
+    else if(error.message?.includes('antecedência mínima')){alert('Esse horário ficou muito próximo do agora enquanto você preenchia os dados e não atende mais a antecedência mínima exigida pelo médico. Escolha outro horário.');ms=1;mSlotsCache=null;renderM();avancarParaHorarios();}
     else alert('Não foi possível confirmar: '+error.message);
     return;
   }
