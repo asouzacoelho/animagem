@@ -476,6 +476,24 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
   </div>
 </div>
 
+<!-- MINHA CONTA / EXCLUSÃO ─ LGPD -->
+<div class="overlay" id="conta-overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div><h3>Minha conta</h3><p>Seus dados, sua decisão</p></div>
+      <button class="modal-close" onclick="document.getElementById('conta-overlay').classList.remove('on')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--light);margin-bottom:14px">Você pode solicitar a exclusão da sua conta e dos seus dados pessoais a qualquer momento.</p>
+      <div style="background:#FBF1DC;border:1px solid #c9a13b;border-radius:8px;padding:12px;font-size:12px;margin-bottom:16px">
+        ⚠ Se você nunca teve nenhum agendamento confirmado, sua conta e seus dados são <strong>apagados de verdade</strong>.<br/><br/>
+        Se você já tem agendamentos pagos/confirmados, seus dados pessoais (nome, telefone, e-mail) são <strong>removidos/anonimizados</strong> e o login é desativado — mas o registro do atendimento em si é mantido, pois é referência financeira sua e da outra parte (tutor/médico envolvido), exigida por obrigação legal/fiscal.
+      </div>
+      <button class="btn-p" style="background:var(--red)" onclick="excluirMinhaConta()">Solicitar exclusão da minha conta</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ MÉDICO ══ -->
 <div class="view" id="view-medico">
   <div class="med-layout">
@@ -794,7 +812,7 @@ async function refreshProfile(){
 function renderAuthSlot(){
   const el=document.getElementById('auth-slot');if(!el)return;
   if(session&&profile){
-    el.innerHTML=`<span style="font-size:12px;color:var(--mid)">${profile.nome.split(' ')[0]} · ${profile.role}</span><button class="topnav-btn" onclick="logout()">Sair</button>`;
+    el.innerHTML=`<span style="font-size:12px;color:var(--mid)">${profile.nome.split(' ')[0]} · ${profile.role}</span><button class="topnav-btn" onclick="abrirMinhaConta()" style="font-size:11px">Minha conta</button><button class="topnav-btn" onclick="logout()">Sair</button>`;
   }else{
     el.innerHTML=`<button class="topnav-btn" onclick="openAuth()">Entrar</button>`;
   }
@@ -806,6 +824,17 @@ function renderAuthSlot(){
   const bnMedico=document.getElementById('bn-medico');if(bnMedico)bnMedico.style.display=isMedico?'':'none';
 }
 async function logout(){await sb.auth.signOut();session=null;profile=null;renderAuthSlot();}
+function abrirMinhaConta(){document.getElementById('conta-overlay').classList.add('on');}
+async function excluirMinhaConta(){
+  if(!confirm('Tem certeza? Essa ação não pode ser desfeita.'))return;
+  const {data,error}=await sb.rpc('solicitar_exclusao_propria');
+  if(error){alert('Erro ao excluir conta: '+error.message);return;}
+  document.getElementById('conta-overlay').classList.remove('on');
+  await sb.auth.signOut();
+  session=null;profile=null;renderAuthSlot();
+  alert(data==='excluido'?'Sua conta e seus dados foram excluídos.':'Sua conta foi desativada e seus dados pessoais foram removidos. O histórico de atendimentos foi mantido por obrigação legal, sem seus dados de identificação.');
+  showView('tutor');
+}
 let authContextoAgendamento=false;
 function openAuth(mode,contextoAgendamento){authMode=mode||'login';authContextoAgendamento=!!contextoAgendamento;renderAuth();document.getElementById('auth-overlay').classList.add('on');}
 function closeAuth(){document.getElementById('auth-overlay').classList.remove('on');}
