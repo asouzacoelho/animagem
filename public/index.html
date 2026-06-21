@@ -226,8 +226,10 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
 .btn-wasm{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#25D366;font-weight:700;background:#f0fdf4;border-radius:7px;padding:5px 9px;border:none;cursor:pointer;text-decoration:none;min-height:32px;}
 
 /* AGENDA */
-.datenav{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.datenav{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
 .datenav-btn{background:var(--plum-pale);border:none;border-radius:8px;width:var(--touch);height:var(--touch);cursor:pointer;color:var(--plum);font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.dia-btn{width:auto;height:auto;}
+.dia-btn.on{background:var(--plum);color:#fff;}
 .datenav-lbl{font-weight:600;font-size:14px;flex:1;text-align:center;}
 .slot-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0ecfa;font-size:14px;gap:8px;}
 .slot-row:last-child{border:none;}
@@ -536,21 +538,17 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
         </div>
         <!-- AGENDA -->
         <div class="mpage" id="mp-agenda">
-          <div class="ptitle">Agenda</div><div class="psub">Gerencie seus horários disponíveis</div>
+          <div class="ptitle">Agenda</div><div class="psub">Defina os horários que você atende — isso se repete toda semana</div>
           <div class="tcard">
-            <div class="datenav">
-              <button class="datenav-btn" id="btn-prev">‹</button>
-              <span class="datenav-lbl" id="day-lbl"></span>
-              <button class="datenav-btn" id="btn-next">›</button>
-            </div>
-            <div class="tcard-title">Horários do dia</div>
+            <div class="datenav" id="dia-semana-nav"></div>
+            <div class="tcard-title" id="agenda-dia-titulo">Horários disponíveis</div>
+            <p style="font-size:11px;color:var(--light);margin-bottom:8px">Toque para ligar/desligar cada horário. Tutores só veem e agendam os horários marcados como disponíveis.</p>
             <div id="slots-list"></div>
           </div>
           <div class="tcard">
-            <div class="tcard-title">Regras</div>
-            <div class="slot-row"><div><div style="font-weight:500;font-size:14px">Antecedência mínima</div><div style="font-size:11px;color:var(--light)">Antes do horário</div></div><div style="display:flex;align-items:center;gap:5px"><input type="number" value="60" style="width:52px;padding:8px;border:1.5px solid #e0d8ec;border-radius:8px;font-size:16px;text-align:center;outline:none;-webkit-appearance:none"/><span style="font-size:12px;color:var(--light)">min</span></div></div>
-            <div class="slot-row"><div style="font-weight:500;font-size:14px">Aceitar fins de semana</div><button class="toggle off" id="tgl-fds"></button></div>
-            <div class="slot-row"><div style="font-weight:500;font-size:14px">Aceitar noturno (após 18h)</div><button class="toggle off" id="tgl-not"></button></div>
+            <div class="tcard-title">Antecedência mínima</div>
+            <div class="slot-row"><div><div style="font-weight:500;font-size:14px">Antes do horário do exame</div><div style="font-size:11px;color:var(--light)">Tutor não consegue agendar com menos antecedência que isso</div></div><div style="display:flex;align-items:center;gap:5px"><input type="number" id="inp-antecedencia" value="60" style="width:52px;padding:8px;border:1.5px solid #e0d8ec;border-radius:8px;font-size:16px;text-align:center;outline:none;-webkit-appearance:none"/><span style="font-size:12px;color:var(--light)">min</span></div></div>
+            <button class="btn-save" style="margin-top:10px" onclick="salvarAntecedencia()">Salvar</button>
           </div>
         </div>
         <!-- HISTÓRICO / EXTRATO -->
@@ -568,6 +566,7 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
         <!-- EXAMES -->
         <div class="mpage" id="mp-exames">
           <div class="ptitle">Meus Exames</div><div class="psub">Exames que você realiza</div>
+          <div class="notice" style="margin-bottom:12px;font-size:12px">💰 <strong>Importante sobre o valor:</strong> o preço que você cadastra abaixo é exatamente o que aparece para o tutor no agendamento. Quando o pagamento real entrar em vigor, esse valor será dividido entre você e a Animagem, na proporção de comissão configurada pela administração — hoje a comissão vigente é <strong>0% (fase MVP): você recebe o valor integral</strong>. Qualquer mudança futura na comissão será comunicada antes de entrar em vigor.</div>
           <div class="exam-list" id="exam-list"></div>
           <button class="btn-save" style="margin-top:14px" onclick="abrirFormExame()">+ Adicionar / editar exame</button>
           <div id="exame-form-wrap" style="margin-top:14px"></div>
@@ -721,7 +720,10 @@ let session=null,profile=null;
 let MEDICOS=[];
 let CATALOGO=[]; // [{id,nome,duracao_min,preco_base}]
 const EP={}; // nome do exame -> {p,d} — preenchido a partir de CATALOGO
-const BAIRROS=["Taquaral","Cambuí","Bosque","Centro","Guanabara","Nova Campinas","Barão Geraldo","Parque Prado","Alphaville","Sousas","Jardim Chapadão","Cidade Universitária"];
+const BAIRROS_POR_CIDADE={
+  'Campinas':["Taquaral","Cambuí","Bosque","Centro","Guanabara","Nova Campinas","Barão Geraldo","Parque Prado","Alphaville Campinas","Sousas","Jardim Chapadão","Cidade Universitária","Cambará","Castelo","Flamboyant","Jardim Guanabara","Mansões Santo Antônio","Parque Taquaral","Ponte Preta","Vila Industrial","Jardim das Paineiras","Swift","Jardim São Bernardo","Vila Nova","Botafogo","Cura D'Ars","Jardim Proença","Parque das Universidades","Vila Brandina","Anhumas"]
+};
+const BAIRROS=BAIRROS_POR_CIDADE['Campinas'];
 const CIDADES=["Valinhos","Vinhedo","Paulínia","Sumaré","Hortolândia","Indaiatuba","Americana","Cosmópolis","Itatiba","Jaguariúna"];
 const ESTADOS_IBGE=[["AC","Acre"],["AL","Alagoas"],["AP","Amapá"],["AM","Amazonas"],["BA","Bahia"],["CE","Ceará"],["DF","Distrito Federal"],["ES","Espírito Santo"],["GO","Goiás"],["MA","Maranhão"],["MT","Mato Grosso"],["MS","Mato Grosso do Sul"],["MG","Minas Gerais"],["PA","Pará"],["PB","Paraíba"],["PR","Paraná"],["PE","Pernambuco"],["PI","Piauí"],["RJ","Rio de Janeiro"],["RN","Rio Grande do Norte"],["RS","Rio Grande do Sul"],["RO","Rondônia"],["RR","Roraima"],["SC","Santa Catarina"],["SP","São Paulo"],["SE","Sergipe"],["TO","Tocantins"]];
 const _municipiosCache={};
@@ -738,7 +740,6 @@ async function municipiosDoEstado(uf){
   }
 }
 const ESP=["Cão","Gato","Coelho","Ave","Réptil","Outro"];
-const HORAS=[8,9,10,11,14,15,16,17];
 
 async function loadCatalogo(){
   const {data,error}=await sb.from('exames_catalogo').select('*').order('nome');
@@ -761,7 +762,7 @@ async function loadSponsor(){
 }
 async function loadMedicos(){
   const {data,error}=await sb.from('medicos').select(`
-    id,crmv,bio,cidade,estado,
+    id,crmv,bio,cidade,estado,antecedencia_min,
     profiles(nome),
     medico_exames(preco,exames_catalogo(nome)),
     medico_area(tipo,nome,ativo)
@@ -777,7 +778,7 @@ async function loadMedicos(){
       crmv:m.crmv,
       em:'🩺',
       specs:(m.medico_exames||[]).map(x=>x.exames_catalogo?.nome).filter(Boolean),
-      cidade:m.cidade,estado:m.estado,
+      cidade:m.cidade,estado:m.estado,antecedenciaMin:m.antecedencia_min??60,
       areas:[...areaBairros,...areaCidades.filter(c=>c!==m.cidade)],
       areaBairros,areaCidades,
       min:Math.min(...(m.medico_exames||[]).map(x=>Number(x.preco))||[0]),
@@ -988,7 +989,12 @@ async function submitAuth(){
 /* ─── STATE ─── */
 let slots={};
 let curDay=new Date();
-let ms=0,mMed=null,mServs=[],mSlot=null,mForm={},mPay=null,mPix=null;
+let ms=0,mMed=null,mServs=[],mSlot=null,mForm={},mPay=null,mPix=null,mSlotsCache=null;
+async function avancarParaHorarios(){
+  ms=1;mSlotsCache=null;renderM();
+  mSlotsCache=await getSlotsReais(mMed);
+  renderM();
+}
 const mTotal=()=>mServs.reduce((s,e)=>s+(EP[e]?.p||0),0);
 const TAXA_CARTAO=0.0399;
 const valorFinal=()=>mPay==='cartao'?+(mTotal()*(1+TAXA_CARTAO)).toFixed(2):mTotal();
@@ -1105,14 +1111,25 @@ function renderCards(list,bairroBuscado){
 }
 
 /* ─── MODAL ─── */
-function getSlots(){
-  const now=new Date();const out=[];
-  for(let d=0;d<7;d++){const day=new Date(now);day.setDate(now.getDate()+d);
-    HORAS.forEach(h=>{const s=new Date(day);s.setHours(h,0,0,0);
-      const occ=(d===0&&[9,14].includes(h))||(d===1&&h===10);
-      if((s-now)/60000>=60&&!occ)out.push(s);
+async function getSlotsReais(medico){
+  const {data:dispo}=await sb.from('medico_disponibilidade').select('dia_semana,hora').eq('medico_id',medico.id).eq('disponivel',true);
+  const porDia={};(dispo||[]).forEach(r=>{porDia[r.dia_semana]=porDia[r.dia_semana]||new Set();porDia[r.dia_semana].add(r.hora);});
+  const now=new Date();
+  const horizonte=new Date(now.getTime()+14*86400000);
+  const {data:ocupados}=await sb.from('agendamentos').select('horario').eq('medico_id',medico.id).in('status',['reservado','pago','confirmado']).gte('horario',now.toISOString()).lte('horario',horizonte.toISOString());
+  const ocupadosSet=new Set((ocupados||[]).map(a=>new Date(a.horario).getTime()));
+  const antecedenciaMs=(medico.antecedenciaMin??60)*60000;
+  const out=[];
+  for(let d=0;d<14;d++){
+    const day=new Date(now);day.setDate(now.getDate()+d);
+    const horasDoDia=porDia[day.getDay()];
+    if(!horasDoDia)continue;
+    horasDoDia.forEach(h=>{
+      const s=new Date(day);s.setHours(h,0,0,0);
+      if((s-now)>=antecedenciaMs&&!ocupadosSet.has(s.getTime()))out.push(s);
     });
-  }return out;
+  }
+  return out.sort((a,b)=>a-b);
 }
 const fD=d=>d.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'});
 const fH=d=>d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
@@ -1120,7 +1137,7 @@ function gByDay(sl){const m={};sl.forEach(s=>{const k=s.toDateString();if(!m[k])
 
 function openModal(id){
   if(!session){openAuth('login',true);return;}
-  mMed=MEDICOS.find(x=>x.id===id);ms=0;mServs=[];mSlot=null;mForm={};mPay=null;mPix=null;
+  mMed=MEDICOS.find(x=>x.id===id);ms=0;mServs=[];mSlot=null;mForm={};mPay=null;mPix=null;mSlotsCache=null;
   const exFiltro=document.getElementById('s-exame')?.value;
   if(exFiltro&&mMed.specs.includes(exFiltro))mServs=[exFiltro];
   mForm.estado=document.getElementById('s-estado')?.value||'SP';
@@ -1155,12 +1172,17 @@ function renderM(){
       return`<button onclick="selE('${e}')" style="display:flex;justify-content:space-between;align-items:center;padding:13px 14px;border-radius:12px;border:2px solid ${on?'var(--plum)':'rgba(15,10,26,0.09)'};background:${on?'var(--plum-pale)':'#fff'};cursor:pointer;font-family:inherit;min-height:54px;width:100%"><div style="text-align:left;display:flex;align-items:center;gap:10px"><span style="width:18px;height:18px;border-radius:5px;border:2px solid ${on?'var(--plum)':'rgba(15,10,26,0.2)'};background:${on?'var(--plum)':'transparent'};color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${on?'✓':''}</span><div><div style="font-weight:600;font-size:14px">${e}</div><div style="font-size:11px;color:var(--light)">⏱ ${ep.d}</div></div></div><div style="font-family:'Fraunces',serif;font-size:19px;font-weight:600;color:var(--sage);flex-shrink:0">R$ ${ep.p}</div></button>`;
     }).join('')+'</div>'+
     (mServs.length>1?`<div style="font-size:12px;color:var(--mid);margin-top:10px">Total: <strong>R$ ${mTotal()},00</strong> (${mServs.length} exames na mesma visita)</div>`:'')+
-    `<button class="btn-p" ${mServs.length?'':'disabled'} style="opacity:${mServs.length?1:0.35}" onclick="ms=1;renderM()">Continuar →</button>`;
+    `<button class="btn-p" ${mServs.length?'':'disabled'} style="opacity:${mServs.length?1:0.35}" onclick="avancarParaHorarios()">Continuar →</button>`;
   }
   /* STEP 1 */
   else if(ms===1){
-    const sl=getSlots();const gr=gByDay(sl);
-    let h=prog(1)+'<p style="font-size:12px;color:var(--light);margin-bottom:4px">Mín. 1h de antecedência</p>';
+    if(!mSlotsCache){
+      b.innerHTML=prog(1)+'<p style="font-size:13px;color:var(--light)">Carregando horários disponíveis…</p>';
+      return;
+    }
+    const gr=gByDay(mSlotsCache);
+    let h=prog(1)+`<p style="font-size:12px;color:var(--light);margin-bottom:4px">Mín. ${mMed.antecedenciaMin??60} min de antecedência</p>`;
+    if(!mSlotsCache.length)h+='<p style="font-size:13px;color:var(--gold);margin-bottom:10px">Este médico não tem horários disponíveis nos próximos 14 dias.</p>';
     Object.entries(gr).forEach(([k,ds])=>{
       h+=`<div class="slot-day-lbl">${fD(ds[0])}</div><div class="slots-row">`;
       ds.forEach(s=>{const on=mSlot?.getTime()===s.getTime();h+=`<button class="slot-btn ${on?'on':''}" onclick="selS(${s.getTime()})">${fH(s)}</button>`;});
@@ -1521,29 +1543,55 @@ function switchMp(mp){
   document.getElementById('mp-'+mp)?.classList.add('on');
   if(mp==='agenda')initAgenda();
 }
-function initAgenda(){
+const DIAS_SEMANA=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+let diaSemanaSelecionado=new Date().getDay();
+let dispoMedico=null; // {dia_semana:{hora:boolean}}
+async function initAgenda(){
+  const nav=document.getElementById('dia-semana-nav');
+  if(nav&&!nav._ok){
+    nav._ok=true;
+    nav.innerHTML=DIAS_SEMANA.map((d,i)=>`<button class="datenav-btn dia-btn" data-d="${i}" style="font-size:11px;padding:6px 8px">${d.slice(0,3)}</button>`).join('');
+    nav.querySelectorAll('.dia-btn').forEach(b=>{b.onclick=()=>{diaSemanaSelecionado=+b.dataset.d;renderSlots();};});
+  }
+  await carregarDisponibilidade();
+  const {data:m}=await sb.from('medicos').select('antecedencia_min').eq('id',session.user.id).maybeSingle();
+  if(m&&document.getElementById('inp-antecedencia'))document.getElementById('inp-antecedencia').value=m.antecedencia_min??60;
   renderSlots();
-  const p=document.getElementById('btn-prev'),n=document.getElementById('btn-next');
-  if(p&&!p._ok){p._ok=true;p.onclick=()=>{curDay.setDate(curDay.getDate()-1);renderSlots();};}
-  if(n&&!n._ok){n._ok=true;n.onclick=()=>{curDay.setDate(curDay.getDate()+1);renderSlots();};}
+}
+async function carregarDisponibilidade(){
+  const {data,error}=await sb.from('medico_disponibilidade').select('dia_semana,hora,disponivel').eq('medico_id',session.user.id);
+  dispoMedico={};
+  if(!error)(data||[]).forEach(r=>{dispoMedico[r.dia_semana]=dispoMedico[r.dia_semana]||{};dispoMedico[r.dia_semana][r.hora]=r.disponivel;});
 }
 function renderSlots(){
-  const el=document.getElementById('day-lbl');if(!el)return;
-  el.textContent=curDay.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
-  const key=curDay.toDateString();if(!slots[key])slots[key]={};
-  const now=new Date();
+  const titulo=document.getElementById('agenda-dia-titulo');
+  if(titulo)titulo.textContent='Horários disponíveis — '+DIAS_SEMANA[diaSemanaSelecionado];
+  document.querySelectorAll('.dia-btn').forEach(b=>b.classList.toggle('on',+b.dataset.d===diaSemanaSelecionado));
   const list=document.getElementById('slots-list');if(!list)return;
-  list.innerHTML=HORAS.map(h=>{
-    const on=slots[key][h]!==false;
-    const st=new Date(curDay);st.setHours(h,0,0,0);const past=st<now;
-    return`<div class="slot-row" style="${past?'opacity:0.38':''}">
-      <div><div style="font-weight:500;font-size:14px">${String(h).padStart(2,'0')}:00</div><div style="font-size:11px;color:var(--light)">${past?'Passado':on?'Disponível':'Bloqueado'}</div></div>
-      <button class="toggle ${on&&!past?'on':'off'}" data-k="${key}" data-h="${h}" ${past?'disabled':''} style="${past?'opacity:0.3':''}"></button>
+  const horasDia=dispoMedico?.[diaSemanaSelecionado]||{};
+  list.innerHTML=Array.from({length:24},(_,h)=>h).map(h=>{
+    const on=horasDia[h]===true;
+    return`<div class="slot-row">
+      <div><div style="font-weight:500;font-size:14px">${String(h).padStart(2,'0')}:00</div><div style="font-size:11px;color:var(--light)">${on?'Disponível':'Bloqueado'}</div></div>
+      <button class="toggle ${on?'on':'off'}" data-h="${h}"></button>
     </div>`;
   }).join('');
   list.querySelectorAll('.toggle').forEach(t=>{
-    t.onclick=()=>{const k=t.dataset.k,h=+t.dataset.h;slots[k]=slots[k]||{};slots[k][h]=!t.classList.contains('on');renderSlots();};
+    t.onclick=async()=>{
+      const h=+t.dataset.h;const novoOn=!t.classList.contains('on');
+      t.classList.toggle('on',novoOn);t.classList.toggle('off',!novoOn);
+      dispoMedico[diaSemanaSelecionado]=dispoMedico[diaSemanaSelecionado]||{};dispoMedico[diaSemanaSelecionado][h]=novoOn;
+      const {error}=await sb.from('medico_disponibilidade').upsert({medico_id:session.user.id,dia_semana:diaSemanaSelecionado,hora:h,disponivel:novoOn},{onConflict:'medico_id,dia_semana,hora'});
+      if(error)alert('Erro ao salvar: '+error.message);
+      renderSlots();
+    };
   });
+}
+async function salvarAntecedencia(){
+  const v=Number(document.getElementById('inp-antecedencia').value)||60;
+  const {error}=await sb.from('medicos').update({antecedencia_min:v}).eq('id',session.user.id);
+  if(error){alert('Erro: '+error.message);return;}
+  alert('Antecedência mínima salva.');
 }
 /* ─── MEUS EXAMES (médico) ─── */
 async function initExames(){
@@ -1635,13 +1683,11 @@ async function abrirFormArea(){
       <select class="finput" id="ar-estado" onchange="onEstadoArea()">${ESTADOS_IBGE.map(([uf,nome])=>`<option value="${uf}" ${uf===ufIni?'selected':''}>${nome} (${uf})</option>`).join('')}</select>
     </div>
     <div class="frow"><label class="flabel">Cidade *</label>
-      <select class="finput" id="ar-cidade"><option>Carregando...</option></select>
+      <select class="finput" id="ar-cidade" onchange="onCidadeArea()"><option>Carregando...</option></select>
     </div>
     <div class="frow"><label class="flabel">Bairro</label>
-      <select class="finput" id="ar-bairro">
-        <option value="">Toda a cidade (sem bairro específico)</option>
-        ${BAIRROS.map(b=>`<option>${b}</option>`).join('')}
-      </select>
+      <select class="finput" id="ar-bairro"></select>
+      <div id="ar-bairro-aviso" style="font-size:11px;color:var(--light);margin-top:4px"></div>
     </div>
     <div class="brow"><button class="btn-b" onclick="document.getElementById('area-form-wrap').innerHTML=''">Cancelar</button><button class="btn-p" style="flex:1;margin-top:0" onclick="salvarArea()">Salvar</button></div>
   </div>`;
@@ -1653,6 +1699,22 @@ async function onEstadoArea(){
   const cidades=await municipiosDoEstado(uf);
   const ini=mMed?.cidade;
   sel.innerHTML=cidades.map(c=>`<option ${c===ini?'selected':''}>${c}</option>`).join('');
+  onCidadeArea();
+}
+function onCidadeArea(){
+  const cidade=document.getElementById('ar-cidade').value;
+  const bairros=BAIRROS_POR_CIDADE[cidade];
+  const sel=document.getElementById('ar-bairro');
+  const aviso=document.getElementById('ar-bairro-aviso');
+  if(bairros?.length){
+    sel.innerHTML='<option value="">Toda a cidade (sem bairro específico)</option>'+bairros.map(b=>`<option>${b}</option>`).join('');
+    sel.disabled=false;
+    aviso.textContent='';
+  }else{
+    sel.innerHTML='<option value="">Toda a cidade (sem bairro específico)</option>';
+    sel.disabled=true;
+    aviso.textContent='Ainda não temos lista de bairros para esta cidade — disponível só "toda a cidade" por enquanto.';
+  }
 }
 async function salvarArea(){
   const cidade=document.getElementById('ar-cidade').value;
