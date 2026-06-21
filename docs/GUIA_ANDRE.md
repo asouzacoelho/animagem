@@ -4,25 +4,35 @@ Tudo abaixo é trabalho que **só você pode fazer** (decisões de negócio, pag
 
 ---
 
-## ⚠ Decisão tomada em 2026-06-20: LTDA fica para depois
+## ⚠ Decisão tomada em 2026-06-21: Animagem Ltda direto agora; holding fica para quando a 2ª empresa existir de fato
 
-André decidiu **não abrir a LTDA agora**. Avaliamos usar o MEI da Ana Camila como alternativa, mas não serve para a Animagem como plataforma — MEI não permite a atividade de intermediação/portal (CNAE 6319-4/00 e 7490-1/04) e tem teto de R$81 mil/ano. O MEI dela continua válido **só para os próprios atendimentos dela** como médica, não para a empresa por trás do marketplace.
+André decidiu **não usar o CNPJ que a Ana Camila já tem** (a "ANA CAMILA VELOSO AUGUSTI LTDA", da prática clínica dela) para a Animagem — separação de risco entre o negócio pessoal dela e o marketplace. A visão de André é ter no futuro um **grupo com várias empresas em segmentos diferentes** (exemplo citado: material de limpeza para piscina) — mas nenhuma delas no ar ainda, a Animagem é a primeira a ser executada de fato.
 
-**Como isso foi resolvido sem travar o projeto:** a comissão da Animagem é 0% na fase MVP (ver tabela de monetização). Como não há dinheiro a reter, **decidimos manter o pagamento simulado no sistema até o CNPJ existir**, em vez de já mudar a arquitetura para pagamento direto tutor→médico. Ou seja: o item 1 abaixo deixa de ser bloqueante imediato — ele só volta a ser urgente quando vocês decidirem ativar comissão (fase pós-MVP) ou formalizar a empresa por outro motivo (ex: o investidor exigir).
+**Caminho escolhido: abrir só a Animagem Ltda agora, sem holding por cima ainda.** Motivo: manter uma holding hoje significaria pagar mensalidade de contador por uma empresa que não faz nada, e isso atrasaria sem necessidade o que é realmente urgente — a Animagem ter CNPJ próprio para abrir conta PJ e Pagar.me. "Encaixar" a Animagem numa holding **depois** não é um problema grande nem incomum: quando a segunda empresa do grupo existir de fato, o contador cria a holding e os sócios contribuem suas quotas da Animagem Ltda para ela em troca de quotas da holding (operação padrão, não é workaround arriscado).
+
+**Estrutura de destino (futura, não para agora):**
+
+```
+[Holding — nome de trabalho sugerido: "Múltiplo Participações Ltda", a criar quando a 2ª empresa existir]
+   ├── Animagem Ltda                          (abrir agora, direto, sem holding por cima)
+   └── [futura empresa de limpeza de piscina] (só quando esse negócio existir de fato)
+```
+
+⚠ **Nota para quando a holding for criada (guardar para o futuro, não agir agora):** holding pura (que só detém participação em outras empresas) geralmente **não pode optar pelo Simples Nacional** — é vedado por lei, independente do faturamento. Na prática tende a não pesar, porque a holding não fatura nada por si (só recebe dividendos das operacionais, que já chegam isentos de imposto) — ficaria no Lucro Presumido. Confirmar com o contador nessa hora, não agora.
 
 ---
 
-## 1. Abrir a empresa (LTDA) — pausado por decisão do André em 2026-06-20
+## 1. Abrir a empresa (Animagem Ltda)
 
 **Por que ainda fica registrado aqui:** sem CNPJ, não dá para abrir conta PJ, não dá para abrir conta no gateway de pagamento (Pagar.me), e sem isso o sistema nunca vai processar um pagamento real — por mais que eu evolua o código, essa pendência (a de maior risco no projeto, #4 em `docs/PENDENCIAS.md`) continua dependendo disso quando chegar a hora.
 
 **Como fazer:**
 1. Contratar um contador (pode ser remoto — existem serviços como Contabilizei, Agilize, Sirena, ou um contador local de Campinas). Custo de referência: ~R$500–800 de honorário de abertura + ~R$150–250/mês de mensalidade contábil recorrente.
 2. Decidir antes de falar com o contador:
-   - **Sócios:** só você, ou Ana Camila entra como sócia? (Isso também resolve a "decisão em aberto" antiga do roteiro original sobre a sociedade dela.)
-   - **Nome empresarial** e se vai ser `Animagem` mesmo ou outra razão social.
-3. CNAEs sugeridos (já estavam no documento original do projeto): `6319-4/00` (portais de internet) + `7490-1/04` (intermediação de serviços).
-4. Regime tributário: Simples Nacional é o recomendado para o estágio atual (~6% sobre receita).
+   - **Sócios:** só você, ou Ana Camila entra como sócia?
+   - **Nome empresarial** e se vai ser `Animagem` mesmo ou outra razão social (`Animagem` ou `Animagem Vet`, a depender do desfecho da marca — ver item 4).
+3. CNAEs: `6319-4/00` (portais de internet) + `7490-1/04` (intermediação de serviços).
+4. Regime tributário: Simples Nacional (~6% sobre receita).
 5. O contador cuida do registro na Junta Comercial, CNPJ na Receita Federal, inscrição municipal/estadual se aplicável.
 
 **Prazo típico:** 5–15 dias úteis depois de enviar os documentos pedidos pelo contador (RG/CPF dos sócios, comprovante de endereço, definição de capital social).
