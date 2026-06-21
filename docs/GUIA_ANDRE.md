@@ -69,7 +69,7 @@ André decidiu **não abrir a LTDA agora**. Avaliamos usar o MEI da Ana Camila c
 1. Verificar disponibilidade e registrar em https://registro.br (custo: ~R$40/ano).
 2. Depois de registrado, me avise — eu mesmo consigo configurar o domínio para apontar para o Cloudflare Pages (isso eu posso fazer, é técnico, especialmente fácil porque já estamos na Cloudflare, que também é gestora de DNS).
 
-**Decisão pendente sua:** `animagem.com.br` ou `animagemvet.com.br`? (mencionado como aberto desde o roteiro original).
+**Decisão tomada em 2026-06-21:** `animagem.com.br` está ocupado por terceiro desde 2017 (confirmado via RDAP oficial do Registro.br, sem relação com a empresa) — segue com **`animagemvet.com.br`** (confirmado disponível na mesma consulta). André já decidiu seguir com esse nome, inclusive aceitando que a marca registrada no INPI possa acompanhar essa variação ("Animagem Vet"), a depender da orientação do advogado sobre a pendência de indeferimento (ver `GUIA_MARCA_INPI.md`).
 
 ---
 

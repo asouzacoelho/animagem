@@ -1,5 +1,7 @@
 # Roteiro: registro da marca "Animagem" no INPI
 
+> ⚠ **Pausado em 2026-06-21, aguardando advogado.** Na busca do Passo 1, André encontrou um processo anterior em nome de "ANA CAMILA VELOSO AUGUSTI LTDA" (depositado 16/04/2024) que foi **indeferido** em 21/10/2025 por colidir com a marca de terceiro já registrada "ANIMAGE SAÚDE DE ESTIMAÇÃO" (processo 910702748, Art. 124 XIX da LPI). André já está em contato com um advogado para avaliar esse cenário antes de prosseguir com qualquer novo protocolo. Não decidir nome alternativo nem reprotocolar sem orientação jurídica.
+
 Passo a passo para você executar sozinho. Os itens com 🔍 são checagens, os com ✍️ são preenchimentos, os com 💳 envolvem pagamento.
 
 ---
