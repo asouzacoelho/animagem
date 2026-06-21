@@ -616,6 +616,7 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
       <div class="admin-sidebar-nav on" data-ap="dash">📊 Visão geral</div>
       <div class="admin-sidebar-nav" data-ap="medicos">🩺 Médicos</div>
       <div class="admin-sidebar-nav" data-ap="agendamentos">📋 Agendamentos</div>
+      <div class="admin-sidebar-nav" data-ap="patrocinadores">📢 Patrocinadores</div>
       <div class="admin-sidebar-nav" data-ap="comissoes">💰 Comissões</div>
       <div class="admin-sidebar-nav" data-ap="config">⚙️ Config</div>
     </div>
@@ -624,6 +625,7 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
         <button class="tab-btn on" data-ap="dash">📊 Geral</button>
         <button class="tab-btn" data-ap="medicos">🩺 Médicos</button>
         <button class="tab-btn" data-ap="agendamentos">📋 Agend.</button>
+        <button class="tab-btn" data-ap="patrocinadores">📢 Patroc.</button>
         <button class="tab-btn" data-ap="comissoes">💰 Comissões</button>
         <button class="tab-btn" data-ap="config">⚙️ Config</button>
       </div>
@@ -632,17 +634,15 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
         <div class="apage on" id="ap-dash">
           <div class="ptitle">Visão Geral</div><div class="psub">Portal Animagem</div>
           <div class="scards">
-            <div class="scard"><div class="scard-val" style="color:var(--plum)">12</div><div class="scard-lbl">Médicos ativos</div></div>
-            <div class="scard"><div class="scard-val" style="color:var(--sage)">R$4.280</div><div class="scard-lbl">Volume mensal</div></div>
-            <div class="scard"><div class="scard-val" style="color:var(--gold)">R$0</div><div class="scard-lbl">Comissão MVP</div></div>
-            <div class="scard"><div class="scard-val" style="color:var(--mid)">34</div><div class="scard-lbl">Agendamentos</div></div>
+            <div class="scard"><div class="scard-val" id="ad-medicos-ativos" style="color:var(--plum)">—</div><div class="scard-lbl">Médicos ativos</div></div>
+            <div class="scard"><div class="scard-val" id="ad-volume" style="color:var(--sage)">—</div><div class="scard-lbl">Volume pago/confirmado</div></div>
+            <div class="scard"><div class="scard-val" id="ad-pendentes-aprov" style="color:var(--gold)">—</div><div class="scard-lbl">Médicos pendentes de aprovação</div></div>
+            <div class="scard"><div class="scard-val" id="ad-total-agend" style="color:var(--mid)">—</div><div class="scard-lbl">Agendamentos no total</div></div>
           </div>
           <div class="notice" style="margin-bottom:12px">🚀 <strong>Fase MVP ativa</strong> — comissões em 0%. Configure em Comissões.</div>
           <div class="tcard">
             <div class="tcard-title">Últimos agendamentos</div>
-            <div class="agitem"><div class="agitem-top"><div><div class="ag-h4">🐕 Rex — Ultrassom Abdominal</div><div class="ag-p">M.V. Ana Camila · Campinas</div></div><div class="agright"><div class="agprice">R$180</div><span class="badge bok">confirmado</span></div></div></div>
-            <div class="agitem"><div class="agitem-top"><div><div class="ag-h4">🐈 Mia — Ecocardiograma</div><div class="ag-p">M.V. Carlos Henrique · Valinhos</div></div><div class="agright"><div class="agprice">R$280</div><span class="badge bok">confirmado</span></div></div></div>
-            <div class="agitem"><div class="agitem-top"><div><div class="ag-h4">🐕 Thor — Gestacional</div><div class="ag-p">M.V. Ana Camila · Campinas</div></div><div class="agright"><div class="agprice">R$200</div><span class="badge bpend">pendente</span></div></div></div>
+            <div id="ad-ultimos-agend"><p style="font-size:13px;color:var(--light)">Carregando…</p></div>
           </div>
         </div>
         <!-- MÉDICOS -->
@@ -669,38 +669,40 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
             </div>
           </div>
         </div>
+        <!-- PATROCINADORES -->
+        <div class="apage" id="ap-patrocinadores">
+          <div class="ptitle">Patrocinadores</div><div class="psub">Conteúdo patrocinado exibido no portal</div>
+          <div class="tcard">
+            <div id="patroc-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px"></div>
+            <button class="btn-save" onclick="abrirFormPatrocinador()">+ Novo patrocinador</button>
+            <div id="patroc-form-wrap" style="margin-top:14px"></div>
+          </div>
+        </div>
         <!-- COMISSÕES -->
         <div class="apage" id="ap-comissoes">
           <div class="ptitle">Comissões</div><div class="psub">Configure por especialidade ou médico</div>
-          <div class="notice" style="margin-bottom:12px">⚡ <strong>MVP:</strong> Comissões em 0%. Altere abaixo para ativar.</div>
+          <div class="notice" style="margin-bottom:12px">⚡ <strong>MVP:</strong> Comissões em 0%. Os valores aqui são salvos de verdade, mas <strong>ainda não são aplicados</strong> no cálculo de repasse — isso só entra em vigor junto com a integração de pagamento real (pendência #4).</div>
           <div class="comm-card">
             <div class="comm-card-title">Por especialidade</div>
-            <div class="comm-row"><div class="comm-lbl">Ultrassonografia</div><div style="display:flex;align-items:center"><input class="comm-inp" value="0" type="number"/><span class="comm-pct">%</span></div></div>
-            <div class="comm-row"><div class="comm-lbl">Ecocardiograma</div><div style="display:flex;align-items:center"><input class="comm-inp" value="0" type="number"/><span class="comm-pct">%</span></div></div>
-            <div class="comm-row"><div class="comm-lbl">Raio-X Portátil</div><div style="display:flex;align-items:center"><input class="comm-inp" value="0" type="number"/><span class="comm-pct">%</span></div></div>
-            <div class="comm-row"><div class="comm-lbl">Eletrocardiograma</div><div style="display:flex;align-items:center"><input class="comm-inp" value="0" type="number"/><span class="comm-pct">%</span></div></div>
+            <div id="comm-especialidades"><p style="font-size:13px;color:var(--light)">Carregando…</p></div>
           </div>
           <div class="comm-card">
             <div class="comm-card-title">Por médico (sobrescreve especialidade)</div>
-            <div class="comm-row"><div><div class="comm-lbl">Ana Camila V. Augusti</div><div class="comm-hint">Campinas</div></div><div style="display:flex;align-items:center"><input class="comm-inp" value="0" type="number"/><span class="comm-pct">%</span></div></div>
-            <div class="comm-row"><div><div class="comm-lbl">Carlos Henrique M.</div><div class="comm-hint">Valinhos</div></div><div style="display:flex;align-items:center"><input class="comm-inp" value="0" type="number"/><span class="comm-pct">%</span></div></div>
-            <div class="comm-row"><div><div class="comm-lbl">Rodrigo Fonseca</div><div class="comm-hint">Americana</div></div><div style="display:flex;align-items:center"><input class="comm-inp" value="0" type="number"/><span class="comm-pct">%</span></div></div>
+            <div id="comm-medicos"><p style="font-size:13px;color:var(--light)">Carregando…</p></div>
           </div>
-          <button class="btn-save" onclick="alert('Comissões salvas!')">Salvar comissões</button>
+          <button class="btn-save" onclick="salvarComissoes()">Salvar comissões</button>
         </div>
         <!-- CONFIG -->
         <div class="apage" id="ap-config">
           <div class="ptitle">Configurações</div><div class="psub">Dados gerais do portal</div>
           <div class="cfg-card">
             <div class="cfg-title">Portal</div>
-            <div class="cfg-row"><div class="cfg-lbl">Nome do portal</div><input class="cfg-inp" value="Animagem"/></div>
-            <div class="cfg-row"><div class="cfg-lbl">E-mail contato</div><input class="cfg-inp" value="contato@animagem.com.br" type="email" style="width:180px"/></div>
-            <div class="cfg-row"><div class="cfg-lbl">WhatsApp suporte</div><input class="cfg-inp" value="(19) 99518-8335" type="tel"/></div>
-            <div class="cfg-row"><div class="cfg-lbl">Antecedência mín. (min)</div><input class="cfg-inp" value="60" type="number" style="width:70px"/></div>
+            <div class="cfg-row"><div class="cfg-lbl">E-mail contato</div><input class="cfg-inp" id="cfg-email" type="email" style="width:180px"/></div>
+            <div class="cfg-row"><div class="cfg-lbl">WhatsApp suporte</div><input class="cfg-inp" id="cfg-whatsapp" type="tel"/></div>
             <div class="cfg-row"><div class="cfg-lbl">Fase MVP ativa</div><button class="toggle on" id="tgl-mvp"></button></div>
-            <div class="cfg-row"><div class="cfg-lbl">Aceitar novos médicos</div><button class="toggle on" id="tgl-novos"></button></div>
+            <div class="cfg-row"><div class="cfg-lbl">Aceitar novos médicos (cadastro)</div><button class="toggle on" id="tgl-novos"></button></div>
           </div>
-          <button class="btn-save" onclick="alert('Configurações salvas!')">Salvar configurações</button>
+          <button class="btn-save" onclick="salvarConfigPortal()">Salvar configurações</button>
         </div>
       </div>
     </div>
@@ -863,14 +865,16 @@ function renderAuth(){
       <button class="btn-p" onclick="salvarNovaSenha()">Salvar nova senha</button>`;
     return;
   }
-  if(authContextoAgendamento&&authMode==='cadastro_medico')authMode='cadastro_tutor';
+  const podeAceitarMedico=configPortal?.aceitar_novos_medicos!==false;
+  if((authContextoAgendamento||!podeAceitarMedico)&&authMode==='cadastro_medico')authMode='cadastro_tutor';
   document.getElementById('auth-title').textContent=authMode==='login'?'Entrar':'Criar conta';
   b.innerHTML=`
     <div class="chips" style="margin-bottom:12px">
       <div class="chip ${authMode==='login'?'on':''}" onclick="authMode='login';renderAuth()">Entrar</div>
       <div class="chip ${authMode==='cadastro_tutor'?'on':''}" onclick="authMode='cadastro_tutor';renderAuth()">Cadastrar (tutor)</div>
-      ${authContextoAgendamento?'':'<div class="chip '+(authMode==='cadastro_medico'?'on':'')+'" onclick="authMode=\'cadastro_medico\';renderAuth()">Cadastrar (médico)</div>'}
+      ${(authContextoAgendamento||!podeAceitarMedico)?'':'<div class="chip '+(authMode==='cadastro_medico'?'on':'')+'" onclick="authMode=\'cadastro_medico\';renderAuth()">Cadastrar (médico)</div>'}
     </div>
+    ${(!podeAceitarMedico&&authMode==='cadastro_tutor'&&!authContextoAgendamento)?'<p style="font-size:11px;color:var(--light);margin-bottom:8px">Cadastro de novos médicos está temporariamente pausado pela administração.</p>':''}
     ${authMode!=='login'?'<div class="frow"><label class="flabel">Nome completo *</label><input class="finput" id="au-nome" placeholder="Seu nome"/></div>':''}
     <div class="frow"><label class="flabel">E-mail *</label><input class="finput" id="au-email" type="email" placeholder="seu@email.com"/></div>
     <div class="frow"><label class="flabel">Senha *</label><input class="finput" id="au-senha" type="password" placeholder="mín. 6 caracteres"/></div>
@@ -923,6 +927,7 @@ async function submitAuth(){
     const nome=document.getElementById('au-nome').value.trim();
     if(!nome){errEl.textContent='Preencha o nome.';return;}
     const role=authMode==='cadastro_medico'?'medico':'tutor';
+    if(role==='medico'&&configPortal?.aceitar_novos_medicos===false){errEl.textContent='Cadastro de novos médicos está temporariamente pausado pela administração.';return;}
     let crmv,tel,docTipo,docFile,docExtraFile;
     if(role==='medico'){
       crmv=document.getElementById('au-crmv').value.trim();
@@ -1676,7 +1681,130 @@ function initAdmin(){
   document.querySelectorAll('#admin-tabs .tab-btn[data-ap]').forEach(btn=>{btn.onclick=()=>switchAp(btn.dataset.ap);});
   document.querySelectorAll('.admin-sidebar-nav[data-ap]').forEach(nav=>{nav.onclick=()=>switchAp(nav.dataset.ap);});
   document.querySelectorAll('#view-admin .toggle').forEach(t=>{t.onclick=()=>{t.classList.toggle('on');t.classList.toggle('off');};});
-  loadAdminMedicos();loadAdminAgendamentos();
+  loadAdminMedicos();loadAdminAgendamentos();loadAdminDash();loadAdminPatrocinadores();loadComissoes();initConfigPortal();
+}
+async function loadAdminDash(){
+  const [{data:medicos},{data:agend},{data:onboarding}]=await Promise.all([
+    sb.from('medicos').select('id,ativo'),
+    sb.from('agendamentos').select('id,horario,valor,status,profiles:tutor_id(nome),pets(nome),medicos(profiles(nome)),agendamento_exames(exames_catalogo(nome))').order('horario',{ascending:false}).limit(8),
+    sb.from('medico_onboarding').select('status')
+  ]);
+  document.getElementById('ad-medicos-ativos').textContent=(medicos||[]).filter(m=>m.ativo).length;
+  document.getElementById('ad-pendentes-aprov').textContent=(onboarding||[]).filter(o=>o.status==='pendente').length;
+  const {data:todosAgend}=await sb.from('agendamentos').select('id,valor,status');
+  document.getElementById('ad-total-agend').textContent=(todosAgend||[]).length;
+  document.getElementById('ad-volume').textContent=fmtMoeda((todosAgend||[]).filter(a=>['pago','confirmado'].includes(a.status)).reduce((s,a)=>s+Number(a.valor||0),0));
+  const box=document.getElementById('ad-ultimos-agend');
+  if(!agend?.length){box.innerHTML='<p style="font-size:13px;color:var(--light)">Nenhum agendamento ainda.</p>';return;}
+  const badge=s=>({pago:'bok',confirmado:'bok',reservado:'bpend',expirado:'bpend'}[s]||'bpend');
+  box.innerHTML=agend.map(a=>{
+    const exames=(a.agendamento_exames||[]).map(e=>e.exames_catalogo?.nome).filter(Boolean).join(', ')||'—';
+    return `<div class="agitem"><div class="agitem-top"><div><div class="ag-h4">${a.pets?.nome||'Pet'} — ${exames}</div><div class="ag-p">M.V. ${a.medicos?.profiles?.nome||'—'} · tutor ${a.profiles?.nome||'—'}</div></div><div class="agright"><div class="agprice">${fmtMoeda(a.valor)}</div><span class="badge ${badge(a.status)}">${a.status}</span></div></div></div>`;
+  }).join('');
+}
+/* PATROCINADORES */
+async function loadAdminPatrocinadores(){
+  const box=document.getElementById('patroc-list');if(!box)return;
+  const {data,error}=await sb.from('patrocinadores').select('*').order('ordem');
+  if(error){box.innerHTML='Erro: '+error.message;return;}
+  if(!data.length){box.innerHTML='<p style="font-size:13px;color:var(--light)">Nenhum patrocinador cadastrado ainda.</p>';return;}
+  box.innerHTML=data.map(p=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border:1px solid rgba(15,10,26,0.08);border-radius:10px">
+      <div><strong>${p.nome}</strong> <span style="font-size:11px;color:var(--light)">${p.cidade||''} · ordem ${p.ordem}</span><div style="font-size:12px;color:var(--mid)">${p.descricao||''}</div></div>
+      <div style="display:flex;gap:8px">
+        <button class="toggle ${p.ativo?'on':'off'}" onclick="toggleAtivoPatrocinador('${p.id}',${!p.ativo})"></button>
+        <button class="btn-b" onclick='abrirFormPatrocinador(${JSON.stringify(p).replace(/'/g,"&#39;")})'>Editar</button>
+        <button class="btn-b" style="color:var(--red)" onclick="removerPatrocinador('${p.id}')">Remover</button>
+      </div>
+    </div>`).join('');
+}
+function abrirFormPatrocinador(existente){
+  const w=document.getElementById('patroc-form-wrap');
+  const p=existente||{};
+  w.innerHTML=`<div class="tcard" style="padding:14px">
+    <input type="hidden" id="pz-id" value="${p.id||''}"/>
+    <div class="frow"><label class="flabel">Nome *</label><input class="finput" id="pz-nome" value="${p.nome||''}"/></div>
+    <div class="frow"><label class="flabel">Descrição</label><textarea class="finput" id="pz-descricao" rows="2">${p.descricao||''}</textarea></div>
+    <div class="frow"><label class="flabel">Link</label><input class="finput" id="pz-link" value="${p.link||''}" placeholder="https://"/></div>
+    <div class="fgrid2"><div class="frow"><label class="flabel">Cidade</label><input class="finput" id="pz-cidade" value="${p.cidade||''}"/></div><div class="frow"><label class="flabel">Ordem</label><input class="finput" id="pz-ordem" type="number" value="${p.ordem??0}"/></div></div>
+    <div class="brow"><button class="btn-b" onclick="document.getElementById('patroc-form-wrap').innerHTML=''">Cancelar</button><button class="btn-p" style="flex:1;margin-top:0" onclick="salvarPatrocinador()">Salvar</button></div>
+  </div>`;
+}
+async function salvarPatrocinador(){
+  const id=document.getElementById('pz-id').value;
+  const payload={
+    nome:document.getElementById('pz-nome').value.trim(),
+    descricao:document.getElementById('pz-descricao').value.trim()||null,
+    link:document.getElementById('pz-link').value.trim()||null,
+    cidade:document.getElementById('pz-cidade').value.trim()||null,
+    ordem:Number(document.getElementById('pz-ordem').value)||0
+  };
+  if(!payload.nome){alert('Preencha o nome.');return;}
+  const q=id?sb.from('patrocinadores').update(payload).eq('id',id):sb.from('patrocinadores').insert({...payload,ativo:true});
+  const {error}=await q;
+  if(error){alert('Erro: '+error.message);return;}
+  document.getElementById('patroc-form-wrap').innerHTML='';
+  loadAdminPatrocinadores();
+}
+async function toggleAtivoPatrocinador(id,novoAtivo){
+  const {error}=await sb.from('patrocinadores').update({ativo:novoAtivo}).eq('id',id);
+  if(error){alert('Erro: '+error.message);return;}
+  loadAdminPatrocinadores();
+}
+async function removerPatrocinador(id){
+  if(!confirm('Remover este patrocinador?'))return;
+  const {error}=await sb.from('patrocinadores').delete().eq('id',id);
+  if(error){alert('Erro: '+error.message);return;}
+  loadAdminPatrocinadores();
+}
+/* COMISSÕES */
+async function loadComissoes(){
+  const boxEsp=document.getElementById('comm-especialidades'),boxMed=document.getElementById('comm-medicos');
+  if(!boxEsp||!boxMed)return;
+  if(!CATALOGO.length)await loadCatalogo();
+  const {data:medicosAdmin}=await sb.from('medicos').select('id,cidade,profiles(nome)');
+  const {data:comissoesAtuais}=await sb.from('comissoes').select('*');
+  const mapAtual={};(comissoesAtuais||[]).forEach(c=>{mapAtual[c.tipo+':'+c.referencia_id]=c.percentual;});
+  boxEsp.innerHTML=CATALOGO.map(e=>`<div class="comm-row"><div class="comm-lbl">${e.nome}</div><div style="display:flex;align-items:center"><input class="comm-inp" data-tipo="especialidade" data-ref="${e.id}" value="${mapAtual['especialidade:'+e.id]??0}" type="number"/><span class="comm-pct">%</span></div></div>`).join('')||'<p style="font-size:13px;color:var(--light)">Nenhum exame no catálogo.</p>';
+  boxMed.innerHTML=(medicosAdmin||[]).map(m=>`<div class="comm-row"><div><div class="comm-lbl">${m.profiles?.nome||'—'}</div><div class="comm-hint">${m.cidade||''}</div></div><div style="display:flex;align-items:center"><input class="comm-inp" data-tipo="medico" data-ref="${m.id}" value="${mapAtual['medico:'+m.id]??0}" type="number"/><span class="comm-pct">%</span></div></div>`).join('')||'<p style="font-size:13px;color:var(--light)">Nenhum médico cadastrado.</p>';
+}
+async function salvarComissoes(){
+  const inputs=document.querySelectorAll('#ap-comissoes .comm-inp');
+  const rows=Array.from(inputs).map(i=>({tipo:i.dataset.tipo,referencia_id:i.dataset.ref,percentual:Number(i.value)||0}));
+  for(const r of rows){
+    const {error}=await sb.from('comissoes').upsert(r,{onConflict:'tipo,referencia_id'});
+    if(error){alert('Erro ao salvar comissão: '+error.message);return;}
+  }
+  alert('Comissões salvas. Lembre-se: ainda não são aplicadas no cálculo de repasse (pendência #4).');
+}
+/* CONFIG PORTAL */
+let configPortal=null;
+async function carregarConfigPortal(){
+  const {data}=await sb.from('config_portal').select('*').eq('id',true).maybeSingle();
+  configPortal=data;
+  return data;
+}
+async function initConfigPortal(){
+  const cfg=await carregarConfigPortal();
+  if(!cfg)return;
+  document.getElementById('cfg-email').value=cfg.email_contato||'';
+  document.getElementById('cfg-whatsapp').value=cfg.whatsapp_suporte||'';
+  const tglMvp=document.getElementById('tgl-mvp'),tglNovos=document.getElementById('tgl-novos');
+  tglMvp.classList.toggle('on',cfg.fase_mvp_ativa);tglMvp.classList.toggle('off',!cfg.fase_mvp_ativa);
+  tglNovos.classList.toggle('on',cfg.aceitar_novos_medicos);tglNovos.classList.toggle('off',!cfg.aceitar_novos_medicos);
+}
+async function salvarConfigPortal(){
+  const payload={
+    id:true,
+    email_contato:document.getElementById('cfg-email').value.trim()||null,
+    whatsapp_suporte:document.getElementById('cfg-whatsapp').value.trim()||null,
+    fase_mvp_ativa:document.getElementById('tgl-mvp').classList.contains('on'),
+    aceitar_novos_medicos:document.getElementById('tgl-novos').classList.contains('on')
+  };
+  const {error}=await sb.from('config_portal').upsert(payload,{onConflict:'id'});
+  if(error){alert('Erro: '+error.message);return;}
+  configPortal=payload;
+  alert('Configurações salvas.');
 }
 async function loadAdminAgendamentos(){
   const tbody=document.getElementById('admin-agendamentos-tbody');if(!tbody)return;
@@ -1767,7 +1895,7 @@ async function init(){
     refreshProfile().then(renderAuthSlot);
     if(evt==='PASSWORD_RECOVERY'){authMode='nova_senha';renderAuth();document.getElementById('auth-overlay').classList.add('on');}
   });
-  await Promise.all([loadCatalogo(),loadMedicos(),loadSponsor()]);
+  await Promise.all([loadCatalogo(),loadMedicos(),loadSponsor(),carregarConfigPortal()]);
   renderCards(MEDICOS);
 }
 init();
