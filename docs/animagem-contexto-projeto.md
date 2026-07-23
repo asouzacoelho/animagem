@@ -2,6 +2,8 @@
 > Documento de continuidade para Claude Projects  
 > Última atualização: Junho 2025 | André Coelho
 
+> ⚠️ **Documento histórico (visão original, pré-implementação).** Escrito antes de existir banco real — várias decisões técnicas aqui **não refletem mais o sistema atual**: a stack planejada era React+Vite+Vercel+Google Auth, mas o que está em produção é JavaScript vanilla + Supabase direto em [`public/`](../public), hospedado no Cloudflare Pages, com login por e-mail/senha. Para o estado técnico e de negócio atual, ver [`SETUP.md`](SETUP.md), [`PENDENCIAS.md`](PENDENCIAS.md) e [`GUIA_ANDRE.md`](GUIA_ANDRE.md). O que continua valendo daqui: personas, catálogo/preços de referência, modelo de monetização por fases e design system.
+
 ---
 
 ## 🎯 O que é o Animagem
