@@ -853,9 +853,18 @@ async function loadMedicos(){
   });
   buildLocationFilters();
 }
+// bairro so faz sentido como lista fechada quando a cidade escolhida e a cidade principal do medico --
+// nas outras cidades que ele atende (areaCidades) nao existe dado de bairro cadastrado, entao bairro
+// nao pode ser exigido/validado contra a lista de outra cidade (evita a incoerencia bairro x cidade)
+function bairroEspecificoDisponivel(med,cidade){
+  return !!(med.areaBairros?.length && (cidade||med.cidade)===med.cidade);
+}
 function areaOk(med,bairro,cidade){
-  const b=(bairro||'').trim().toLowerCase(),c=(cidade||'').trim().toLowerCase();
-  if(med.areaBairros?.length)return med.areaBairros.some(a=>a.toLowerCase()===b);
+  const c=(cidade||'').trim().toLowerCase();
+  if(bairroEspecificoDisponivel(med,cidade)){
+    const b=(bairro||'').trim().toLowerCase();
+    return med.areaBairros.some(a=>a.toLowerCase()===b);
+  }
   return (med.areaCidades||[med.cidade]).some(a=>a.toLowerCase()===c);
 }
 function buildLocationFilters(){
@@ -955,6 +964,7 @@ function renderAuth(){
     <div class="frow"><label class="flabel">E-mail *</label><input class="finput" id="au-email" type="email" placeholder="seu@email.com"/></div>
     <div class="frow"><label class="flabel">Senha *</label><input class="finput" id="au-senha" type="password" placeholder="mín. 6 caracteres"/></div>
     ${authMode==='login'?'<div style="text-align:right;margin-bottom:10px"><a href="#" style="font-size:12px;color:var(--plum)" onclick="authMode=\'recuperar\';renderAuth();return false;">Esqueci minha senha</a></div>':''}
+    ${authMode==='cadastro_tutor'?ENDERECO_TUTOR_HTML:''}
     ${authMode==='cadastro_medico'?TERMOS_MEDICO_HTML:''}
     ${authMode==='cadastro_clinica'?TERMOS_CLINICA_HTML(configPortal?.clinica_comissao_teto??20):''}
     <div id="au-err" style="color:var(--red);font-size:12px;margin-bottom:8px"></div>
@@ -981,6 +991,12 @@ async function salvarNovaSenha(){
   alert('Senha atualizada com sucesso. Você já está conectado(a).');
 }
 const TERMOS_VERSAO='2026-06-20';
+const ENDERECO_TUTOR_HTML=`
+  <div style="font-size:11px;color:var(--light);margin-bottom:8px">Esse endereço fica salvo no seu cadastro pra agilizar os próximos agendamentos — você ainda pode ajustar por agendamento.</div>
+  <div class="fgrid2"><div class="frow"><label class="flabel">Rua/Avenida *</label><input class="finput" id="au-end-rua" placeholder="Av. Engenheiro Augusto"/></div><div class="frow"><label class="flabel">Número *</label><input class="finput" id="au-end-numero" placeholder="123"/></div></div>
+  <div class="fgrid2"><div class="frow"><label class="flabel">Complemento</label><input class="finput" id="au-end-complemento" placeholder="Apto, bloco (opcional)"/></div><div class="frow"><label class="flabel">CEP *</label><input class="finput" id="au-end-cep" placeholder="00000-000" maxlength="9" oninput="fmtCEP(this)"/></div></div>
+  <div class="fgrid2"><div class="frow"><label class="flabel">Bairro *</label><input class="finput" id="au-end-bairro" placeholder="Seu bairro"/></div><div class="frow"><label class="flabel">Cidade *</label><input class="finput" id="au-end-cidade" placeholder="Campinas"/></div></div>
+  <div class="frow" style="max-width:160px"><label class="flabel">Estado *</label><input class="finput" id="au-end-estado" placeholder="SP" maxlength="2" style="text-transform:uppercase"/></div>`;
 const TERMOS_MEDICO_HTML=`
   <div class="frow"><label class="flabel">CRMV *</label><input class="finput" id="au-crmv" placeholder="CRMV-SP 00000"/></div>
   <div class="frow"><label class="flabel">Telefone/WhatsApp *</label><input class="finput" id="au-tel" placeholder="(19) 99999-9999" oninput="fmtTel(this)"/></div>
@@ -1053,6 +1069,21 @@ async function submitAuth(){
       if(!docFile){errEl.textContent='Envie o arquivo do documento selecionado.';return;}
       if(!(t1&&t2&&t3)){errEl.textContent='É necessário aceitar todos os termos para se cadastrar como médico.';return;}
     }
+    let endereco=null;
+    if(role==='tutor'){
+      endereco={
+        rua:document.getElementById('au-end-rua').value.trim(),
+        numero:document.getElementById('au-end-numero').value.trim(),
+        complemento:document.getElementById('au-end-complemento').value.trim()||null,
+        cep:document.getElementById('au-end-cep').value.trim(),
+        bairro:document.getElementById('au-end-bairro').value.trim(),
+        cidade:document.getElementById('au-end-cidade').value.trim(),
+        estado:document.getElementById('au-end-estado').value.trim().toUpperCase()
+      };
+      const obrigEnd=['rua','numero','cep','bairro','cidade','estado'];
+      const faltandoEnd=obrigEnd.filter(k=>!endereco[k]);
+      if(faltandoEnd.length){errEl.textContent='Preencha o endereço: '+faltandoEnd.map(k=>CAMPO_LABEL[k]||k).join(', ');return;}
+    }
     const {data,error}=await sb.auth.signUp({email,password:senha});
     if(error){errEl.textContent=error.message;return;}
     // signUp com e-mail já cadastrado retorna 200 sem criar nada (proteção contra enumeração de e-mail)
@@ -1062,7 +1093,7 @@ async function submitAuth(){
     }
     const uid=data.user?.id;
     if(uid){
-      const {error:perr}=await sb.from('profiles').insert({id:uid,role,nome,email});
+      const {error:perr}=await sb.from('profiles').insert({id:uid,role,nome,email,...(endereco||{})});
       if(perr){errEl.textContent='Conta criada, mas falhou ao salvar o perfil: '+perr.message;return;}
       if(role==='medico'){
         const {error:merr}=await sb.from('medicos').insert({id:uid,crmv,cidade:'Campinas',estado:'SP',ativo:false});
@@ -1321,11 +1352,16 @@ function openModal(id){
 }
 function closeModal(){document.getElementById('overlay').classList.remove('on');}
 async function precarregarDadosTutor(){
-  // se o tutor ja tem conta, evita ele redigitar o que a gente ja sabe (nome/e-mail/telefone/ultimo pet)
+  // se o tutor ja tem conta, evita ele redigitar o que a gente ja sabe (nome/e-mail/telefone/endereco/ultimo pet)
   if(!session)return;
   mForm.nome=mForm.nome||profile?.nome||'';
   mForm.email=mForm.email||profile?.email||session.user.email||'';
   mForm.tel=mForm.tel||profile?.telefone||'';
+  mForm.rua=mForm.rua||profile?.rua||'';
+  mForm.numero=mForm.numero||profile?.numero||'';
+  mForm.complemento=mForm.complemento||profile?.complemento||'';
+  mForm.cep=mForm.cep||profile?.cep||'';
+  mForm.bairro=mForm.bairro||profile?.bairro||'';
   const {data:pet}=await sb.from('pets').select('nome,especie,raca').eq('tutor_id',session.user.id).order('created_at',{ascending:false}).limit(1).maybeSingle();
   if(pet){
     mForm.pet=mForm.pet||pet.nome;
@@ -1386,14 +1422,13 @@ function renderM(){
     <div class="fgrid2"><div class="frow"><label class="flabel">Rua / Avenida *</label><input class="finput" id="f-rua" value="${f.rua||''}" placeholder="Av. Engenheiro Augusto"/></div><div class="frow"><label class="flabel">Número *</label><input class="finput" id="f-numero" value="${f.numero||''}" placeholder="123"/></div></div>
     <div class="fgrid2"><div class="frow"><label class="flabel">Complemento</label><input class="finput" id="f-complemento" value="${f.complemento||''}" placeholder="Apto, bloco (opcional)"/></div><div class="frow"><label class="flabel">CEP *</label><input class="finput" id="f-cep" value="${f.cep||''}" placeholder="00000-000" maxlength="9" oninput="fmtCEP(this)"/></div></div>
     <div class="fgrid2">
-      <div class="frow"><label class="flabel">Bairro ${mMed.areaBairros?.length?'*':'(opcional)'}</label>
-        <select class="finput" id="f-bairro">
-          ${mMed.areaBairros?.length?`<option value="" disabled ${!f.bairro?'selected':''}>Selecione o bairro</option>`:'<option value="">Não informado</option>'}
-          ${(mMed.areaBairros?.length?mMed.areaBairros:BAIRROS).map(b=>`<option ${f.bairro===b?'selected':''}>${b}</option>`).join('')}
-        </select>
+      <div class="frow"><label class="flabel">Bairro ${bairroEspecificoDisponivel(mMed,f.cidade)?'*':'(opcional)'}</label>
+        ${bairroEspecificoDisponivel(mMed,f.cidade)
+          ?`<select class="finput" id="f-bairro"><option value="" disabled ${mMed.areaBairros.includes(f.bairro)?'':'selected'}>Selecione o bairro</option>${mMed.areaBairros.map(b=>`<option ${f.bairro===b?'selected':''}>${b}</option>`).join('')}</select>`
+          :`<input class="finput" id="f-bairro" value="${f.bairro||''}" placeholder="Bairro (opcional)"/>`}
       </div>
       <div class="frow"><label class="flabel">Cidade *</label>
-        <select class="finput" id="f-cidade">${(mMed.areaCidades||[mMed.cidade]).map(c=>`<option ${f.cidade===c?'selected':''}>${c}</option>`).join('')}</select>
+        <select class="finput" id="f-cidade" onchange="syncFormFields();renderM()">${(mMed.areaCidades||[mMed.cidade]).map(c=>`<option ${(f.cidade||mMed.cidade)===c?'selected':''}>${c}</option>`).join('')}</select>
       </div>
     </div>
     <div class="frow" style="max-width:160px"><label class="flabel">Estado *</label>
@@ -1514,7 +1549,7 @@ function fmtCEP(inp){
 function saveForm(){
   syncFormFields();
   const obrig=['nome','tel','email','pet','esp','rua','numero','cep','cidade','estado'];
-  if(mMed.areaBairros?.length)obrig.push('bairro'); // só obrigatório quando o médico tem bairros específicos cadastrados
+  if(bairroEspecificoDisponivel(mMed,mForm.cidade))obrig.push('bairro'); // só obrigatório quando a cidade escolhida é a cidade principal do médico
   const faltando=obrig.filter(k=>!mForm[k]);
   if(faltando.length){alert('Preencha: '+faltando.map(k=>CAMPO_LABEL[k]||k).join(', '));return;}
   if(!areaOk(mMed,mForm.bairro,mForm.cidade)){
@@ -2059,10 +2094,12 @@ function renderCs(){
     <div class="fgrid2"><div class="frow"><label class="flabel">Rua / Avenida *</label><input class="finput" id="cs-rua" value="${f.rua||''}"/></div><div class="frow"><label class="flabel">Número *</label><input class="finput" id="cs-numero" value="${f.numero||''}"/></div></div>
     <div class="fgrid2"><div class="frow"><label class="flabel">Complemento</label><input class="finput" id="cs-complemento" value="${f.complemento||''}"/></div><div class="frow"><label class="flabel">CEP *</label><input class="finput" id="cs-cep" value="${f.cep||''}" maxlength="9" oninput="fmtCEP(this)"/></div></div>
     <div class="fgrid2">
-      <div class="frow"><label class="flabel">Bairro ${csMed.areaBairros?.length?'*':'(opcional)'}</label>
-        <select class="finput" id="cs-bairro">${csMed.areaBairros?.length?`<option value="" disabled ${!f.bairro?'selected':''}>Selecione o bairro</option>`:'<option value="">Não informado</option>'}${(csMed.areaBairros?.length?csMed.areaBairros:BAIRROS).map(b=>`<option ${f.bairro===b?'selected':''}>${b}</option>`).join('')}</select>
+      <div class="frow"><label class="flabel">Bairro ${bairroEspecificoDisponivel(csMed,f.cidade)?'*':'(opcional)'}</label>
+        ${bairroEspecificoDisponivel(csMed,f.cidade)
+          ?`<select class="finput" id="cs-bairro"><option value="" disabled ${csMed.areaBairros.includes(f.bairro)?'':'selected'}>Selecione o bairro</option>${csMed.areaBairros.map(b=>`<option ${f.bairro===b?'selected':''}>${b}</option>`).join('')}</select>`
+          :`<input class="finput" id="cs-bairro" value="${f.bairro||''}" placeholder="Bairro (opcional)"/>`}
       </div>
-      <div class="frow"><label class="flabel">Cidade *</label><select class="finput" id="cs-cidade">${(csMed.areaCidades||[csMed.cidade]).map(c=>`<option ${f.cidade===c?'selected':''}>${c}</option>`).join('')}</select></div>
+      <div class="frow"><label class="flabel">Cidade *</label><select class="finput" id="cs-cidade" onchange="syncCsFormFields();renderCs()">${(csMed.areaCidades||[csMed.cidade]).map(c=>`<option ${(f.cidade||csMed.cidade)===c?'selected':''}>${c}</option>`).join('')}</select></div>
     </div>
     <div class="frow" style="max-width:160px"><label class="flabel">Estado *</label><select class="finput" id="cs-estado"><option ${f.estado===csMed.estado?'selected':''}>${csMed.estado}</option></select></div>
     <div style="font-size:11px;color:var(--gold);margin-bottom:12px">⚠ O médico atenderá <strong>exatamente neste endereço</strong> — confira com o cliente antes de avançar.</div>
@@ -2122,7 +2159,7 @@ async function verificarTutorExistente(){
 function avancarCsOrientacoes(){
   syncCsFormFields();
   const obrig=['nome','tel','email','pet','esp','rua','numero','cep','cidade','estado'];
-  if(csMed.areaBairros?.length)obrig.push('bairro');
+  if(bairroEspecificoDisponivel(csMed,csForm.cidade))obrig.push('bairro');
   const faltando=obrig.filter(k=>!csForm[k]);
   if(faltando.length){alert('Preencha: '+faltando.map(k=>CAMPO_LABEL[k]||k).join(', '));return;}
   if(!areaOk(csMed,csForm.bairro,csForm.cidade)){alert(`Esse médico não atende ${csForm.bairro||csForm.cidade}. Verifique a área de atendimento ou escolha outro médico.`);return;}
