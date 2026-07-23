@@ -37,3 +37,27 @@ Em 2026-06-19, a pedido do André, criamos a estrutura para vender espaço patro
   - Definir quem pode anunciar: negócios locais relacionados a pet em Campinas/região (clínicas, pet food, laboratórios) — evitar anúncio genérico que não tenha relação com o público.
   - Limite de quantos slots por página, para não comprometer a experiência do tutor.
 - **Por que vale considerar para o ROI do projeto:** é receita não-dependente de comissão de agendamento — relevante porque hoje a comissão está em 0% (fase MVP) e o volume de transações ainda é baixo; patrocínio pode gerar caixa antes do marketplace atingir volume.
+
+---
+
+## Novo papel: Clínica veterinária (agendamento em nome do tutor)
+
+Implementado em 2026-07-23, a pedido do André: uma clínica veterinária busca médicos autônomos e agenda exames em nome do cliente dela, ganhando uma comissão por indicação.
+
+- **Schema:** tabela `clinicas` (espelha `medicos`: aprovação do admin via `ativo`), `clinica_onboarding` (espelha `medico_onboarding`: contrato social, documento dos sócios, comprovante de endereço, CRMV da clínica, situação do CNPJ verificada automaticamente via BrasilAPI no cadastro), bucket privado `documentos-clinicas`. Comissão da clínica é percentual, auto-definida por ela dentro de um teto (`config_portal.clinica_comissao_teto`, hoje 20%).
+- **Preço:** `agendamentos.clinica_id`/`origem` marcam quem indicou; `agendamento_exames` agora guarda `preco_medico` e `comissao_clinica` separados (a soma vira `preco`), calculado pelo mesmo trigger `validar_preco_exame()` que já existia — nunca confia em valor vindo do navegador.
+- **Fluxo de agendamento:** a clínica busca médico/horário/exame (reaproveita a disponibilidade real já existente) e preenche os dados do tutor/pet. Ao confirmar, o frontend chama `signInWithOtp` (cria/acha a conta do tutor sem precisar de Edge Function) e a função `clinica_criar_agendamento` (RPC, SECURITY DEFINER) cria o agendamento em nome do tutor. O tutor recebe um link mágico por e-mail e só ele que confirma os dados e "paga" (mesmo fluxo simulado de PIX/cartão que já existia — o valor mostrado já vem correto, incluindo a comissão da clínica).
+- **Testado ponta a ponta em 2026-07-23** com contas fake (`clinica.teste@animagem.com.br` / `admin.teste@animagem.com.br`, senha `Teste123!` — **remover antes de abrir para usuários reais**): busca de médico, criação do agendamento com split de preço correto, banner do tutor pendente de confirmação, e resumo de pagamento mostrando o valor certo (médico + comissão).
+- **O que falta:**
+  - Dados bancários da clínica para repasse da comissão (hoje não existe `clinica_dados_bancarios` — mesma pendência de repasse manual da #4, só que agora com 3 partes: médico, clínica, Animagem).
+  - Tela de admin "Clínicas" (aprovar/ver documentos) foi implementada espelhando a de médicos, mas **não foi clicada manualmente no navegador** — só a lógica de aprovação via SQL direto foi validada.
+  - E-mail de confirmação ao tutor ainda depende da pendência #9 (hoje só o magic link do Supabase Auth é enviado, sem um e-mail transacional bonito explicando o agendamento).
+
+**Rodada de ajustes de UX/bugs em 2026-07-23** (achados por André testando com as contas fake), todos implementados e testados ponta a ponta:
+- Modal de login/cadastro simplificado: sem os chips "Entrar/Cadastrar", agora é direto (e-mail/senha + link contextual "Ainda não tem cadastro?"), com médico/clínica como links secundários.
+- Corrigido bug grave: clicar "Agendar" sem estar logado abria o login mas, depois de autenticar, devolvia o tutor pra busca em vez de retomar o agendamento — agora `pendingBookingMedicoId` guarda o médico e reabre o modal automaticamente pós-login.
+- Etapa "Dados" do agendamento agora pré-preenche nome/e-mail/telefone/pet a partir da conta do tutor logado (`precarregarDadosTutor()`), em vez de vir sempre em branco.
+- Erros de validação agora listam os campos específicos faltando (`CAMPO_LABEL`), e o campo Bairro — quando obrigatório pra aquele médico — não aceita mais "Não informado" como opção enganosa (vira um placeholder desabilitado).
+- Busca de médico pela clínica ganhou os mesmos filtros do tutor (Estado/Cidade/Tipo de exame em dropdown, resultado só aparece após buscar); e as opções desses dropdowns (incluindo o de exame na tela do tutor, que antes era uma lista HTML fixa) agora só mostram o que existe de verdade entre os médicos ativos.
+- Novo passo "Orientações" no agendamento pela clínica: o operador pode deixar uma nota clínica pro médico que vai realizar o exame (`agendamentos.observacoes`, via novo parâmetro `p_observacoes` na RPC `clinica_criar_agendamento`). Corrigido junto: o médico nunca via `observacoes` em lugar nenhum do próprio painel (nem as do fluxo normal do tutor) — agora aparece no dashboard/histórico dele.
+- Nova função `clinica_verificar_tutor(email)` (RPC, só pra clínica ativa) permite mostrar em tempo real, ao digitar o e-mail do tutor, se já existe cadastro ("✓ Cliente já cadastrado") ou se será criada uma conta nova — sem expor dados sensíveis de tutores que a clínica ainda não atende.

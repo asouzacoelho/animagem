@@ -381,6 +381,7 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
   <div class="topnav-desktop">
     <button class="topnav-btn on" onclick="showView('tutor')">🐾 Buscar exame</button>
     <button class="topnav-btn med" onclick="showView('medico')">🩺 Área do médico</button>
+    <button class="topnav-btn cli" onclick="showView('clinica')">🏥 Área da clínica</button>
     <button class="topnav-btn adm" onclick="showView('admin')">⚙️ Admin</button>
   </div>
   <div id="auth-slot" style="display:flex;align-items:center;gap:8px"></div>
@@ -390,6 +391,7 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
 <div class="bottomnav">
   <button class="bnav-btn on" id="bn-tutor" onclick="showView('tutor')"><div class="bnav-icon">🐾</div>Buscar</button>
   <button class="bnav-btn" id="bn-medico" onclick="showView('medico')"><div class="bnav-icon">🩺</div>Médico</button>
+  <button class="bnav-btn" id="bn-clinica" onclick="showView('clinica')"><div class="bnav-icon">🏥</div>Clínica</button>
   <button class="bnav-btn" id="bn-admin" onclick="showView('admin')"><div class="bnav-icon">⚙️</div>Admin</button>
 </div>
 
@@ -412,10 +414,6 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
         <div class="sf"><label class="sf-label">Tipo de exame</label>
           <select class="si" id="s-exame" onchange="renderWhy(this.value)">
             <option value="">Todos os exames</option>
-            <option>Ultrassom Abdominal</option><option>Ultrassom Gestacional</option>
-            <option>Ecocardiograma</option><option>Ultrassom Ortopédico</option>
-            <option>Ultrassom Ocular</option><option>Raio-X Portátil</option>
-            <option>Eletrocardiograma</option>
           </select>
         </div>
         <div class="sf"><label class="sf-label">Estado</label>
@@ -436,6 +434,8 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
       </div>
     </div>
   </div>
+
+  <div id="banner-pendente-clinica" style="max-width:900px;margin:0 auto;padding:14px 16px 0"></div>
 
   <div class="results-wrap">
     <div class="results-head">
@@ -471,7 +471,7 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
 <div class="overlay" id="auth-overlay">
   <div class="modal">
     <div class="modal-head">
-      <div><h3 id="auth-title">Entrar</h3><p>Acesso de tutor ou médico</p></div>
+      <div><h3 id="auth-title">Entrar</h3><p>Tutor, médico ou clínica</p></div>
       <button class="modal-close" onclick="closeAuth()">✕</button>
     </div>
     <div class="modal-body" id="auth-body"></div>
@@ -607,6 +607,55 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
   </div>
 </div>
 
+<!-- ══ CLÍNICA ══ -->
+<div class="view" id="view-clinica">
+  <div class="med-layout">
+    <!-- Sidebar desktop -->
+    <div class="med-sidebar">
+      <div class="med-sidebar-logo"><div class="logo" style="font-size:16px">Animagem</div><p>Área da Clínica</p></div>
+      <div class="med-sidebar-nav on" data-cp="agendar">🔎 Agendar</div>
+      <div class="med-sidebar-nav" data-cp="agendamentos">📋 Meus Agendamentos</div>
+      <div class="med-sidebar-nav" data-cp="perfil">👤 Perfil</div>
+      <div class="med-sidebar-foot">Clínica parceira · Animagem</div>
+    </div>
+    <!-- Main -->
+    <div class="med-main">
+      <!-- Tab strip mobile -->
+      <div class="tab-strip">
+        <button class="tab-btn on" data-cp="agendar">🔎 Agendar</button>
+        <button class="tab-btn" data-cp="agendamentos">📋 Agend.</button>
+        <button class="tab-btn" data-cp="perfil">👤 Perfil</button>
+      </div>
+      <div class="mpages">
+        <!-- AGENDAR -->
+        <div class="mpage on" id="cp-agendar">
+          <div class="ptitle">Agendar para um cliente</div><div class="psub">Busque um médico, escolha o horário e os dados do tutor — ele recebe um e-mail para confirmar e pagar</div>
+          <div class="tcard" id="cs-body"></div>
+        </div>
+        <!-- MEUS AGENDAMENTOS -->
+        <div class="mpage" id="cp-agendamentos">
+          <div class="ptitle">Meus Agendamentos</div><div class="psub">Exames que você indicou e sua comissão em cada um</div>
+          <div class="tcard">
+            <div id="cs-lista-agendamentos"><p style="font-size:13px;color:var(--light)">Carregando…</p></div>
+          </div>
+        </div>
+        <!-- PERFIL -->
+        <div class="mpage" id="cp-perfil">
+          <div class="ptitle">Meu Perfil</div><div class="psub">Dados da clínica e comissão por indicação</div>
+          <div class="tcard">
+            <p style="font-size:12px;margin-bottom:12px" id="cf-status">—</p>
+            <div class="frow"><label class="flabel">Razão social</label><input class="finput" id="cf-razao"/></div>
+            <div class="frow"><label class="flabel">Nome fantasia</label><input class="finput" id="cf-fantasia"/></div>
+            <div class="fgrid2"><div class="frow"><label class="flabel">Cidade</label><input class="finput" id="cf-cidade"/></div><div class="frow"><label class="flabel">Estado</label><input class="finput" id="cf-estado" maxlength="2" style="text-transform:uppercase"/></div></div>
+            <div class="frow" style="max-width:200px"><label class="flabel">Comissão por indicação (%)</label><input class="finput" id="cf-comissao" type="number" min="0" step="0.5"/></div>
+            <button class="btn-save" style="margin-top:14px" onclick="salvarPerfilClinica()">Salvar perfil</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ══ ADMIN ══ -->
 <div class="view" id="view-admin">
   <div class="admin-layout">
@@ -614,6 +663,7 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
       <div class="admin-sidebar-logo"><div class="logo" style="font-size:16px">Animagem</div><p>Administração</p></div>
       <div class="admin-sidebar-nav on" data-ap="dash">📊 Visão geral</div>
       <div class="admin-sidebar-nav" data-ap="medicos">🩺 Médicos</div>
+      <div class="admin-sidebar-nav" data-ap="clinicas">🏥 Clínicas</div>
       <div class="admin-sidebar-nav" data-ap="agendamentos">📋 Agendamentos</div>
       <div class="admin-sidebar-nav" data-ap="patrocinadores">📢 Patrocinadores</div>
       <div class="admin-sidebar-nav" data-ap="comissoes">💰 Comissões</div>
@@ -623,6 +673,7 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
       <div class="tab-strip" id="admin-tabs">
         <button class="tab-btn on" data-ap="dash">📊 Geral</button>
         <button class="tab-btn" data-ap="medicos">🩺 Médicos</button>
+        <button class="tab-btn" data-ap="clinicas">🏥 Clínicas</button>
         <button class="tab-btn" data-ap="agendamentos">📋 Agend.</button>
         <button class="tab-btn" data-ap="patrocinadores">📢 Patroc.</button>
         <button class="tab-btn" data-ap="comissoes">💰 Comissões</button>
@@ -652,6 +703,18 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
               <table class="tbl">
                 <thead><tr><th>Médico</th><th>CRMV</th><th>Cidade</th><th>Documentação</th><th>Status</th><th>Ação</th></tr></thead>
                 <tbody id="admin-medicos-tbody"><tr><td colspan="6">Carregando…</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <!-- CLÍNICAS -->
+        <div class="apage" id="ap-clinicas">
+          <div class="ptitle">Clínicas</div><div class="psub">Clínicas parceiras cadastradas (dados reais do Supabase)</div>
+          <div class="tcard">
+            <div class="tbl-wrap">
+              <table class="tbl">
+                <thead><tr><th>Clínica</th><th>CNPJ</th><th>Situação CNPJ</th><th>Cidade</th><th>Comissão</th><th>Documentação</th><th>Status</th><th>Ação</th></tr></thead>
+                <tbody id="admin-clinicas-tbody"><tr><td colspan="8">Carregando…</td></tr></tbody>
               </table>
             </div>
           </div>
@@ -740,6 +803,7 @@ async function municipiosDoEstado(uf){
   }
 }
 const ESP=["Cão","Gato","Coelho","Ave","Réptil","Outro"];
+const CAMPO_LABEL={nome:'Nome',tel:'WhatsApp',email:'E-mail',pet:'Nome do pet',esp:'Espécie',rua:'Rua/Avenida',numero:'Número',cep:'CEP',cidade:'Cidade',estado:'Estado',bairro:'Bairro'};
 
 async function loadCatalogo(){
   const {data,error}=await sb.from('exames_catalogo').select('*').order('nome');
@@ -798,12 +862,15 @@ function buildLocationFilters(){
   const estados=[...new Set(MEDICOS.map(m=>m.estado))].sort();
   const cidades=[...new Set(MEDICOS.flatMap(m=>m.areaCidades||[m.cidade]))].sort();
   const bairros=[...new Set(MEDICOS.flatMap(m=>m.areaBairros||[]))].sort();
+  const exames=[...new Set(MEDICOS.flatMap(m=>m.specs||[]))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
   const se=document.getElementById('s-estado');
   if(se)se.innerHTML=estados.map(e=>`<option value="${e}">${e}</option>`).join('')||'<option value="SP">SP</option>';
   const sc=document.getElementById('s-cidade');
   if(sc)sc.innerHTML='<option value="">Todas as cidades</option>'+cidades.map(c=>`<option ${c==='Campinas'?'selected':''}>${c}</option>`).join('');
   const sb_=document.getElementById('s-bairro');
   if(sb_)sb_.innerHTML='<option value="">Todos os bairros</option>'+bairros.map(b=>`<option>${b}</option>`).join('');
+  const sx=document.getElementById('s-exame');
+  if(sx){const atual=sx.value;sx.innerHTML='<option value="">Todos os exames</option>'+exames.map(e=>`<option ${e===atual?'selected':''}>${e}</option>`).join('');}
 }
 
 /* ─── AUTENTICAÇÃO ─── */
@@ -821,10 +888,14 @@ function renderAuthSlot(){
   }
   const isAdmin=profile?.role==='admin';
   const isMedico=profile?.role==='medico';
+  const isClinica=profile?.role==='clinica';
   document.querySelectorAll('.topnav-btn.adm').forEach(x=>x.style.display=isAdmin?'':'none');
   document.querySelectorAll('.topnav-btn.med').forEach(x=>x.style.display=isMedico?'':'none');
+  document.querySelectorAll('.topnav-btn.cli').forEach(x=>x.style.display=isClinica?'':'none');
   const bnAdmin=document.getElementById('bn-admin');if(bnAdmin)bnAdmin.style.display=isAdmin?'':'none';
   const bnMedico=document.getElementById('bn-medico');if(bnMedico)bnMedico.style.display=isMedico?'':'none';
+  const bnClinica=document.getElementById('bn-clinica');if(bnClinica)bnClinica.style.display=isClinica?'':'none';
+  verificarAgendamentosPendentesClinica();
 }
 async function logout(){await sb.auth.signOut();session=null;profile=null;renderAuthSlot();}
 function abrirMinhaConta(){document.getElementById('conta-overlay').classList.add('on');}
@@ -868,19 +939,24 @@ function renderAuth(){
   }
   const podeAceitarMedico=configPortal?.aceitar_novos_medicos!==false;
   if((authContextoAgendamento||!podeAceitarMedico)&&authMode==='cadastro_medico')authMode='cadastro_tutor';
-  document.getElementById('auth-title').textContent=authMode==='login'?'Entrar':'Criar conta';
+  const titulos={login:'Entrar',cadastro_tutor:'Criar conta',cadastro_medico:'Cadastro de médico',cadastro_clinica:'Cadastro de clínica'};
+  document.getElementById('auth-title').textContent=titulos[authMode]||'Criar conta';
+  const linksNav=authMode==='login'
+    ?`<div style="font-size:13px;color:var(--mid);margin-bottom:14px;line-height:1.9">
+        Ainda não tem cadastro? <a href="#" style="color:var(--plum);font-weight:700" onclick="authMode='cadastro_tutor';renderAuth();return false;">Criar cadastro</a>
+        ${(authContextoAgendamento||!podeAceitarMedico)?'':'<br/>É médico veterinário? <a href="#" style="color:var(--plum)" onclick="authMode=\'cadastro_medico\';renderAuth();return false;">Cadastre-se aqui</a>'}
+        ${authContextoAgendamento?'':'<br/>Tem uma clínica veterinária? <a href="#" style="color:var(--plum)" onclick="authMode=\'cadastro_clinica\';renderAuth();return false;">Cadastre-se aqui</a>'}
+      </div>`
+    :`<div style="font-size:13px;color:var(--mid);margin-bottom:14px">Já tem conta? <a href="#" style="color:var(--plum);font-weight:700" onclick="authMode='login';renderAuth();return false;">Entrar</a></div>`;
   b.innerHTML=`
-    <div class="chips" style="margin-bottom:12px">
-      <div class="chip ${authMode==='login'?'on':''}" onclick="authMode='login';renderAuth()">Entrar</div>
-      <div class="chip ${authMode==='cadastro_tutor'?'on':''}" onclick="authMode='cadastro_tutor';renderAuth()">Cadastrar (tutor)</div>
-      ${(authContextoAgendamento||!podeAceitarMedico)?'':'<div class="chip '+(authMode==='cadastro_medico'?'on':'')+'" onclick="authMode=\'cadastro_medico\';renderAuth()">Cadastrar (médico)</div>'}
-    </div>
+    ${linksNav}
     ${(!podeAceitarMedico&&authMode==='cadastro_tutor'&&!authContextoAgendamento)?'<p style="font-size:11px;color:var(--light);margin-bottom:8px">Cadastro de novos médicos está temporariamente pausado pela administração.</p>':''}
     ${authMode!=='login'?'<div class="frow"><label class="flabel">Nome completo *</label><input class="finput" id="au-nome" placeholder="Seu nome"/></div>':''}
     <div class="frow"><label class="flabel">E-mail *</label><input class="finput" id="au-email" type="email" placeholder="seu@email.com"/></div>
     <div class="frow"><label class="flabel">Senha *</label><input class="finput" id="au-senha" type="password" placeholder="mín. 6 caracteres"/></div>
     ${authMode==='login'?'<div style="text-align:right;margin-bottom:10px"><a href="#" style="font-size:12px;color:var(--plum)" onclick="authMode=\'recuperar\';renderAuth();return false;">Esqueci minha senha</a></div>':''}
     ${authMode==='cadastro_medico'?TERMOS_MEDICO_HTML:''}
+    ${authMode==='cadastro_clinica'?TERMOS_CLINICA_HTML(configPortal?.clinica_comissao_teto??20):''}
     <div id="au-err" style="color:var(--red);font-size:12px;margin-bottom:8px"></div>
     <button class="btn-p" onclick="submitAuth()">${authMode==='login'?'Entrar':'Criar conta'}</button>`;
 }
@@ -915,6 +991,19 @@ const TERMOS_MEDICO_HTML=`
   <label style="display:flex;gap:8px;font-size:12px;margin-bottom:6px;align-items:flex-start"><input type="checkbox" id="au-t1" style="margin-top:2px"/> Entendo como o Animagem funciona (marketplace que conecta tutores a médicos veterinários para atendimento domiciliar) e estou de acordo com as responsabilidades de um médico parceiro, incluindo atender exatamente no endereço informado pelo tutor.</label>
   <label style="display:flex;gap:8px;font-size:12px;margin-bottom:6px;align-items:flex-start"><input type="checkbox" id="au-t2" style="margin-top:2px"/> Autorizo o uso do meu nome, CRMV, foto e descrição profissional para divulgação no portal e em materiais de marketing do Animagem.</label>
   <label style="display:flex;gap:8px;font-size:12px;margin-bottom:10px;align-items:flex-start"><input type="checkbox" id="au-t3" style="margin-top:2px"/> Estou de acordo com a forma de pagamento e repasse: o tutor paga pelo portal, o Animagem retém a comissão vigente (hoje 0%, fase MVP) e repassa o restante para a chave PIX/conta que eu cadastrar.</label>`;
+const TERMOS_CLINICA_HTML=(teto)=>`
+  <div class="fgrid2"><div class="frow"><label class="flabel">CNPJ *</label><input class="finput" id="au-cnpj" placeholder="00.000.000/0000-00" maxlength="18" oninput="fmtCNPJ(this)"/></div><div class="frow"><label class="flabel">Comissão desejada (%) *</label><input class="finput" id="au-comissao" type="number" min="0" max="${teto}" step="0.5" placeholder="ex: 10"/></div></div>
+  <div class="frow"><label class="flabel">Razão social *</label><input class="finput" id="au-razao" placeholder="Clínica Veterinária Exemplo Ltda"/></div>
+  <div class="frow"><label class="flabel">Nome fantasia</label><input class="finput" id="au-fantasia" placeholder="Opcional"/></div>
+  <div class="fgrid2"><div class="frow"><label class="flabel">Cidade *</label><input class="finput" id="au-cidade" placeholder="Campinas"/></div><div class="frow"><label class="flabel">Estado *</label><input class="finput" id="au-estado" placeholder="SP" maxlength="2" style="text-transform:uppercase"/></div></div>
+  <div style="font-size:11px;color:var(--light);margin-bottom:8px">A comissão fica limitada ao teto definido pela administração (hoje: ${teto}%). Ela é somada ao preço do médico e cobrada do tutor no pagamento — não sai do bolso da clínica.</div>
+  <div class="frow"><label class="flabel">Contrato social *</label><input class="finput" id="au-contrato-social" type="file" accept="image/*,.pdf"/></div>
+  <div class="frow"><label class="flabel">Documento dos sócios (RG/CPF de todos, pode ser 1 PDF combinado) *</label><input class="finput" id="au-doc-socios" type="file" accept="image/*,.pdf"/></div>
+  <div class="frow"><label class="flabel">Comprovante de endereço da clínica *</label><input class="finput" id="au-comprovante-endereco" type="file" accept="image/*,.pdf"/></div>
+  <div class="frow"><label class="flabel">CRMV da clínica (responsabilidade técnica) *</label><input class="finput" id="au-crmv-clinica" type="file" accept="image/*,.pdf"/></div>
+  <div style="font-size:11px;color:var(--light);margin:4px 0 10px">Sua conta fica <strong>pendente de aprovação</strong> da administração após o envio. Você só consegue agendar depois de aprovada.</div>
+  <label style="display:flex;gap:8px;font-size:12px;margin-bottom:6px;align-items:flex-start"><input type="checkbox" id="au-tc1" style="margin-top:2px"/> Entendo como funciona o Animagem para clínicas parceiras (buscar médicos autônomos e agendar exames em nome dos meus clientes) e sou responsável pela veracidade dos dados do tutor/pet que eu inserir em nome dele.</label>
+  <label style="display:flex;gap:8px;font-size:12px;margin-bottom:10px;align-items:flex-start"><input type="checkbox" id="au-tc2" style="margin-top:2px"/> Estou de acordo com a comissão definida acima e com a forma de pagamento: o tutor paga o valor total (exame + minha comissão) pelo portal, e o repasse da minha parte segue a mesma forma combinada com a administração.</label>`;
 async function submitAuth(){
   const email=document.getElementById('au-email').value.trim();
   const senha=document.getElementById('au-senha').value;
@@ -927,8 +1016,29 @@ async function submitAuth(){
   }else{
     const nome=document.getElementById('au-nome').value.trim();
     if(!nome){errEl.textContent='Preencha o nome.';return;}
-    const role=authMode==='cadastro_medico'?'medico':'tutor';
+    const role=authMode==='cadastro_medico'?'medico':authMode==='cadastro_clinica'?'clinica':'tutor';
     if(role==='medico'&&configPortal?.aceitar_novos_medicos===false){errEl.textContent='Cadastro de novos médicos está temporariamente pausado pela administração.';return;}
+    let cnpj,razaoSocial,fantasia,cCidade,cEstado,comissao,contratoSocialFile,docSociosFile,comprovanteEnderecoFile,crmvClinicaFile;
+    if(role==='clinica'){
+      cnpj=document.getElementById('au-cnpj').value.trim();
+      razaoSocial=document.getElementById('au-razao').value.trim();
+      fantasia=document.getElementById('au-fantasia').value.trim();
+      cCidade=document.getElementById('au-cidade').value.trim();
+      cEstado=document.getElementById('au-estado').value.trim().toUpperCase();
+      comissao=Number(document.getElementById('au-comissao').value);
+      contratoSocialFile=document.getElementById('au-contrato-social').files[0];
+      docSociosFile=document.getElementById('au-doc-socios').files[0];
+      comprovanteEnderecoFile=document.getElementById('au-comprovante-endereco').files[0];
+      crmvClinicaFile=document.getElementById('au-crmv-clinica').files[0];
+      const tc1=document.getElementById('au-tc1').checked,tc2=document.getElementById('au-tc2').checked;
+      const teto=configPortal?.clinica_comissao_teto??20;
+      if(!cnpj){errEl.textContent='Preencha o CNPJ.';return;}
+      if(!razaoSocial){errEl.textContent='Preencha a razão social.';return;}
+      if(!cCidade||!cEstado){errEl.textContent='Preencha cidade e estado.';return;}
+      if(!(comissao>=0&&comissao<=teto)){errEl.textContent=`Comissão deve estar entre 0 e ${teto}%.`;return;}
+      if(!contratoSocialFile||!docSociosFile||!comprovanteEnderecoFile||!crmvClinicaFile){errEl.textContent='Envie os 4 documentos obrigatórios.';return;}
+      if(!(tc1&&tc2)){errEl.textContent='É necessário aceitar todos os termos para se cadastrar como clínica.';return;}
+    }
     let crmv,tel,docTipo,docFile,docExtraFile;
     if(role==='medico'){
       crmv=document.getElementById('au-crmv').value.trim();
@@ -975,15 +1085,70 @@ async function submitAuth(){
         });
         if(oerr){errEl.textContent='Conta criada, mas falhou ao registrar onboarding: '+oerr.message;return;}
       }
+      if(role==='clinica'){
+        const {error:cerr}=await sb.from('clinicas').insert({
+          id:uid,cnpj,razao_social:razaoSocial,nome_fantasia:fantasia||null,cidade:cCidade,estado:cEstado,comissao_percentual:comissao,ativo:false
+        });
+        if(cerr){errEl.textContent='Perfil criado, mas falhou ao salvar dados da clínica: '+cerr.message;return;}
+        // sessão recém-criada já está ativa após signUp (confirmação de e-mail desligada), então o upload pode usar o uid no path com segurança via RLS
+        const uploadDoc=async(file,tag)=>{
+          const path=`${uid}/${Date.now()}_${tag}_${file.name}`;
+          const {error:uperr}=await sb.storage.from('documentos-clinicas').upload(path,file);
+          if(uperr)throw new Error(`Falha ao enviar ${tag}: ${uperr.message}`);
+          return path;
+        };
+        let contratoSocialPath,docSociosPath,comprovanteEnderecoPath,crmvClinicaPath;
+        try{
+          contratoSocialPath=await uploadDoc(contratoSocialFile,'contrato');
+          docSociosPath=await uploadDoc(docSociosFile,'socios');
+          comprovanteEnderecoPath=await uploadDoc(comprovanteEnderecoFile,'endereco');
+          crmvClinicaPath=await uploadDoc(crmvClinicaFile,'crmv');
+        }catch(e){errEl.textContent='Conta criada, mas '+e.message;return;}
+        const cnpjSituacao=await verificarCnpjSituacao(cnpj);
+        const {error:coerr}=await sb.from('clinica_onboarding').insert({
+          clinica_id:uid,contrato_social_path:contratoSocialPath,documentos_socios_path:docSociosPath,
+          comprovante_endereco_path:comprovanteEnderecoPath,crmv_path:crmvClinicaPath,
+          cnpj_situacao:cnpjSituacao,cnpj_situacao_verificado_em:new Date().toISOString(),
+          termos_versao:TERMOS_VERSAO,termos_aceitos_em:new Date().toISOString(),status:'pendente'
+        });
+        if(coerr){errEl.textContent='Conta criada, mas falhou ao registrar onboarding: '+coerr.message;return;}
+        if(cnpjSituacao&&cnpjSituacao!=='ATIVA'){alert(`Atenção: a situação cadastral desse CNPJ na Receita Federal aparece como "${cnpjSituacao}", não ATIVA. Isso não impede seu cadastro, mas será revisado pela administração antes da aprovação.`);}
+      }
     }
   }
   const eraCadastroMedico=authMode==='cadastro_medico';
+  const eraCadastroClinica=authMode==='cadastro_clinica';
   const {data:s}=await sb.auth.getSession();
   session=s.session;
   await refreshProfile();
   renderAuthSlot();
   closeAuth();
   if(eraCadastroMedico)alert('Conta criada! Sua documentação e termos foram registrados. Um admin precisa aprovar seu cadastro antes de você aparecer nas buscas.');
+  if(eraCadastroClinica)alert('Conta criada! Seus documentos e termos foram registrados. Um admin precisa aprovar seu cadastro antes de você conseguir agendar exames.');
+  // se o login/cadastro veio de um "Agendar" clicado sem sessão, retoma direto pra dentro do agendamento
+  // em vez de devolver o tutor pra tela de busca como se nada tivesse acontecido
+  if(pendingBookingMedicoId&&!eraCadastroMedico&&!eraCadastroClinica){
+    const id=pendingBookingMedicoId;pendingBookingMedicoId=null;
+    openModal(id);
+  }
+}
+function fmtCNPJ(inp){
+  let v=inp.value.replace(/\D/g,'').slice(0,14);
+  if(v.length>12)v=v.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{0,2})/,'$1.$2.$3/$4-$5');
+  else if(v.length>8)v=v.replace(/(\d{2})(\d{3})(\d{3})(\d{0,4})/,'$1.$2.$3/$4');
+  else if(v.length>5)v=v.replace(/(\d{2})(\d{3})(\d{0,3})/,'$1.$2.$3');
+  else if(v.length>2)v=v.replace(/(\d{2})(\d{0,3})/,'$1.$2');
+  inp.value=v;
+}
+async function verificarCnpjSituacao(cnpj){
+  const cnpjLimpo=cnpj.replace(/\D/g,'');
+  if(cnpjLimpo.length!==14)return null;
+  try{
+    const r=await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpjLimpo}`);
+    if(!r.ok)return null;
+    const data=await r.json();
+    return data.descricao_situacao_cadastral||null;
+  }catch(e){return null;}
 }
 
 /* ─── STATE ─── */
@@ -995,7 +1160,8 @@ async function avancarParaHorarios(){
   mSlotsCache=await getSlotsReais(mMed);
   renderM();
 }
-const mTotal=()=>mServs.reduce((s,e)=>s+(EP[e]?.p||0),0);
+let mTotalOverride=null;
+const mTotal=()=>mTotalOverride??mServs.reduce((s,e)=>s+(EP[e]?.p||0),0);
 const TAXA_CARTAO=0.0399;
 const valorFinal=()=>mPay==='cartao'?+(mTotal()*(1+TAXA_CARTAO)).toFixed(2):mTotal();
 
@@ -1009,7 +1175,9 @@ function showView(v){
   document.querySelectorAll(`.topnav-btn[onclick*="'${v}'"]`).forEach(x=>x.classList.add('on'));
   if(v==='admin'&&profile?.role!=='admin'){alert('Acesso restrito a administradores.');showView('tutor');return;}
   if(v==='medico'&&profile?.role!=='medico'){alert('Acesso restrito a médicos cadastrados.');showView('tutor');return;}
+  if(v==='clinica'&&profile?.role!=='clinica'){alert('Acesso restrito a clínicas cadastradas.');showView('tutor');return;}
   if(v==='medico')initMedico();
+  if(v==='clinica')initClinica();
   if(v==='admin')initAdmin();
 }
 
@@ -1135,9 +1303,10 @@ const fD=d=>d.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'s
 const fH=d=>d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
 function gByDay(sl){const m={};sl.forEach(s=>{const k=s.toDateString();if(!m[k])m[k]=[];m[k].push(s);});return m;}
 
+let pendingBookingMedicoId=null;
 function openModal(id){
-  if(!session){openAuth('login',true);return;}
-  mMed=MEDICOS.find(x=>x.id===id);ms=0;mServs=[];mSlot=null;mForm={};mPay=null;mPix=null;mSlotsCache=null;
+  if(!session){pendingBookingMedicoId=id;openAuth('login',true);return;}
+  mMed=MEDICOS.find(x=>x.id===id);ms=0;mServs=[];mSlot=null;mForm={};mPay=null;mPix=null;mSlotsCache=null;mAgendamento=null;mTotalOverride=null;
   const exFiltro=document.getElementById('s-exame')?.value;
   if(exFiltro&&mMed.specs.includes(exFiltro))mServs=[exFiltro];
   mForm.estado=document.getElementById('s-estado')?.value||'SP';
@@ -1148,8 +1317,23 @@ function openModal(id){
   document.getElementById('m-sub').textContent=mMed.crmv+' · '+mMed.cidade;
   document.getElementById('overlay').classList.add('on');
   renderM();
+  precarregarDadosTutor();
 }
 function closeModal(){document.getElementById('overlay').classList.remove('on');}
+async function precarregarDadosTutor(){
+  // se o tutor ja tem conta, evita ele redigitar o que a gente ja sabe (nome/e-mail/telefone/ultimo pet)
+  if(!session)return;
+  mForm.nome=mForm.nome||profile?.nome||'';
+  mForm.email=mForm.email||profile?.email||session.user.email||'';
+  mForm.tel=mForm.tel||profile?.telefone||'';
+  const {data:pet}=await sb.from('pets').select('nome,especie,raca').eq('tutor_id',session.user.id).order('created_at',{ascending:false}).limit(1).maybeSingle();
+  if(pet){
+    mForm.pet=mForm.pet||pet.nome;
+    mForm.esp=mForm.esp||pet.especie;
+    mForm.raca=mForm.raca||pet.raca||'';
+  }
+  if(ms===2)renderM(); // se o usuario ja estiver na etapa de dados, atualiza com o que acabou de chegar
+}
 
 function prog(s){
   const steps=['Exame','Horário','Dados','Pagamento','✓'];
@@ -1204,7 +1388,7 @@ function renderM(){
     <div class="fgrid2">
       <div class="frow"><label class="flabel">Bairro ${mMed.areaBairros?.length?'*':'(opcional)'}</label>
         <select class="finput" id="f-bairro">
-          <option value="">Não informado</option>
+          ${mMed.areaBairros?.length?`<option value="" disabled ${!f.bairro?'selected':''}>Selecione o bairro</option>`:'<option value="">Não informado</option>'}
           ${(mMed.areaBairros?.length?mMed.areaBairros:BAIRROS).map(b=>`<option ${f.bairro===b?'selected':''}>${b}</option>`).join('')}
         </select>
       </div>
@@ -1332,7 +1516,7 @@ function saveForm(){
   const obrig=['nome','tel','email','pet','esp','rua','numero','cep','cidade','estado'];
   if(mMed.areaBairros?.length)obrig.push('bairro'); // só obrigatório quando o médico tem bairros específicos cadastrados
   const faltando=obrig.filter(k=>!mForm[k]);
-  if(faltando.length){alert('Preencha todos os campos obrigatórios (*)');return;}
+  if(faltando.length){alert('Preencha: '+faltando.map(k=>CAMPO_LABEL[k]||k).join(', '));return;}
   if(!areaOk(mMed,mForm.bairro,mForm.cidade)){
     alert(`Esse médico não atende ${mForm.bairro||mForm.cidade}. Verifique a área de atendimento dele ou escolha outro médico.`);
     return;
@@ -1404,6 +1588,9 @@ async function obterOuCriarPet(){
   return novo.id;
 }
 async function criarAgendamento(){
+  // agendamento feito por uma clinica em nome do tutor — a linha ja existe no banco,
+  // so falta mostrar a confirmacao (o "pagamento" aqui, como em todo o app, ainda e simulado)
+  if(mAgendamento){ms=4;renderM();return;}
   if(!session){openAuth('login',true);return;}
   if(!mServs.length){alert('Escolha pelo menos um exame.');return;}
   const exameIds=mServs.map(e=>EP[e]?.id);
@@ -1437,6 +1624,44 @@ async function criarAgendamento(){
   ms=4;renderM();
 }
 
+/* ─── AGENDAMENTOS CRIADOS POR CLÍNICA (tutor só confirma e paga) ─── */
+let _pendentesClinica=[];
+async function verificarAgendamentosPendentesClinica(){
+  const box=document.getElementById('banner-pendente-clinica');
+  if(!box)return;
+  if(!session||profile?.role!=='tutor'){box.innerHTML='';return;}
+  const {data,error}=await sb.from('agendamentos')
+    .select('id,horario,endereco,pet_id,medico_id,medicos(profiles(nome),crmv,cidade,estado,antecedencia_min),pets(nome,especie),agendamento_exames(preco,exames_catalogo(nome))')
+    .eq('tutor_id',session.user.id).eq('status','reservado').eq('origem','clinica')
+    .order('horario',{ascending:true});
+  if(error||!data?.length){_pendentesClinica=[];box.innerHTML='';return;}
+  _pendentesClinica=data;
+  box.innerHTML=data.map(a=>{
+    const exames=(a.agendamento_exames||[]).map(e=>e.exames_catalogo?.nome).filter(Boolean).join(', ')||'Exame';
+    const dt=new Date(a.horario).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+    return `<div style="background:#fffbea;border:1px solid #f0d060;border-radius:12px;padding:14px;margin-bottom:10px">
+      <div style="font-weight:700;font-size:13px;margin-bottom:4px">📋 Agendamento feito por uma clínica — falta você confirmar e pagar</div>
+      <div style="font-size:12px;color:var(--mid);margin-bottom:8px">${exames} · M.V. ${a.medicos?.profiles?.nome||'—'} · ${dt}</div>
+      <button class="btn-p" style="margin-top:0" onclick="retomarAgendamentoClinica('${a.id}')">Confirmar e pagar</button>
+    </div>`;
+  }).join('');
+}
+function retomarAgendamentoClinica(id){
+  const a=_pendentesClinica.find(x=>x.id===id);if(!a)return;
+  const md=a.medicos;
+  mMed={id:a.medico_id,nome:md?.profiles?.nome||'Médico',crmv:md?.crmv||'',cidade:md?.cidade||'',estado:md?.estado||'',antecedenciaMin:md?.antecedencia_min??60,areaBairros:[],areaCidades:[],wa:''};
+  mServs=(a.agendamento_exames||[]).map(e=>e.exames_catalogo?.nome).filter(Boolean);
+  mTotalOverride=(a.agendamento_exames||[]).reduce((s,e)=>s+Number(e.preco||0),0);
+  mSlot=new Date(a.horario);
+  mForm={pet:a.pets?.nome||'',esp:a.pets?.especie||'',end:a.endereco,email:profile?.email||session.user.email};
+  mPay=null;mPix=null;mSlotsCache=null;
+  mAgendamento=a;
+  document.getElementById('m-title').textContent='Confirmar agendamento — '+mMed.nome;
+  document.getElementById('m-sub').textContent=(mMed.crmv?mMed.crmv+' · ':'')+mMed.cidade;
+  document.getElementById('overlay').classList.add('on');
+  ms=3;renderM();
+}
+
 /* ─── MÉDICO ─── */
 function initMedico(){
   /* Tab strip */
@@ -1456,7 +1681,7 @@ function initMedico(){
 function fmtMoeda(v){return 'R$ '+Number(v||0).toFixed(2).replace('.',',');}
 async function carregarAgendamentosMedico(){
   const {data,error}=await sb.from('agendamentos')
-    .select('id,horario,endereco,valor,status,profiles:tutor_id(nome,telefone),pets(nome,especie),agendamento_exames(exames_catalogo(nome))')
+    .select('id,horario,endereco,valor,status,observacoes,origem,profiles:tutor_id(nome,telefone),pets(nome,especie),agendamento_exames(exames_catalogo(nome))')
     .eq('medico_id',session.user.id)
     .order('horario',{ascending:false});
   if(error){console.error(error);return [];}
@@ -1469,7 +1694,9 @@ function renderItemAgendamento(a){
   const dataFmt=dt.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
   const horaFmt=dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   const badge=a.status==='pago'?'<span class="badge bok">pago</span>':'<span class="badge bok">confirmado</span>';
-  return `<div class="agitem"><div class="agitem-top"><div><div class="ag-h4">${pet} — ${exames}</div><div class="ag-p">📅 ${dataFmt} · ${horaFmt} · 📍 ${a.endereco||'—'}<br/>👤 ${a.profiles?.nome||'—'} · ${a.profiles?.telefone||'—'}</div></div><div class="agright"><div class="agprice">${fmtMoeda(a.valor)}</div>${badge}</div></div></div>`;
+  const origemTag=a.origem==='clinica'?'<span class="badge" style="background:var(--plum-pale);color:var(--plum)">via clínica</span>':'';
+  const obsHtml=a.observacoes?`<div style="font-size:12px;color:var(--plum);background:var(--plum-pale);border-radius:8px;padding:8px 10px;margin-top:6px">📝 <strong>Orientações:</strong> ${a.observacoes}</div>`:'';
+  return `<div class="agitem"><div class="agitem-top"><div><div class="ag-h4">${pet} — ${exames}</div><div class="ag-p">📅 ${dataFmt} · ${horaFmt} · 📍 ${a.endereco||'—'}<br/>👤 ${a.profiles?.nome||'—'} · ${a.profiles?.telefone||'—'}</div></div><div class="agright"><div class="agprice">${fmtMoeda(a.valor)}</div>${badge} ${origemTag}</div></div>${obsHtml}</div>`;
 }
 async function initDashMedico(){
   const box=document.getElementById('dash-proximos');if(!box)return;
@@ -1739,12 +1966,248 @@ async function removerArea(id){
   initArea();
 }
 
+/* ─── CLÍNICA ─── */
+function initClinica(){
+  document.querySelectorAll('.tab-strip .tab-btn[data-cp]').forEach(btn=>{btn.onclick=()=>switchCp(btn.dataset.cp);});
+  document.querySelectorAll('.med-sidebar-nav[data-cp]').forEach(nav=>{nav.onclick=()=>switchCp(nav.dataset.cp);});
+  cs=0;csMed=null;csServs=[];csSlot=null;csForm={};csSlotsCache=null;csObs='';csFiltro={estado:'',cidade:'',exame:''};csResultados=null;
+  renderCs();
+  initClinicaPerfil();
+  carregarAgendamentosClinica();
+}
+function switchCp(cp){
+  document.querySelectorAll('.tab-strip .tab-btn[data-cp],.med-sidebar-nav[data-cp]').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('#view-clinica .mpage').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll(`[data-cp="${cp}"]`).forEach(x=>x.classList.add('on'));
+  document.getElementById('cp-'+cp)?.classList.add('on');
+}
+
+/* Estado do fluxo de agendamento pela clínica (equivalente ao ms/mMed/mServs/mSlot/mForm do tutor,
+   mas sem etapa de pagamento — quem paga é o tutor, pelo link mágico) */
+let cs=0,csMed=null,csServs=[],csSlot=null,csForm={},csSlotsCache=null,csObs='',csFiltro={estado:'',cidade:'',exame:''},csResultados=null,csAgendamentoResumo=null,_csResumoMsg='';
+function prog2(s){
+  const steps=['Médico','Horário','Dados','Orientações','✓'];
+  return'<div class="prog">'+steps.map((n,i)=>{
+    const cl=i<s?'done':i===s?'act':'idle';
+    return`<div class="pstep"><div class="pcircle ${cl}">${i<s?'✓':i+1}</div><div class="plbl">${n}</div></div>`+
+    (i<steps.length-1?`<div class="pline" style="background:${i<s?'var(--sage)':'#e8e0f4'}"></div>`:'');
+  }).join('')+'</div>';
+}
+function buscarCsMedicos(){
+  csFiltro.estado=document.getElementById('cs-f-estado')?.value||'';
+  csFiltro.cidade=document.getElementById('cs-f-cidade')?.value||'';
+  csFiltro.exame=document.getElementById('cs-f-exame')?.value||'';
+  csResultados=MEDICOS.filter(m=>
+    (!csFiltro.estado||m.estado===csFiltro.estado)&&
+    (!csFiltro.cidade||(m.areaCidades||[m.cidade]).includes(csFiltro.cidade))&&
+    (!csFiltro.exame||m.specs.includes(csFiltro.exame))
+  );
+  const alvo=document.getElementById('cs-resultados');
+  if(alvo)alvo.innerHTML=renderCsResultados();
+}
+function renderCsResultados(){
+  if(!csResultados)return'';
+  if(!csResultados.length)return'<p style="font-size:13px;color:var(--light);margin-top:10px">Nenhum médico encontrado com esses filtros.</p>';
+  return `<div class="results-count" style="margin:10px 0">${csResultados.length} encontrado${csResultados.length!==1?'s':''}</div><div class="dcards">${csResultados.map(m=>`<div class="dcard" onclick="selCsMed('${m.id}')"><div class="dcard-head"><div class="davatar">${m.em}</div><div><div class="dname">${m.nome}</div><div class="dcrmv">${m.crmv} · ${m.cidade}</div><div class="dtags">${m.specs.slice(0,3).map(s=>`<span class="dtag">${s}</span>`).join('')}</div></div></div></div>`).join('')}</div>`;
+}
+function renderCs(){
+  const b=document.getElementById('cs-body');if(!b)return;
+  if(cs===0){
+    if(!csMed){
+      const estados=[...new Set(MEDICOS.map(m=>m.estado))].sort();
+      const cidades=[...new Set(MEDICOS.flatMap(m=>m.areaCidades||[m.cidade]))].sort();
+      const exames=[...new Set(MEDICOS.flatMap(m=>m.specs||[]))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+      b.innerHTML=prog2(0)+
+      `<div class="fgrid2">
+        <div class="frow"><label class="flabel">Estado</label><select class="finput" id="cs-f-estado">${estados.map(e=>`<option ${csFiltro.estado===e?'selected':''}>${e}</option>`).join('')||'<option value="SP">SP</option>'}</select></div>
+        <div class="frow"><label class="flabel">Cidade</label><select class="finput" id="cs-f-cidade"><option value="">Todas as cidades</option>${cidades.map(c=>`<option ${csFiltro.cidade===c?'selected':''}>${c}</option>`).join('')}</select></div>
+      </div>
+      <div class="frow"><label class="flabel">Tipo de exame</label><select class="finput" id="cs-f-exame"><option value="">Todos os exames</option>${exames.map(e=>`<option ${csFiltro.exame===e?'selected':''}>${e}</option>`).join('')}</select></div>
+      <button class="btn-p" onclick="buscarCsMedicos()">Buscar médicos</button>
+      <div id="cs-resultados">${renderCsResultados()}</div>`;
+      return;
+    }
+    b.innerHTML=prog2(0)+
+    `<p style="font-size:12px;color:var(--mid);margin-bottom:10px">Médico: <strong>${csMed.nome}</strong> · ${csMed.cidade} <a href="#" onclick="csMed=null;csServs=[];renderCs();return false" style="color:var(--plum);margin-left:6px">trocar</a></p>
+    <p style="font-size:13px;color:var(--light);margin-bottom:12px">Escolha um ou mais exames com este médico</p>
+    <div style="display:flex;flex-direction:column;gap:8px">${csMed.specs.map(e=>{const ep=EP[e]||{p:'—',d:'—'};const on=csServs.includes(e);
+      return`<button onclick="selCsE('${e}')" style="display:flex;justify-content:space-between;align-items:center;padding:13px 14px;border-radius:12px;border:2px solid ${on?'var(--plum)':'rgba(15,10,26,0.09)'};background:${on?'var(--plum-pale)':'#fff'};cursor:pointer;font-family:inherit;min-height:54px;width:100%"><div style="text-align:left;display:flex;align-items:center;gap:10px"><span style="width:18px;height:18px;border-radius:5px;border:2px solid ${on?'var(--plum)':'rgba(15,10,26,0.2)'};background:${on?'var(--plum)':'transparent'};color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${on?'✓':''}</span><div><div style="font-weight:600;font-size:14px">${e}</div><div style="font-size:11px;color:var(--light)">⏱ ${ep.d}</div></div></div><div style="font-family:'Fraunces',serif;font-size:19px;font-weight:600;color:var(--sage);flex-shrink:0">R$ ${ep.p}</div></button>`;
+    }).join('')}</div>
+    <button class="btn-p" ${csServs.length?'':'disabled'} style="opacity:${csServs.length?1:0.35}" onclick="avancarCsHorarios()">Continuar →</button>`;
+  }
+  else if(cs===1){
+    if(!csSlotsCache){b.innerHTML=prog2(1)+'<p style="font-size:13px;color:var(--light)">Carregando horários disponíveis…</p>';return;}
+    const gr=gByDay(csSlotsCache);
+    let h=prog2(1)+`<p style="font-size:12px;color:var(--light);margin-bottom:4px">Mín. ${csMed.antecedenciaMin??60} min de antecedência</p>`;
+    if(!csSlotsCache.length)h+='<p style="font-size:13px;color:var(--gold);margin-bottom:10px">Este médico não tem horários disponíveis nos próximos 14 dias.</p>';
+    Object.entries(gr).forEach(([k,ds])=>{
+      h+=`<div class="slot-day-lbl">${fD(ds[0])}</div><div class="slots-row">`;
+      ds.forEach(s=>{const on=csSlot?.getTime()===s.getTime();h+=`<button class="slot-btn ${on?'on':''}" onclick="selCsS(${s.getTime()})">${fH(s)}</button>`;});
+      h+='</div>';
+    });
+    h+=`<div class="brow"><button class="btn-b" onclick="cs=0;renderCs()">← Voltar</button><button class="btn-p" style="flex:1;margin-top:0" ${csSlot?'':'disabled'} onclick="cs=2;renderCs()">Continuar →</button></div>`;
+    b.innerHTML=h;
+  }
+  else if(cs===2){
+    const f=csForm;
+    b.innerHTML=prog2(2)+
+    `<div class="notice" style="margin-bottom:12px;font-size:12px">O tutor recebe um e-mail para confirmar os dados e pagar — preencha com o que o cliente te passou no balcão.</div>
+    <div class="fgrid2"><div class="frow"><label class="flabel">Nome do tutor *</label><input class="finput" id="cs-fn" value="${f.nome||''}"/></div><div class="frow"><label class="flabel">WhatsApp *</label><input class="finput" id="cs-ft" value="${f.tel||''}" type="tel" oninput="fmtTel(this)"/></div></div>
+    <div class="frow"><label class="flabel">E-mail do tutor *</label><input class="finput" id="cs-fe" value="${f.email||''}" type="email" oninput="verificarTutorExistenteDebounced()"/><div id="cs-tutor-status" style="font-size:12px;margin-top:5px"></div></div>
+    <div class="fgrid2"><div class="frow"><label class="flabel">Nome do pet *</label><input class="finput" id="cs-fp" value="${f.pet||''}"/></div><div class="frow"><label class="flabel">Raça</label><input class="finput" id="cs-fr" value="${f.raca||''}"/></div></div>
+    <div class="frow"><label class="flabel">Espécie *</label><div class="chips">${ESP.map(e=>`<div class="chip ${f.esp===e?'on':''}" onclick="selCsEsp('${e}')">${e}</div>`).join('')}</div></div>
+    <div class="fgrid2"><div class="frow"><label class="flabel">Rua / Avenida *</label><input class="finput" id="cs-rua" value="${f.rua||''}"/></div><div class="frow"><label class="flabel">Número *</label><input class="finput" id="cs-numero" value="${f.numero||''}"/></div></div>
+    <div class="fgrid2"><div class="frow"><label class="flabel">Complemento</label><input class="finput" id="cs-complemento" value="${f.complemento||''}"/></div><div class="frow"><label class="flabel">CEP *</label><input class="finput" id="cs-cep" value="${f.cep||''}" maxlength="9" oninput="fmtCEP(this)"/></div></div>
+    <div class="fgrid2">
+      <div class="frow"><label class="flabel">Bairro ${csMed.areaBairros?.length?'*':'(opcional)'}</label>
+        <select class="finput" id="cs-bairro">${csMed.areaBairros?.length?`<option value="" disabled ${!f.bairro?'selected':''}>Selecione o bairro</option>`:'<option value="">Não informado</option>'}${(csMed.areaBairros?.length?csMed.areaBairros:BAIRROS).map(b=>`<option ${f.bairro===b?'selected':''}>${b}</option>`).join('')}</select>
+      </div>
+      <div class="frow"><label class="flabel">Cidade *</label><select class="finput" id="cs-cidade">${(csMed.areaCidades||[csMed.cidade]).map(c=>`<option ${f.cidade===c?'selected':''}>${c}</option>`).join('')}</select></div>
+    </div>
+    <div class="frow" style="max-width:160px"><label class="flabel">Estado *</label><select class="finput" id="cs-estado"><option ${f.estado===csMed.estado?'selected':''}>${csMed.estado}</option></select></div>
+    <div style="font-size:11px;color:var(--gold);margin-bottom:12px">⚠ O médico atenderá <strong>exatamente neste endereço</strong> — confira com o cliente antes de avançar.</div>
+    <div class="brow"><button class="btn-b" onclick="syncCsFormFields();cs=1;renderCs()">← Voltar</button><button class="btn-p" style="flex:1;margin-top:0" onclick="avancarCsOrientacoes()">Continuar →</button></div>`;
+  }
+  else if(cs===3){
+    b.innerHTML=prog2(3)+
+    `<p style="font-size:13px;color:var(--light);margin-bottom:12px">Alguma orientação pro médico que vai realizar o exame? (opcional) — motivo do encaminhamento, o que observar, histórico relevante do pet.</p>
+    <div class="frow"><textarea class="finput" id="cs-obs" rows="4" placeholder="Ex: suspeita de massa abdominal, avaliar região X...">${csObs}</textarea></div>
+    <div class="brow"><button class="btn-b" onclick="cs=2;renderCs()">← Voltar</button><button class="btn-p" id="cs-btn-confirmar" style="flex:1;margin-top:0" onclick="clinicaCriarAgendamento()">Confirmar agendamento</button></div>`;
+  }
+  else if(cs===4){
+    const r=csAgendamentoResumo;
+    b.innerHTML=`<div class="confirm-box">
+      <div class="confirm-ring">✓</div>
+      <div class="confirm-title">Agendamento criado!</div>
+      <p class="confirm-sub">Enviamos um e-mail para <strong>${r.form.email}</strong> com o link para o tutor confirmar os dados e pagar. O horário fica reservado por 30 minutos.</p>
+      <div class="resumo" style="text-align:left;margin-bottom:14px">
+        <div class="rrow"><div class="rrow-lbl">Médico</div><div class="rrow-val">${r.med.nome}</div></div>
+        <div class="rrow"><div class="rrow-lbl">Exames</div><div class="rrow-val">${r.servs.join(', ')}</div></div>
+        <div class="rrow"><div class="rrow-lbl">Data/hora</div><div class="rrow-val">${fD(r.slot)} ${fH(r.slot)}</div></div>
+        <div class="rrow"><div class="rrow-lbl">Tutor</div><div class="rrow-val">${r.form.nome}</div></div>
+        <div class="rrow"><div class="rrow-lbl">Pet</div><div class="rrow-val">${r.form.pet} · ${r.form.esp}</div></div>
+        ${r.obs?`<div class="rrow"><div class="rrow-lbl">Orientações</div><div class="rrow-val">${r.obs}</div></div>`:''}
+      </div>
+      <button class="btn-copy" onclick="copiarResumoCs(this)">Copiar resumo</button>
+      <button class="btn-b" style="width:100%;margin-top:8px" onclick="cs=0;csMed=null;csServs=[];csSlot=null;csForm={};csSlotsCache=null;csObs='';renderCs()">Agendar outro</button>
+    </div>`;
+  }
+}
+function selCsMed(id){csMed=MEDICOS.find(x=>x.id===id);csServs=[];renderCs();}
+function selCsE(e){csServs=csServs.includes(e)?csServs.filter(x=>x!==e):[...csServs,e];renderCs();}
+async function avancarCsHorarios(){cs=1;csSlotsCache=null;renderCs();csSlotsCache=await getSlotsReais(csMed);renderCs();}
+function selCsS(t){csSlot=new Date(t);renderCs();}
+function syncCsFormFields(){
+  const g=id=>document.getElementById(id)?.value;
+  const map={nome:'cs-fn',tel:'cs-ft',email:'cs-fe',pet:'cs-fp',raca:'cs-fr',rua:'cs-rua',numero:'cs-numero',complemento:'cs-complemento',cep:'cs-cep',bairro:'cs-bairro',cidade:'cs-cidade',estado:'cs-estado'};
+  Object.entries(map).forEach(([k,id])=>{const v=g(id);if(v!==undefined)csForm[k]=v;});
+}
+function selCsEsp(e){syncCsFormFields();csForm.esp=e;renderCs();}
+function copiarResumoCs(btn){navigator.clipboard.writeText(_csResumoMsg);btn.textContent='✓ Copiado!';}
+let _verifTutorTimer=null;
+function verificarTutorExistenteDebounced(){clearTimeout(_verifTutorTimer);_verifTutorTimer=setTimeout(verificarTutorExistente,500);}
+async function verificarTutorExistente(){
+  const email=document.getElementById('cs-fe')?.value.trim();
+  const status=document.getElementById('cs-tutor-status');
+  if(!status)return;
+  if(!email||!email.includes('@')){status.innerHTML='';return;}
+  status.innerHTML='<span style="color:var(--light)">Verificando…</span>';
+  const {data,error}=await sb.rpc('clinica_verificar_tutor',{p_email:email});
+  if(error){status.innerHTML='';return;}
+  const r=Array.isArray(data)?data[0]:data;
+  status.innerHTML=r?.existe
+    ?`<span style="color:var(--sage);font-weight:600">✓ Cliente já cadastrado${r.primeiro_nome?' ('+r.primeiro_nome+')':''} — vamos vincular a essa conta</span>`
+    :'<span style="color:var(--mid)">Novo cliente — vamos criar uma conta pra ele</span>';
+}
+function avancarCsOrientacoes(){
+  syncCsFormFields();
+  const obrig=['nome','tel','email','pet','esp','rua','numero','cep','cidade','estado'];
+  if(csMed.areaBairros?.length)obrig.push('bairro');
+  const faltando=obrig.filter(k=>!csForm[k]);
+  if(faltando.length){alert('Preencha: '+faltando.map(k=>CAMPO_LABEL[k]||k).join(', '));return;}
+  if(!areaOk(csMed,csForm.bairro,csForm.cidade)){alert(`Esse médico não atende ${csForm.bairro||csForm.cidade}. Verifique a área de atendimento ou escolha outro médico.`);return;}
+  if(!csServs.length){alert('Escolha pelo menos um exame.');return;}
+  cs=3;renderCs();
+}
+async function clinicaCriarAgendamento(){
+  csObs=document.getElementById('cs-obs')?.value.trim()||'';
+  const exameIds=csServs.map(e=>EP[e]?.id);
+  if(exameIds.some(id=>!id)){alert('Exame não encontrado no catálogo.');return;}
+  const endereco=`${csForm.rua}, ${csForm.numero}${csForm.complemento?' - '+csForm.complemento:''}${csForm.bairro?' - '+csForm.bairro:''}, ${csForm.cidade} - ${csForm.estado.toUpperCase()}, CEP ${csForm.cep}`;
+  const btn=document.getElementById('cs-btn-confirmar');
+  if(btn){btn.disabled=true;btn.textContent='Enviando...';}
+  // 1) cria/acha a conta do tutor e manda o link magico de confirmacao/pagamento — nao mexe na sessao da clinica
+  const {error:otpErr}=await sb.auth.signInWithOtp({
+    email:csForm.email,
+    options:{shouldCreateUser:true,emailRedirectTo:window.location.origin+window.location.pathname}
+  });
+  if(otpErr){if(btn){btn.disabled=false;btn.textContent='Confirmar agendamento';}alert('Não foi possível enviar o acesso ao tutor: '+otpErr.message);return;}
+  // 2) cria o agendamento em nome do tutor (funcao no banco valida tudo de novo, nunca confia no que veio daqui)
+  const {data:agendamentoId,error}=await sb.rpc('clinica_criar_agendamento',{
+    p_medico_id:csMed.id,p_horario:csSlot.toISOString(),p_endereco:endereco,
+    p_tutor_email:csForm.email,p_tutor_nome:csForm.nome,p_tutor_telefone:csForm.tel,
+    p_pet_nome:csForm.pet,p_pet_especie:csForm.esp,p_pet_raca:csForm.raca||null,
+    p_exame_ids:exameIds,p_observacoes:csObs||null
+  });
+  if(btn){btn.disabled=false;btn.textContent='Confirmar agendamento';}
+  if(error){
+    if(error.code==='23505')alert('Esse horário acabou de ser reservado. Escolha outro horário.');
+    else if(error.message?.includes('antecedência mínima')){alert('Esse horário ficou muito próximo do agora. Escolha outro.');cs=1;csSlotsCache=null;renderCs();avancarCsHorarios();}
+    else alert('Não foi possível confirmar: '+error.message);
+    return;
+  }
+  csAgendamentoResumo={med:csMed,servs:[...csServs],slot:csSlot,form:{...csForm},endereco,obs:csObs};
+  _csResumoMsg=`Animagem — agendamento feito pela clínica\n📋 ${csServs.join(', ')}\n📅 ${fD(csSlot)} às ${fH(csSlot)}\n🐾 ${csForm.pet} (${csForm.esp})\n👤 Tutor: ${csForm.nome}\n📍 ${endereco}${csObs?'\n📝 Orientações: '+csObs:''}\n\nEnviamos um e-mail para ${csForm.email} com o link para confirmar e pagar.`;
+  cs=4;renderCs();
+  carregarAgendamentosClinica();
+}
+async function carregarAgendamentosClinica(){
+  const box=document.getElementById('cs-lista-agendamentos');if(!box||!session)return;
+  const {data,error}=await sb.from('agendamentos')
+    .select('id,horario,status,profiles:tutor_id(nome),pets(nome),medicos(profiles(nome)),agendamento_exames(exames_catalogo(nome),comissao_clinica)')
+    .eq('clinica_id',session.user.id)
+    .order('horario',{ascending:false});
+  if(error){box.innerHTML='Erro: '+error.message;return;}
+  if(!data.length){box.innerHTML='<p style="font-size:13px;color:var(--light)">Nenhum agendamento criado ainda.</p>';return;}
+  box.innerHTML=data.map(a=>{
+    const exames=(a.agendamento_exames||[]).map(e=>e.exames_catalogo?.nome).filter(Boolean).join(', ')||'—';
+    const comissao=(a.agendamento_exames||[]).reduce((s,e)=>s+Number(e.comissao_clinica||0),0);
+    const dt=new Date(a.horario).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+    const badge={pago:'bok',confirmado:'bok',reservado:'bpend',expirado:'bpend',cancelado:'bpend'}[a.status]||'bpend';
+    return `<div class="agitem"><div class="agitem-top"><div><div class="ag-h4">${a.pets?.nome||'Pet'} — ${exames}</div><div class="ag-p">📅 ${dt} · M.V. ${a.medicos?.profiles?.nome||'—'}<br/>👤 ${a.profiles?.nome||'—'}</div></div><div class="agright"><div class="agprice">${fmtMoeda(comissao)}</div><span class="badge ${badge}">${a.status}</span></div></div></div>`;
+  }).join('');
+}
+async function initClinicaPerfil(){
+  if(!session)return;
+  const {data:c}=await sb.from('clinicas').select('*').eq('id',session.user.id).maybeSingle();
+  if(!c)return;
+  document.getElementById('cf-razao').value=c.razao_social||'';
+  document.getElementById('cf-fantasia').value=c.nome_fantasia||'';
+  document.getElementById('cf-cidade').value=c.cidade||'';
+  document.getElementById('cf-estado').value=c.estado||'';
+  document.getElementById('cf-comissao').value=c.comissao_percentual??0;
+  const {data:ob}=await sb.from('clinica_onboarding').select('status').eq('clinica_id',session.user.id).maybeSingle();
+  document.getElementById('cf-status').textContent=ob?.status==='aprovado'?'✅ Clínica aprovada':ob?.status==='rejeitado'?'❌ Cadastro rejeitado — fale com a administração':'⏳ Pendente de aprovação da administração';
+}
+async function salvarPerfilClinica(){
+  const payload={
+    razao_social:document.getElementById('cf-razao').value.trim(),
+    nome_fantasia:document.getElementById('cf-fantasia').value.trim()||null,
+    cidade:document.getElementById('cf-cidade').value.trim(),
+    estado:document.getElementById('cf-estado').value.trim().toUpperCase(),
+    comissao_percentual:Number(document.getElementById('cf-comissao').value)||0
+  };
+  const {error}=await sb.from('clinicas').update(payload).eq('id',session.user.id);
+  if(error){alert('Erro ao salvar (a comissão tem um teto definido pela administração): '+error.message);return;}
+  alert('Perfil atualizado.');
+}
+
 /* ─── ADMIN ─── */
 function initAdmin(){
   document.querySelectorAll('#admin-tabs .tab-btn[data-ap]').forEach(btn=>{btn.onclick=()=>switchAp(btn.dataset.ap);});
   document.querySelectorAll('.admin-sidebar-nav[data-ap]').forEach(nav=>{nav.onclick=()=>switchAp(nav.dataset.ap);});
   document.querySelectorAll('#view-admin .toggle').forEach(t=>{t.onclick=()=>{t.classList.toggle('on');t.classList.toggle('off');};});
-  loadAdminMedicos();loadAdminAgendamentos();loadAdminDash();loadAdminPatrocinadores();loadComissoes();initConfigPortal();
+  loadAdminMedicos();loadAdminClinicas();loadAdminAgendamentos();loadAdminDash();loadAdminPatrocinadores();loadComissoes();initConfigPortal();
 }
 async function loadAdminDash(){
   const [{data:medicos},{data:agend},{data:onboarding}]=await Promise.all([
@@ -1937,6 +2400,46 @@ async function toggleMedicoAtivo(id,novoAtivo){
     return;
   }
   loadAdminMedicos();
+}
+async function loadAdminClinicas(){
+  const tbody=document.getElementById('admin-clinicas-tbody');if(!tbody)return;
+  const {data,error}=await sb.from('clinicas').select('id,cnpj,razao_social,nome_fantasia,cidade,comissao_percentual,ativo,clinica_onboarding(contrato_social_path,documentos_socios_path,comprovante_endereco_path,crmv_path,cnpj_situacao,status)').order('cidade');
+  if(error){tbody.innerHTML=`<tr><td colspan="8">Erro: ${error.message}</td></tr>`;return;}
+  if(!data.length){tbody.innerHTML='<tr><td colspan="8">Nenhuma clínica cadastrada ainda.</td></tr>';return;}
+  tbody.innerHTML=data.map(c=>{
+    const ob=Array.isArray(c.clinica_onboarding)?c.clinica_onboarding[0]:c.clinica_onboarding;
+    const docBtn=(path,lbl)=>path?`<button class="topnav-btn" onclick="verDocClinica('${path}')">${lbl}</button>`:'';
+    const situacaoCor=ob?.cnpj_situacao==='ATIVA'?'var(--sage)':'var(--red)';
+    return `
+    <tr>
+      <td><strong>${c.nome_fantasia||c.razao_social}</strong><br/><span style="font-size:11px;color:var(--light)">${c.razao_social}</span></td>
+      <td>${c.cnpj||'—'}</td>
+      <td><span style="color:${situacaoCor};font-weight:600">${ob?.cnpj_situacao||'não verificada'}</span></td>
+      <td>${c.cidade||'—'}</td>
+      <td>${c.comissao_percentual}%</td>
+      <td>${docBtn(ob?.contrato_social_path,'Contrato')} ${docBtn(ob?.documentos_socios_path,'Sócios')} ${docBtn(ob?.comprovante_endereco_path,'Endereço')} ${docBtn(ob?.crmv_path,'CRMV')}</td>
+      <td>${c.ativo?'<span class="sdot sdot-ok"></span>Ativa':'<span class="sdot sdot-pend"></span>Pendente'}</td>
+      <td><button class="topnav-btn" onclick="toggleClinicaAtiva('${c.id}',${!c.ativo})">${c.ativo?'Desativar':'Aprovar'}</button></td>
+    </tr>`;}).join('');
+}
+async function verDocClinica(path){
+  const {data,error}=await sb.storage.from('documentos-clinicas').createSignedUrl(path,120);
+  if(error){alert('Erro ao abrir documento: '+error.message);return;}
+  window.open(data.signedUrl,'_blank');
+}
+async function toggleClinicaAtiva(id,novoAtivo){
+  if(novoAtivo){
+    // precisa aprovar o onboarding ANTES de ativar — o banco bloqueia ativo=true sem onboarding aprovado
+    const {error:oerr}=await sb.from('clinica_onboarding').update({status:'aprovado'}).eq('clinica_id',id);
+    if(oerr){alert('Falha ao aprovar onboarding: '+oerr.message);return;}
+  }
+  const {error}=await sb.from('clinicas').update({ativo:novoAtivo}).eq('id',id);
+  if(error){
+    if(novoAtivo)alert('Falha ao ativar: essa clínica não tem documentação/termos registrados. Detalhe: '+error.message);
+    else alert('Falha: '+error.message);
+    return;
+  }
+  loadAdminClinicas();
 }
 function switchAp(ap){
   document.querySelectorAll('#admin-tabs .tab-btn[data-ap],.admin-sidebar-nav[data-ap]').forEach(x=>x.classList.remove('on'));
