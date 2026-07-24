@@ -422,7 +422,7 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
           </select>
         </div>
         <div class="sf"><label class="sf-label">Cidade</label>
-          <select class="si" id="s-cidade"><option value="">Todas as cidades</option></select>
+          <select class="si" id="s-cidade" onchange="onCidadeBusca()"><option value="">Todas as cidades</option></select>
         </div>
         <div class="sf"><label class="sf-label">Bairro (opcional)</label>
           <select class="si" id="s-bairro"><option value="">Todos os bairros</option></select>
@@ -666,6 +666,7 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
       <div class="admin-sidebar-nav" data-ap="clinicas">🏥 Clínicas</div>
       <div class="admin-sidebar-nav" data-ap="agendamentos">📋 Agendamentos</div>
       <div class="admin-sidebar-nav" data-ap="patrocinadores">📢 Patrocinadores</div>
+      <div class="admin-sidebar-nav" data-ap="bairros">📍 Bairros</div>
       <div class="admin-sidebar-nav" data-ap="comissoes">💰 Comissões</div>
       <div class="admin-sidebar-nav" data-ap="config">⚙️ Config</div>
     </div>
@@ -676,6 +677,7 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
         <button class="tab-btn" data-ap="clinicas">🏥 Clínicas</button>
         <button class="tab-btn" data-ap="agendamentos">📋 Agend.</button>
         <button class="tab-btn" data-ap="patrocinadores">📢 Patroc.</button>
+        <button class="tab-btn" data-ap="bairros">📍 Bairros</button>
         <button class="tab-btn" data-ap="comissoes">💰 Comissões</button>
         <button class="tab-btn" data-ap="config">⚙️ Config</button>
       </div>
@@ -740,6 +742,15 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
             <div id="patroc-form-wrap" style="margin-top:14px"></div>
           </div>
         </div>
+        <!-- BAIRROS -->
+        <div class="apage" id="ap-bairros">
+          <div class="ptitle">Bairros</div><div class="psub">Lista de bairros por cidade — usada nos selects de bairro do agendamento, cadastro e área de atendimento do médico (não existe API pública confiável pra isso no Brasil)</div>
+          <div class="tcard">
+            <div id="bairros-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px"></div>
+            <button class="btn-save" onclick="abrirFormBairro()">+ Novo bairro</button>
+            <div id="bairro-form-wrap" style="margin-top:14px"></div>
+          </div>
+        </div>
         <!-- COMISSÕES -->
         <div class="apage" id="ap-comissoes">
           <div class="ptitle">Comissões</div><div class="psub">Configure por especialidade ou médico</div>
@@ -783,10 +794,16 @@ let session=null,profile=null;
 let MEDICOS=[];
 let CATALOGO=[]; // [{id,nome,duracao_min,preco_base}]
 const EP={}; // nome do exame -> {p,d} — preenchido a partir de CATALOGO
-const BAIRROS_POR_CIDADE={
-  'Campinas':["Taquaral","Cambuí","Bosque","Centro","Guanabara","Nova Campinas","Barão Geraldo","Parque Prado","Alphaville Campinas","Sousas","Jardim Chapadão","Cidade Universitária","Cambará","Castelo","Flamboyant","Jardim Guanabara","Mansões Santo Antônio","Parque Taquaral","Ponte Preta","Vila Industrial","Jardim das Paineiras","Swift","Jardim São Bernardo","Vila Nova","Botafogo","Cura D'Ars","Jardim Proença","Parque das Universidades","Vila Brandina","Anhumas"]
-};
-const BAIRROS=BAIRROS_POR_CIDADE['Campinas'];
+// bairro nao tem API publica confiavel no Brasil (IBGE so tem distrito/subdistrito, nao bate com os
+// bairros informais de endereco) -- por isso mantemos nossa propria lista, gerenciavel pelo admin (tabela `bairros`)
+let BAIRROS_POR_CIDADE={};
+async function loadBairros(){
+  const {data,error}=await sb.from('bairros').select('cidade,nome').order('nome');
+  if(error){console.error('bairros',error);return;}
+  const map={};
+  (data||[]).forEach(b=>{(map[b.cidade]=map[b.cidade]||[]).push(b.nome);});
+  BAIRROS_POR_CIDADE=map;
+}
 const CIDADES=["Valinhos","Vinhedo","Paulínia","Sumaré","Hortolândia","Indaiatuba","Americana","Cosmópolis","Itatiba","Jaguariúna"];
 const ESTADOS_IBGE=[["AC","Acre"],["AL","Alagoas"],["AP","Amapá"],["AM","Amazonas"],["BA","Bahia"],["CE","Ceará"],["DF","Distrito Federal"],["ES","Espírito Santo"],["GO","Goiás"],["MA","Maranhão"],["MT","Mato Grosso"],["MS","Mato Grosso do Sul"],["MG","Minas Gerais"],["PA","Pará"],["PB","Paraíba"],["PR","Paraná"],["PE","Pernambuco"],["PI","Piauí"],["RJ","Rio de Janeiro"],["RN","Rio Grande do Norte"],["RS","Rio Grande do Sul"],["RO","Rondônia"],["RR","Roraima"],["SC","Santa Catarina"],["SP","São Paulo"],["SE","Sergipe"],["TO","Tocantins"]];
 const _municipiosCache={};
@@ -859,6 +876,20 @@ async function loadMedicos(){
 function bairroEspecificoDisponivel(med,cidade){
   return !!(med.areaBairros?.length && (cidade||med.cidade)===med.cidade);
 }
+// bairro e sempre uma lista suspensa (nunca texto livre), pra garantir selecao correta e nunca deixar
+// bairro de uma cidade combinado com outra cidade selecionada. Na cidade principal do medico, a lista
+// e a area de atendimento dele (obrigatorio); nas outras cidades que ele atende, mostra os bairros
+// cadastrados daquela cidade (tabela `bairros`, opcional -- ele ja se comprometeu com a cidade toda)
+function renderOpcoesBairro(med,cidade,valorAtual){
+  const cidadeAtual=cidade||med.cidade;
+  const obrigatorio=bairroEspecificoDisponivel(med,cidadeAtual);
+  const lista=obrigatorio?med.areaBairros:(BAIRROS_POR_CIDADE[cidadeAtual]||[]);
+  if(!lista.length)return'<option value="">Não informado</option>';
+  const placeholder=obrigatorio
+    ?`<option value="" disabled ${lista.includes(valorAtual)?'':'selected'}>Selecione o bairro</option>`
+    :`<option value="">Não informado</option>`;
+  return placeholder+lista.map(b=>`<option ${valorAtual===b?'selected':''}>${b}</option>`).join('');
+}
 function areaOk(med,bairro,cidade){
   const c=(cidade||'').trim().toLowerCase();
   if(bairroEspecificoDisponivel(med,cidade)){
@@ -876,10 +907,17 @@ function buildLocationFilters(){
   if(se)se.innerHTML=estados.map(e=>`<option value="${e}">${e}</option>`).join('')||'<option value="SP">SP</option>';
   const sc=document.getElementById('s-cidade');
   if(sc)sc.innerHTML='<option value="">Todas as cidades</option>'+cidades.map(c=>`<option ${c==='Campinas'?'selected':''}>${c}</option>`).join('');
-  const sb_=document.getElementById('s-bairro');
-  if(sb_)sb_.innerHTML='<option value="">Todos os bairros</option>'+bairros.map(b=>`<option>${b}</option>`).join('');
   const sx=document.getElementById('s-exame');
   if(sx){const atual=sx.value;sx.innerHTML='<option value="">Todos os exames</option>'+exames.map(e=>`<option ${e===atual?'selected':''}>${e}</option>`).join('');}
+  onCidadeBusca();
+}
+// bairro da busca principal segue a cidade selecionada, igual ao agendamento e ao cadastro
+function onCidadeBusca(){
+  const cidade=document.getElementById('s-cidade')?.value;
+  const sel=document.getElementById('s-bairro');if(!sel)return;
+  const atual=sel.value;
+  const bairros=cidade?(BAIRROS_POR_CIDADE[cidade]||[]):[...new Set(MEDICOS.flatMap(m=>m.areaBairros||[]))].sort();
+  sel.innerHTML='<option value="">Todos os bairros</option>'+bairros.map(b=>`<option ${b===atual?'selected':''}>${b}</option>`).join('');
 }
 
 /* ─── AUTENTICAÇÃO ─── */
@@ -969,6 +1007,7 @@ function renderAuth(){
     ${authMode==='cadastro_clinica'?TERMOS_CLINICA_HTML(configPortal?.clinica_comissao_teto??20):''}
     <div id="au-err" style="color:var(--red);font-size:12px;margin-bottom:8px"></div>
     <button class="btn-p" onclick="submitAuth()">${authMode==='login'?'Entrar':'Criar conta'}</button>`;
+  if(authMode==='cadastro_tutor')onEstadoTutor();
 }
 async function enviarRecuperacao(){
   const email=document.getElementById('au-email').value.trim();
@@ -995,8 +1034,31 @@ const ENDERECO_TUTOR_HTML=`
   <div style="font-size:11px;color:var(--light);margin-bottom:8px">Esse endereço fica salvo no seu cadastro pra agilizar os próximos agendamentos — você ainda pode ajustar por agendamento.</div>
   <div class="fgrid2"><div class="frow"><label class="flabel">Rua/Avenida *</label><input class="finput" id="au-end-rua" placeholder="Av. Engenheiro Augusto"/></div><div class="frow"><label class="flabel">Número *</label><input class="finput" id="au-end-numero" placeholder="123"/></div></div>
   <div class="fgrid2"><div class="frow"><label class="flabel">Complemento</label><input class="finput" id="au-end-complemento" placeholder="Apto, bloco (opcional)"/></div><div class="frow"><label class="flabel">CEP *</label><input class="finput" id="au-end-cep" placeholder="00000-000" maxlength="9" oninput="fmtCEP(this)"/></div></div>
-  <div class="fgrid2"><div class="frow"><label class="flabel">Bairro *</label><input class="finput" id="au-end-bairro" placeholder="Seu bairro"/></div><div class="frow"><label class="flabel">Cidade *</label><input class="finput" id="au-end-cidade" placeholder="Campinas"/></div></div>
-  <div class="frow" style="max-width:160px"><label class="flabel">Estado *</label><input class="finput" id="au-end-estado" placeholder="SP" maxlength="2" style="text-transform:uppercase"/></div>`;
+  <div class="fgrid2">
+    <div class="frow"><label class="flabel">Estado *</label><select class="finput" id="au-end-estado" onchange="onEstadoTutor()">${ESTADOS_IBGE.map(([uf,nome])=>`<option value="${uf}" ${uf==='SP'?'selected':''}>${nome} (${uf})</option>`).join('')}</select></div>
+    <div class="frow"><label class="flabel">Cidade *</label><select class="finput" id="au-end-cidade" onchange="onCidadeTutor()"><option>Carregando...</option></select></div>
+  </div>
+  <div class="frow"><label class="flabel">Bairro</label><select class="finput" id="au-end-bairro"></select><div id="au-end-bairro-aviso" style="font-size:11px;color:var(--light);margin-top:4px"></div></div>`;
+async function onEstadoTutor(){
+  const uf=document.getElementById('au-end-estado').value;
+  const sel=document.getElementById('au-end-cidade');
+  const cidades=await municipiosDoEstado(uf);
+  sel.innerHTML=cidades.map(c=>`<option ${c==='Campinas'?'selected':''}>${c}</option>`).join('');
+  onCidadeTutor();
+}
+function onCidadeTutor(){
+  const cidade=document.getElementById('au-end-cidade').value;
+  const bairros=BAIRROS_POR_CIDADE[cidade];
+  const sel=document.getElementById('au-end-bairro');
+  const aviso=document.getElementById('au-end-bairro-aviso');
+  if(bairros?.length){
+    sel.innerHTML='<option value="" disabled selected>Selecione o bairro</option>'+bairros.map(b=>`<option>${b}</option>`).join('');
+    aviso.textContent='';
+  }else{
+    sel.innerHTML='<option value="">Não informado</option>';
+    aviso.textContent='Ainda não temos lista de bairros pra essa cidade.';
+  }
+}
 const TERMOS_MEDICO_HTML=`
   <div class="frow"><label class="flabel">CRMV *</label><input class="finput" id="au-crmv" placeholder="CRMV-SP 00000"/></div>
   <div class="frow"><label class="flabel">Telefone/WhatsApp *</label><input class="finput" id="au-tel" placeholder="(19) 99999-9999" oninput="fmtTel(this)"/></div>
@@ -1080,9 +1142,11 @@ async function submitAuth(){
         cidade:document.getElementById('au-end-cidade').value.trim(),
         estado:document.getElementById('au-end-estado').value.trim().toUpperCase()
       };
-      const obrigEnd=['rua','numero','cep','bairro','cidade','estado'];
+      const obrigEnd=['rua','numero','cep','cidade','estado'];
+      if(BAIRROS_POR_CIDADE[endereco.cidade]?.length)obrigEnd.push('bairro'); // só exige bairro se já tivermos lista pra essa cidade
       const faltandoEnd=obrigEnd.filter(k=>!endereco[k]);
       if(faltandoEnd.length){errEl.textContent='Preencha o endereço: '+faltandoEnd.map(k=>CAMPO_LABEL[k]||k).join(', ');return;}
+      if(!endereco.bairro)endereco.bairro=null;
     }
     const {data,error}=await sb.auth.signUp({email,password:senha});
     if(error){errEl.textContent=error.message;return;}
@@ -1423,9 +1487,7 @@ function renderM(){
     <div class="fgrid2"><div class="frow"><label class="flabel">Complemento</label><input class="finput" id="f-complemento" value="${f.complemento||''}" placeholder="Apto, bloco (opcional)"/></div><div class="frow"><label class="flabel">CEP *</label><input class="finput" id="f-cep" value="${f.cep||''}" placeholder="00000-000" maxlength="9" oninput="fmtCEP(this)"/></div></div>
     <div class="fgrid2">
       <div class="frow"><label class="flabel">Bairro ${bairroEspecificoDisponivel(mMed,f.cidade)?'*':'(opcional)'}</label>
-        ${bairroEspecificoDisponivel(mMed,f.cidade)
-          ?`<select class="finput" id="f-bairro"><option value="" disabled ${mMed.areaBairros.includes(f.bairro)?'':'selected'}>Selecione o bairro</option>${mMed.areaBairros.map(b=>`<option ${f.bairro===b?'selected':''}>${b}</option>`).join('')}</select>`
-          :`<input class="finput" id="f-bairro" value="${f.bairro||''}" placeholder="Bairro (opcional)"/>`}
+        <select class="finput" id="f-bairro">${renderOpcoesBairro(mMed,f.cidade,f.bairro)}</select>
       </div>
       <div class="frow"><label class="flabel">Cidade *</label>
         <select class="finput" id="f-cidade" onchange="syncFormFields();renderM()">${(mMed.areaCidades||[mMed.cidade]).map(c=>`<option ${(f.cidade||mMed.cidade)===c?'selected':''}>${c}</option>`).join('')}</select>
@@ -2095,9 +2157,7 @@ function renderCs(){
     <div class="fgrid2"><div class="frow"><label class="flabel">Complemento</label><input class="finput" id="cs-complemento" value="${f.complemento||''}"/></div><div class="frow"><label class="flabel">CEP *</label><input class="finput" id="cs-cep" value="${f.cep||''}" maxlength="9" oninput="fmtCEP(this)"/></div></div>
     <div class="fgrid2">
       <div class="frow"><label class="flabel">Bairro ${bairroEspecificoDisponivel(csMed,f.cidade)?'*':'(opcional)'}</label>
-        ${bairroEspecificoDisponivel(csMed,f.cidade)
-          ?`<select class="finput" id="cs-bairro"><option value="" disabled ${csMed.areaBairros.includes(f.bairro)?'':'selected'}>Selecione o bairro</option>${csMed.areaBairros.map(b=>`<option ${f.bairro===b?'selected':''}>${b}</option>`).join('')}</select>`
-          :`<input class="finput" id="cs-bairro" value="${f.bairro||''}" placeholder="Bairro (opcional)"/>`}
+        <select class="finput" id="cs-bairro">${renderOpcoesBairro(csMed,f.cidade,f.bairro)}</select>
       </div>
       <div class="frow"><label class="flabel">Cidade *</label><select class="finput" id="cs-cidade" onchange="syncCsFormFields();renderCs()">${(csMed.areaCidades||[csMed.cidade]).map(c=>`<option ${(f.cidade||csMed.cidade)===c?'selected':''}>${c}</option>`).join('')}</select></div>
     </div>
@@ -2244,7 +2304,7 @@ function initAdmin(){
   document.querySelectorAll('#admin-tabs .tab-btn[data-ap]').forEach(btn=>{btn.onclick=()=>switchAp(btn.dataset.ap);});
   document.querySelectorAll('.admin-sidebar-nav[data-ap]').forEach(nav=>{nav.onclick=()=>switchAp(nav.dataset.ap);});
   document.querySelectorAll('#view-admin .toggle').forEach(t=>{t.onclick=()=>{t.classList.toggle('on');t.classList.toggle('off');};});
-  loadAdminMedicos();loadAdminClinicas();loadAdminAgendamentos();loadAdminDash();loadAdminPatrocinadores();loadComissoes();initConfigPortal();
+  loadAdminMedicos();loadAdminClinicas();loadAdminAgendamentos();loadAdminDash();loadAdminPatrocinadores();loadAdminBairros();loadComissoes();initConfigPortal();
 }
 async function loadAdminDash(){
   const [{data:medicos},{data:agend},{data:onboarding}]=await Promise.all([
@@ -2319,6 +2379,55 @@ async function removerPatrocinador(id){
   const {error}=await sb.from('patrocinadores').delete().eq('id',id);
   if(error){alert('Erro: '+error.message);return;}
   loadAdminPatrocinadores();
+}
+/* BAIRROS */
+async function loadAdminBairros(){
+  const box=document.getElementById('bairros-list');if(!box)return;
+  const {data,error}=await sb.from('bairros').select('*').order('cidade').order('nome');
+  if(error){box.innerHTML='Erro: '+error.message;return;}
+  if(!data.length){box.innerHTML='<p style="font-size:13px;color:var(--light)">Nenhum bairro cadastrado ainda.</p>';return;}
+  box.innerHTML=data.map(b=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border:1px solid rgba(15,10,26,0.08);border-radius:10px">
+      <div><strong>${b.nome}</strong> <span style="font-size:11px;color:var(--light)">${b.cidade} - ${b.estado}</span></div>
+      <div style="display:flex;gap:8px">
+        <button class="toggle ${b.ativo?'on':'off'}" onclick="toggleAtivoBairro('${b.id}',${!b.ativo})"></button>
+        <button class="btn-b" style="color:var(--red)" onclick="removerBairro('${b.id}')">Remover</button>
+      </div>
+    </div>`).join('');
+}
+function abrirFormBairro(){
+  const w=document.getElementById('bairro-form-wrap');
+  w.innerHTML=`<div class="tcard" style="padding:14px">
+    <div class="fgrid2"><div class="frow"><label class="flabel">Cidade *</label><input class="finput" id="bz-cidade" placeholder="Campinas"/></div><div class="frow"><label class="flabel">Estado *</label><input class="finput" id="bz-estado" placeholder="SP" maxlength="2" style="text-transform:uppercase"/></div></div>
+    <div class="frow"><label class="flabel">Nome do bairro *</label><input class="finput" id="bz-nome" placeholder="Ex: Cambuí"/></div>
+    <div class="brow"><button class="btn-b" onclick="document.getElementById('bairro-form-wrap').innerHTML=''">Cancelar</button><button class="btn-p" style="flex:1;margin-top:0" onclick="salvarBairro()">Salvar</button></div>
+  </div>`;
+}
+async function salvarBairro(){
+  const payload={
+    cidade:document.getElementById('bz-cidade').value.trim(),
+    estado:document.getElementById('bz-estado').value.trim().toUpperCase(),
+    nome:document.getElementById('bz-nome').value.trim()
+  };
+  if(!payload.cidade||!payload.estado||!payload.nome){alert('Preencha cidade, estado e nome do bairro.');return;}
+  const {error}=await sb.from('bairros').insert({...payload,ativo:true});
+  if(error){alert('Erro: '+(error.code==='23505'?'Esse bairro já está cadastrado para essa cidade.':error.message));return;}
+  document.getElementById('bairro-form-wrap').innerHTML='';
+  loadAdminBairros();
+  loadBairros();
+}
+async function toggleAtivoBairro(id,novoAtivo){
+  const {error}=await sb.from('bairros').update({ativo:novoAtivo}).eq('id',id);
+  if(error){alert('Erro: '+error.message);return;}
+  loadAdminBairros();
+  loadBairros();
+}
+async function removerBairro(id){
+  if(!confirm('Remover este bairro?'))return;
+  const {error}=await sb.from('bairros').delete().eq('id',id);
+  if(error){alert('Erro: '+error.message);return;}
+  loadAdminBairros();
+  loadBairros();
 }
 /* COMISSÕES */
 async function loadComissoes(){
@@ -2498,7 +2607,8 @@ async function init(){
     refreshProfile().then(renderAuthSlot);
     if(evt==='PASSWORD_RECOVERY'){authMode='nova_senha';renderAuth();document.getElementById('auth-overlay').classList.add('on');}
   });
-  await Promise.all([loadCatalogo(),loadMedicos(),loadSponsor(),carregarConfigPortal()]);
+  await Promise.all([loadCatalogo(),loadMedicos(),loadSponsor(),carregarConfigPortal(),loadBairros()]);
+  onCidadeBusca(); // garante o filtro de bairro certo mesmo se loadBairros() resolveu depois de buildLocationFilters()
   renderCards(MEDICOS);
 }
 init();
