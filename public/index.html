@@ -176,7 +176,6 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
 .btn-p:not(:disabled):active{background:var(--plum-mid);}
 .btn-b{background:var(--plum-pale);color:var(--plum);border:none;border-radius:var(--rs);height:46px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s;flex-shrink:0;}
 .brow{display:flex;gap:8px;margin-top:10px;}
-.btn-wa{display:flex;align-items:center;justify-content:center;gap:8px;background:#25D366;color:#fff;border:none;border-radius:var(--rs);height:var(--touch);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;width:100%;text-decoration:none;margin-top:12px;}
 .btn-copy{background:var(--plum);color:#fff;border:none;border-radius:var(--rs);height:42px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;width:100%;margin-top:8px;}
 
 /* CONFIRM */
@@ -863,8 +862,7 @@ async function loadMedicos(){
       areaBairros,areaCidades,
       min:Math.min(...(m.medico_exames||[]).map(x=>Number(x.preco))||[0]),
       atende:'Domiciliar',
-      avail:'Consulte disponibilidade',
-      wa:''
+      avail:'Consulte disponibilidade'
     };
   });
   buildLocationFilters();
@@ -1562,7 +1560,6 @@ function renderM(){
   /* STEP 4 — confirmação */
   else if(ms===4){
     const vf=valorFinal().toFixed(2).replace('.',',');
-    const msg=`Animagem\n\n📋 ${mServs.join(', ')}\n📅 ${fD(mSlot)} às ${fH(mSlot)}\n🐾 ${mForm.pet} (${mForm.esp})\n📍 ${mForm.end}\n💰 R$ ${vf}${mPay==='cartao'?' (com taxa do cartão)':''} — reservado, aguardando confirmação de pagamento`;
     b.innerHTML=`<div class="confirm-box">
       <div class="confirm-ring">✓</div>
       <div class="confirm-title">Horário reservado!</div>
@@ -1576,8 +1573,7 @@ function renderM(){
         <div class="rrow"><div class="rrow-lbl">Status</div><div class="rrow-val" style="color:var(--gold);font-weight:700">Reservado · aguardando pagamento</div></div>
       </div>
       <p style="font-size:11px;color:var(--gold);margin-bottom:10px">⚠ O médico irá <strong>exatamente a este endereço</strong> e a nenhum outro local. Confira se está correto.</p>
-      <p style="font-size:12px;color:var(--light);margin-bottom:14px">Confirmação enviada para <strong>${mForm.email||''}</strong></p>
-      <a href="https://wa.me/${mMed.wa}?text=${encodeURIComponent(msg)}" target="_blank" class="btn-wa">💬 Falar com o médico</a>
+      <p style="font-size:12px;color:var(--light);margin-bottom:14px">Confirmação enviada para <strong>${mForm.email||''}</strong>. O contato com o médico acontece pelo próprio sistema — nenhum número pessoal é compartilhado.</p>
       <button class="btn-b" style="width:100%;margin-top:8px" onclick="closeModal();ms=0;mPay=null;mPix=null;">Fechar</button>
     </div>`;
   }
@@ -1745,7 +1741,7 @@ async function verificarAgendamentosPendentesClinica(){
 function retomarAgendamentoClinica(id){
   const a=_pendentesClinica.find(x=>x.id===id);if(!a)return;
   const md=a.medicos;
-  mMed={id:a.medico_id,nome:md?.profiles?.nome||'Médico',crmv:md?.crmv||'',cidade:md?.cidade||'',estado:md?.estado||'',antecedenciaMin:md?.antecedencia_min??60,areaBairros:[],areaCidades:[],wa:''};
+  mMed={id:a.medico_id,nome:md?.profiles?.nome||'Médico',crmv:md?.crmv||'',cidade:md?.cidade||'',estado:md?.estado||'',antecedenciaMin:md?.antecedencia_min??60,areaBairros:[],areaCidades:[]};
   mServs=(a.agendamento_exames||[]).map(e=>e.exames_catalogo?.nome).filter(Boolean);
   mTotalOverride=(a.agendamento_exames||[]).reduce((s,e)=>s+Number(e.preco||0),0);
   mSlot=new Date(a.horario);
