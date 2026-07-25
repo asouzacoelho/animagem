@@ -398,20 +398,20 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
 <div class="view on" id="view-tutor">
   <div class="hero">
     <div class="hero-in">
-      <div class="eyebrow">Portal veterinário domiciliar</div>
+      <div class="eyebrow">Portal de veterinários autônomos</div>
       <h1>Encontre o especialista<br/>certo para o <em>seu pet</em></h1>
-      <p class="hero-p">Médicos veterinários que atendem na sua casa. Agende online em minutos.</p>
+      <p class="hero-p">Médicos veterinários de qualquer especialidade, para qualquer necessidade do seu pet — em casa ou na clínica. Agende online em minutos.</p>
 
       <!-- POR QUE ATENDIMENTO DOMICILIAR — varia conforme o exame selecionado -->
       <div class="why-wrap" style="margin-bottom:22px">
-        <div id="why-title" style="font-family:'Fraunces',serif;font-size:18px;font-weight:600;margin-bottom:12px;color:#fff">Por que atendimento domiciliar?</div>
+        <div id="why-title" style="font-family:'Fraunces',serif;font-size:18px;font-weight:600;margin-bottom:12px;color:#fff">Por que agendar pelo Animagem?</div>
         <div id="why-bullets" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:10px"></div>
       </div>
 
       <div class="sbox">
-        <div class="sf"><label class="sf-label">Tipo de exame</label>
+        <div class="sf"><label class="sf-label">Tipo de atendimento</label>
           <select class="si" id="s-exame" onchange="renderWhy(this.value)">
-            <option value="">Todos os exames</option>
+            <option value="">Todos os atendimentos</option>
           </select>
         </div>
         <div class="sf"><label class="sf-label">Estado</label>
@@ -448,7 +448,7 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
 
   <div class="stats-bar">
     <div class="stat-item"><div class="stat-val">12</div><div class="stat-lbl">Médicos</div></div>
-    <div class="stat-item"><div class="stat-val">8</div><div class="stat-lbl">Especialidades</div></div>
+    <div class="stat-item"><div class="stat-val">8</div><div class="stat-lbl">Tipos de atendimento</div></div>
     <div class="stat-item"><div class="stat-val">34</div><div class="stat-lbl">Cidades</div></div>
     <div class="stat-item"><div class="stat-val">247</div><div class="stat-lbl">Exames</div></div>
   </div>
@@ -503,7 +503,7 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
       <div class="med-sidebar-nav on" data-mp="dash">📊 Dashboard</div>
       <div class="med-sidebar-nav" data-mp="agenda">📅 Agenda</div>
       <div class="med-sidebar-nav" data-mp="historico">📜 Histórico</div>
-      <div class="med-sidebar-nav" data-mp="exames">🔬 Meus Exames</div>
+      <div class="med-sidebar-nav" data-mp="exames">🔬 Meus Atendimentos</div>
       <div class="med-sidebar-nav" data-mp="area">📍 Área</div>
       <div class="med-sidebar-nav" data-mp="perfil">👤 Perfil</div>
       <div class="med-sidebar-foot">M.V. Ana Camila · Animagem</div>
@@ -563,7 +563,7 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
         </div>
         <!-- EXAMES -->
         <div class="mpage" id="mp-exames">
-          <div class="ptitle">Meus Exames</div><div class="psub">Exames que você realiza</div>
+          <div class="ptitle">Meus Atendimentos</div><div class="psub">Serviços que você realiza (exames, consultas ou outro atendimento)</div>
           <div class="notice" style="margin-bottom:12px;font-size:12px">💰 <strong>Importante sobre o valor:</strong> o preço que você cadastra abaixo é exatamente o que aparece para o tutor no agendamento. Quando o pagamento real entrar em vigor, esse valor será dividido entre você e a Animagem, na proporção de comissão configurada pela administração — hoje a comissão vigente é <strong>0% (fase MVP): você recebe o valor integral</strong>. Qualquer mudança futura na comissão será comunicada antes de entrar em vigor.</div>
           <div class="exam-list" id="exam-list"></div>
           <button class="btn-save" style="margin-top:14px" onclick="abrirFormExame()">+ Adicionar / editar exame</button>
@@ -915,7 +915,7 @@ function buildLocationFilters(){
   const sc=document.getElementById('s-cidade');
   if(sc)sc.innerHTML='<option value="">Todas as cidades</option>'+cidades.map(c=>`<option ${c==='Campinas'?'selected':''}>${c}</option>`).join('');
   const sx=document.getElementById('s-exame');
-  if(sx){const atual=sx.value;sx.innerHTML='<option value="">Todos os exames</option>'+exames.map(e=>`<option ${e===atual?'selected':''}>${e}</option>`).join('');}
+  if(sx){const atual=sx.value;sx.innerHTML='<option value="">Todos os atendimentos</option>'+exames.map(e=>`<option ${e===atual?'selected':''}>${e}</option>`).join('');}
   onCidadeBusca();
 }
 // bairro da busca principal segue a cidade selecionada, igual ao agendamento e ao cadastro
@@ -1036,7 +1036,7 @@ async function salvarNovaSenha(){
   closeAuth();
   alert('Senha atualizada com sucesso. Você já está conectado(a).');
 }
-const TERMOS_VERSAO='2026-06-20';
+const TERMOS_VERSAO='2026-07-25';
 const ENDERECO_TUTOR_HTML=`
   <div style="font-size:11px;color:var(--light);margin-bottom:8px">Esse endereço fica salvo no seu cadastro pra agilizar os próximos agendamentos — você ainda pode ajustar por agendamento.</div>
   <div class="fgrid2"><div class="frow"><label class="flabel">Rua/Avenida *</label><input class="finput" id="au-end-rua" placeholder="Av. Engenheiro Augusto"/></div><div class="frow"><label class="flabel">Número *</label><input class="finput" id="au-end-numero" placeholder="123"/></div></div>
@@ -1073,7 +1073,7 @@ const TERMOS_MEDICO_HTML=`
   <div class="frow"><label class="flabel">Arquivo do documento *</label><input class="finput" id="au-doc" type="file" accept="image/*,.pdf"/></div>
   <div class="frow"><label class="flabel">Outro documento (opcional)</label><input class="finput" id="au-doc-extra" type="file" accept="image/*,.pdf"/></div>
   <div style="font-size:11px;color:var(--light);margin:4px 0 10px">Sua conta fica <strong>pendente de aprovação</strong> da administração após o envio. Você só aparece nas buscas depois de aprovado.</div>
-  <label style="display:flex;gap:8px;font-size:12px;margin-bottom:6px;align-items:flex-start"><input type="checkbox" id="au-t1" style="margin-top:2px"/> Entendo como o Animagem funciona (marketplace que conecta tutores a médicos veterinários para atendimento domiciliar) e estou de acordo com as responsabilidades de um médico parceiro, incluindo atender exatamente no endereço informado pelo tutor.</label>
+  <label style="display:flex;gap:8px;font-size:12px;margin-bottom:6px;align-items:flex-start"><input type="checkbox" id="au-t1" style="margin-top:2px"/> Entendo como o Animagem funciona (marketplace que conecta tutores a médicos veterinários de qualquer especialidade) e estou de acordo com as responsabilidades de um médico parceiro, incluindo atender exatamente no endereço e formato combinados em cada agendamento.</label>
   <label style="display:flex;gap:8px;font-size:12px;margin-bottom:6px;align-items:flex-start"><input type="checkbox" id="au-t2" style="margin-top:2px"/> Autorizo o uso do meu nome, CRMV, foto e descrição profissional para divulgação no portal e em materiais de marketing do Animagem.</label>
   <label style="display:flex;gap:8px;font-size:12px;margin-bottom:10px;align-items:flex-start"><input type="checkbox" id="au-t3" style="margin-top:2px"/> Estou de acordo com a forma de pagamento e repasse: o tutor paga pelo portal, o Animagem retém a comissão vigente (hoje 0%, fase MVP) e repassa o restante para a chave PIX/conta que eu cadastrar.</label>`;
 const TERMOS_CLINICA_HTML=(teto)=>`
@@ -1087,7 +1087,7 @@ const TERMOS_CLINICA_HTML=(teto)=>`
   <div class="frow"><label class="flabel">Comprovante de endereço da clínica *</label><input class="finput" id="au-comprovante-endereco" type="file" accept="image/*,.pdf"/></div>
   <div class="frow"><label class="flabel">CRMV da clínica (responsabilidade técnica) *</label><input class="finput" id="au-crmv-clinica" type="file" accept="image/*,.pdf"/></div>
   <div style="font-size:11px;color:var(--light);margin:4px 0 10px">Sua conta fica <strong>pendente de aprovação</strong> da administração após o envio. Você só consegue agendar depois de aprovada.</div>
-  <label style="display:flex;gap:8px;font-size:12px;margin-bottom:6px;align-items:flex-start"><input type="checkbox" id="au-tc1" style="margin-top:2px"/> Entendo como funciona o Animagem para clínicas parceiras (buscar médicos autônomos e agendar exames em nome dos meus clientes) e sou responsável pela veracidade dos dados do tutor/pet que eu inserir em nome dele.</label>
+  <label style="display:flex;gap:8px;font-size:12px;margin-bottom:6px;align-items:flex-start"><input type="checkbox" id="au-tc1" style="margin-top:2px"/> Entendo como funciona o Animagem para clínicas parceiras (buscar médicos autônomos de qualquer especialidade e agendar atendimentos em nome dos meus clientes) e sou responsável pela veracidade dos dados do tutor/pet que eu inserir em nome dele.</label>
   <label style="display:flex;gap:8px;font-size:12px;margin-bottom:10px;align-items:flex-start"><input type="checkbox" id="au-tc2" style="margin-top:2px"/> Estou de acordo com a comissão definida acima e com a forma de pagamento: o tutor paga o valor total (exame + minha comissão) pelo portal, e o repasse da minha parte segue a mesma forma combinada com a administração.</label>`;
 async function submitAuth(){
   const email=document.getElementById('au-email').value.trim();
@@ -1285,11 +1285,11 @@ function showView(v){
 
 /* ─── POR QUE DOMICILIAR (varia por exame) ─── */
 const WHY_CONTENT={
-  '':{titulo:'Por que atendimento domiciliar?',itens:[
-    ['🏠','Sem deslocamento','O pet faz o exame no ambiente dele, sem o estresse da viagem até a clínica.'],
-    ['🩺','Mesma qualidade clínica','Equipamento e laudo no mesmo padrão de uma clínica especializada.'],
+  '':{titulo:'Por que agendar pelo Animagem?',itens:[
+    ['📍','Em casa ou na clínica','Cada profissional atende do jeito que faz sentido pro serviço — domiciliar quando aplicável.'],
+    ['🩺','Qualquer especialidade','Clínico geral, dermatologia, nutrição, diagnóstico por imagem e mais.'],
     ['✅','CRMV verificado','Todo médico é aprovado manualmente antes de aparecer nas buscas.'],
-    ['⏱','Agendamento rápido','Escolha o horário, pague e o médico já fica notificado.']]},
+    ['⏱','Agendamento rápido','Escolha o horário, pague e o profissional já fica notificado.']]},
   'Ultrassom Abdominal':{titulo:'Por que ultrassom abdominal domiciliar?',itens:[
     ['🏠','Sem jejum estressante fora de casa','O pet já chega preparado no ambiente onde se sente seguro.'],
     ['🩺','Mesma qualidade clínica','Equipamento e laudo no mesmo padrão de uma clínica especializada.'],
@@ -1356,7 +1356,7 @@ function buscar(){
 
 function renderCards(list,bairroBuscado){
   const c=document.getElementById('dcards');
-  if(!list.length){c.innerHTML='<div style="text-align:center;padding:36px 16px;color:var(--light)"><div style="font-size:36px;margin-bottom:10px">🔍</div><div style="font-family:Fraunces,serif;font-size:18px;margin-bottom:5px">Nenhum médico encontrado</div><div style="font-size:13px">Tente outra especialidade, cidade ou bairro</div></div>';return;}
+  if(!list.length){c.innerHTML='<div style="text-align:center;padding:36px 16px;color:var(--light)"><div style="font-size:36px;margin-bottom:10px">🔍</div><div style="font-family:Fraunces,serif;font-size:18px;margin-bottom:5px">Nenhum médico encontrado</div><div style="font-size:13px">Tente outro tipo de atendimento, cidade ou bairro</div></div>';return;}
   const bb=(bairroBuscado||'').toLowerCase();
   c.innerHTML=list.map(m=>`
     <div class="dcard" onclick="openModal('${m.id}')">
@@ -2124,7 +2124,7 @@ function renderCs(){
         <div class="frow"><label class="flabel">Estado</label><select class="finput" id="cs-f-estado">${estados.map(e=>`<option ${csFiltro.estado===e?'selected':''}>${e}</option>`).join('')||'<option value="SP">SP</option>'}</select></div>
         <div class="frow"><label class="flabel">Cidade</label><select class="finput" id="cs-f-cidade"><option value="">Todas as cidades</option>${cidades.map(c=>`<option ${csFiltro.cidade===c?'selected':''}>${c}</option>`).join('')}</select></div>
       </div>
-      <div class="frow"><label class="flabel">Tipo de exame</label><select class="finput" id="cs-f-exame"><option value="">Todos os exames</option>${exames.map(e=>`<option ${csFiltro.exame===e?'selected':''}>${e}</option>`).join('')}</select></div>
+      <div class="frow"><label class="flabel">Tipo de atendimento</label><select class="finput" id="cs-f-exame"><option value="">Todos os atendimentos</option>${exames.map(e=>`<option ${csFiltro.exame===e?'selected':''}>${e}</option>`).join('')}</select></div>
       <button class="btn-p" onclick="buscarCsMedicos()">Buscar médicos</button>
       <div id="cs-resultados">${renderCsResultados()}</div>`;
       return;
