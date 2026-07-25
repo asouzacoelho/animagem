@@ -648,6 +648,16 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
             <div class="frow" style="max-width:200px"><label class="flabel">Comissão por indicação (%)</label><input class="finput" id="cf-comissao" type="number" min="0" step="0.5"/></div>
             <button class="btn-save" style="margin-top:14px" onclick="salvarPerfilClinica()">Salvar perfil</button>
           </div>
+          <div class="tcard" style="margin-top:14px">
+            <div class="tcard-title">Dados bancários para repasse da comissão</div>
+            <p style="font-size:11px;color:var(--light);margin-bottom:10px">🔒 Visível só para você e a administração — nunca aparece no portal público.</p>
+            <div class="pfrow"><label class="flabel">Chave PIX</label><input class="finput" id="cf-pix" placeholder="CPF/CNPJ, e-mail, telefone ou chave aleatória"/></div>
+            <div class="pfrow"><label class="flabel">Nome do titular</label><input class="finput" id="cf-tit-nome"/></div>
+            <div class="pfrow"><label class="flabel">CPF/CNPJ do titular</label><input class="finput" id="cf-tit-doc"/></div>
+            <div class="fgrid2"><div class="frow"><label class="flabel">Banco</label><input class="finput" id="cf-banco"/></div><div class="frow"><label class="flabel">Tipo de conta</label><select class="finput" id="cf-conta-tipo"><option value="">Selecione</option><option>Corrente</option><option>Poupança</option></select></div></div>
+            <div class="fgrid2"><div class="frow"><label class="flabel">Agência</label><input class="finput" id="cf-agencia"/></div><div class="frow"><label class="flabel">Conta</label><input class="finput" id="cf-conta"/></div></div>
+            <button class="btn-save" style="margin-top:14px" onclick="salvarDadosBancariosClinica()">Salvar dados bancários</button>
+          </div>
         </div>
       </div>
     </div>
@@ -2280,6 +2290,16 @@ async function initClinicaPerfil(){
   document.getElementById('cf-comissao').value=c.comissao_percentual??0;
   const {data:ob}=await sb.from('clinica_onboarding').select('status').eq('clinica_id',session.user.id).maybeSingle();
   document.getElementById('cf-status').textContent=ob?.status==='aprovado'?'✅ Clínica aprovada':ob?.status==='rejeitado'?'❌ Cadastro rejeitado — fale com a administração':'⏳ Pendente de aprovação da administração';
+  const {data:banc}=await sb.from('clinica_dados_bancarios').select('*').eq('clinica_id',session.user.id).maybeSingle();
+  if(banc){
+    document.getElementById('cf-pix').value=banc.pix_chave||'';
+    document.getElementById('cf-tit-nome').value=banc.titular_nome||'';
+    document.getElementById('cf-tit-doc').value=banc.titular_cpf_cnpj||'';
+    document.getElementById('cf-banco').value=banc.banco||'';
+    document.getElementById('cf-conta-tipo').value=banc.conta_tipo||'';
+    document.getElementById('cf-agencia').value=banc.agencia||'';
+    document.getElementById('cf-conta').value=banc.conta||'';
+  }
 }
 async function salvarPerfilClinica(){
   const payload={
@@ -2292,6 +2312,22 @@ async function salvarPerfilClinica(){
   const {error}=await sb.from('clinicas').update(payload).eq('id',session.user.id);
   if(error){alert('Erro ao salvar (a comissão tem um teto definido pela administração): '+error.message);return;}
   alert('Perfil atualizado.');
+}
+async function salvarDadosBancariosClinica(){
+  const payload={
+    clinica_id:session.user.id,
+    pix_chave:document.getElementById('cf-pix').value.trim()||null,
+    titular_nome:document.getElementById('cf-tit-nome').value.trim()||null,
+    titular_cpf_cnpj:document.getElementById('cf-tit-doc').value.trim()||null,
+    banco:document.getElementById('cf-banco').value.trim()||null,
+    conta_tipo:document.getElementById('cf-conta-tipo').value||null,
+    agencia:document.getElementById('cf-agencia').value.trim()||null,
+    conta:document.getElementById('cf-conta').value.trim()||null,
+    updated_at:new Date().toISOString()
+  };
+  const {error}=await sb.from('clinica_dados_bancarios').upsert(payload,{onConflict:'clinica_id'});
+  if(error){alert('Erro ao salvar: '+error.message);return;}
+  alert('Dados bancários atualizados.');
 }
 
 /* ─── ADMIN ─── */
