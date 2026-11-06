@@ -50,7 +50,7 @@ medico_dados_bancarios (medico_id) — pix/banco/agencia/conta, RLS restrita ao 
 
 clinicas (id = profiles.id)
   cnpj, razao_social, nome_fantasia, cidade, estado, comissao_percentual (≤ config_portal.clinica_comissao_teto), ativo
-  ⚠ sem endereço próprio (rua/número) — só cidade/estado. Relevante para a ideia de "exame na clínica".
+  + endereço próprio (2026-08-25): endereco_rua/numero/complemento/cep/bairro — usado quando o exame acontece nas dependências da clínica
 clinica_onboarding (clinica_id) — documentos + cnpj_situacao (via BrasilAPI) + termos, status
 
 pets (tutor_id, nome, especie, raca)
@@ -86,13 +86,13 @@ Buckets privados no Storage: `documentos-medicos`, `documentos-clinicas` (RLS: s
 
 **Médico:** onboarding com CRMV + upload de documento + aceite de 3 termos (bloqueado até admin aprovar), dashboard e histórico com dados reais, agenda por toggle de horário, exames com preço diferenciado (normal/fim de semana/noturno), área de atendimento (bairros/cidades), dados bancários para repasse (ainda sem repasse automático real).
 
-**Clínica** *(papel mais novo, 2026-07-23)*: onboarding espelhando médico (+ verificação automática de CNPJ via BrasilAPI), busca o mesmo catálogo de médicos/horários, preenche dados do tutor+pet, `signInWithOtp` cria/acha a conta do tutor sem Edge Function, RPC `clinica_criar_agendamento` cria o agendamento em nome dele com split de preço correto; tutor recebe magic link e confirma/paga. Dados bancários para repasse da comissão (`clinica_dados_bancarios`, 2026-07-25) espelham o padrão do médico. Endereço do exame hoje é **sempre** o endereço residencial do tutor (não existe opção "na própria clínica" — `clinicas` não tem colunas de endereço próprio; ver `docs/PENDENCIAS.md`).
+**Clínica** *(papel mais novo, 2026-07-23)*: onboarding espelhando médico (+ verificação automática de CNPJ via BrasilAPI), busca o mesmo catálogo de médicos/horários, preenche dados do tutor+pet, `signInWithOtp` cria/acha a conta do tutor sem Edge Function, RPC `clinica_criar_agendamento` cria o agendamento em nome dele com split de preço correto; tutor recebe magic link e confirma/paga. Dados bancários para repasse da comissão (`clinica_dados_bancarios`, 2026-07-25) espelham o padrão do médico. Endereço do exame (2026-08-25): passo "Local do exame" no fluxo de agendamento escolhe entre endereço residencial do tutor (padrão original) ou nas dependências da própria clínica (usa o endereço cadastrado no perfil dela, `clinicas.endereco_*`), validando a área de atendimento do médico contra o endereço escolhido.
 
 **Admin:** aprovação de médicos e clínicas (com visualização de documento), visão geral com números reais, gestão de agendamentos (incl. botão manual "Marcar como pago", stand-in temporário), patrocinadores, bairros, comissões (persistidas, sem efeito automático ainda), config geral.
 
 ## 5. Nome e marca
 
-Ver [`GUIA_MARCA_INPI.md`](GUIA_MARCA_INPI.md): processo de registro **pausado**, risco real de colisão fonética com marca já registrada "ANIMAGE SAÚDE DE ESTIMAÇÃO" (pedido anterior semelhante foi rejeitado por isso). Domínio de reserva: `animagemvet.com.br` (`animagem.com.br` é de terceiro desde 2017).
+**"Animagem" foi descartado como nome definitivo (confirmado com André em 2026-08-25)** — motivo duplo: risco real de colisão fonética com marca já registrada "ANIMAGE SAÚDE DE ESTIMAÇÃO" (pedido anterior semelhante foi indeferido por isso, ver [`GUIA_MARCA_INPI.md`](GUIA_MARCA_INPI.md)) e o nome remeter só a "imagem", desalinhado do posicionamento amplo (§1). Reserva de domínio `animagemvet.com.br` também descartada junto. Candidatos novos e status da decisão em [`GUIA_ANDRE.md`](GUIA_ANDRE.md) item 0 — até decidir, o produto segue rodando com o nome "Animagem" no código/copy (não é urgente trocar tecnicamente, mas é o próximo nome a aparecer em qualquer material novo).
 
 ## 6. Nota sobre o pivot de escopo (2026-07-25)
 
