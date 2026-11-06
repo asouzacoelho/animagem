@@ -49,6 +49,9 @@ Tudo abaixo é trabalho que **só você pode fazer** (decisões de negócio, pag
 - ~~EloPet~~ — **já existe**: "Elopet" é uma rede brasileira de descontos e proteção animal, redeelopet.com.br. Mesmo público, colisão real.
 - ~~VetGuia~~ / ~~PetGuia~~ — "PetGuia Brasil" já é plataforma brasileira ativa; "Guiavet" (BH) é plataforma de saúde veterinária quase com o mesmo nome invertido; "VetGuia" também existe como clínica em Portugal.
 - ~~VetFlow~~ / ~~PetFlow~~ — "Vetflow" (plataforma de anatomia veterinária), "VetFlow Sistema Veterinário" e "PetFlow" (sistema para pet shop e clínica veterinária, petflow.app) — três colisões no próprio setor.
+- ~~SoulPet~~ *(2026-11-06, André perguntou)* — **já existe**: "SOULPET PETSHOP E HOSPITAL VETERINÁRIO LTDA" (CNPJ 40.017.777/0001-83, Goiânia) e também "Soul Pet Estética, Banho e Tosa" (zona norte de SP). Dois usos comerciais independentes, ambos no setor pet/veterinário.
+
+**⚠ Caso especial — SoulVet *(2026-11-06)*:** não encontrei nenhuma empresa chamada "SoulVet"/"Soul Vet" no Brasil, e o nome tem uma simetria bonita com a origem do projeto ("soul" = alma em inglês; "alma" em latim é ***anima***, a raiz que inspirou "Animagem" — o mesmo conceito, sem arrastar a colisão antiga). **Mas o risco de registro é maior que o dos outros candidatos:** o "SoulPet" já existente é um **hospital veterinário**, ou seja, mesma classe do INPI (44 — serviços veterinários) que vocês vão pedir. Um examinador pode considerar "SoulVet" × "SoulPet" confundíveis na mesma classe — que é **exatamente o mecanismo que indeferiu o Animagem** (Art. 124 XIX da LPI, proximidade com "Animage Saúde de Estimação"). Se o nome agradar, vale levar essa dúvida específica ao advogado antes de investir nele.
 
 **Candidatos sem colisão aparente na minha busca (ordem de preferência):**
 
