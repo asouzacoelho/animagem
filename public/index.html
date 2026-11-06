@@ -649,6 +649,14 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
             <button class="btn-save" style="margin-top:14px" onclick="salvarPerfilClinica()">Salvar perfil</button>
           </div>
           <div class="tcard" style="margin-top:14px">
+            <div class="tcard-title">Endereço da clínica</div>
+            <p style="font-size:11px;color:var(--light);margin-bottom:10px">Preencha para poder oferecer "atendimento nas dependências da clínica" ao agendar em nome de um cliente.</p>
+            <div class="fgrid2"><div class="frow"><label class="flabel">Rua/Avenida</label><input class="finput" id="cf-end-rua"/></div><div class="frow"><label class="flabel">Número</label><input class="finput" id="cf-end-numero"/></div></div>
+            <div class="fgrid2"><div class="frow"><label class="flabel">Complemento</label><input class="finput" id="cf-end-complemento"/></div><div class="frow"><label class="flabel">CEP</label><input class="finput" id="cf-end-cep" maxlength="9" oninput="fmtCEP(this)"/></div></div>
+            <div class="frow"><label class="flabel">Bairro</label><input class="finput" id="cf-end-bairro"/></div>
+            <button class="btn-save" style="margin-top:14px" onclick="salvarPerfilClinica()">Salvar perfil</button>
+          </div>
+          <div class="tcard" style="margin-top:14px">
             <div class="tcard-title">Dados bancários para repasse da comissão</div>
             <p style="font-size:11px;color:var(--light);margin-bottom:10px">🔒 Visível só para você e a administração — nunca aparece no portal público.</p>
             <div class="pfrow"><label class="flabel">Chave PIX</label><input class="finput" id="cf-pix" placeholder="CPF/CNPJ, e-mail, telefone ou chave aleatória"/></div>
@@ -790,8 +798,26 @@ textarea.finput{height:auto;padding:12px 14px;resize:none;}
   </div>
 </div>
 
+<script src="https://browser.sentry-cdn.com/7.120.3/bundle.min.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
+/* ─── MONITORAMENTO DE ERROS (Sentry) ───
+   SENTRY_DSN vazio = monitoramento desligado, sem custo/efeito nenhum (nao quebra nada mesmo sem DSN).
+   Pra ativar: criar conta gratis em sentry.io, criar um projeto "Browser JavaScript",
+   copiar o DSN em Settings > Client Keys (DSN) e colar abaixo. */
+const SENTRY_DSN='';
+if(SENTRY_DSN&&window.Sentry){
+  Sentry.init({
+    dsn:SENTRY_DSN,
+    environment:location.hostname==='animagem.pages.dev'?'production':'development',
+    tracesSampleRate:0, // so captura erros por enquanto, sem tracing de performance
+    beforeSend(event){
+      // nunca deixa dados sensiveis (cookies/headers) saírem no relatorio de erro
+      if(event.request){delete event.request.cookies;delete event.request.headers;}
+      return event;
+    }
+  });
+}
 /* ─── SUPABASE ─── */
 const SUPABASE_URL='https://xtmuffomynrwpxswrdvy.supabase.co';
 const SUPABASE_KEY='sb_publishable_l8gbwcyIhtBFxZ1uSyp_lA_QJu95j4Y';
@@ -2072,7 +2098,7 @@ async function removerArea(id){
 function initClinica(){
   document.querySelectorAll('.tab-strip .tab-btn[data-cp]').forEach(btn=>{btn.onclick=()=>switchCp(btn.dataset.cp);});
   document.querySelectorAll('.med-sidebar-nav[data-cp]').forEach(nav=>{nav.onclick=()=>switchCp(nav.dataset.cp);});
-  cs=0;csMed=null;csServs=[];csSlot=null;csForm={};csSlotsCache=null;csObs='';csFiltro={estado:'',cidade:'',exame:''};csResultados=null;
+  cs=0;csMed=null;csServs=[];csSlot=null;csForm={};csSlotsCache=null;csObs='';csLocal='tutor';csFiltro={estado:'',cidade:'',exame:''};csResultados=null;
   renderCs();
   initClinicaPerfil();
   carregarAgendamentosClinica();
@@ -2087,6 +2113,9 @@ function switchCp(cp){
 /* Estado do fluxo de agendamento pela clínica (equivalente ao ms/mMed/mServs/mSlot/mForm do tutor,
    mas sem etapa de pagamento — quem paga é o tutor, pelo link mágico) */
 let cs=0,csMed=null,csServs=[],csSlot=null,csForm={},csSlotsCache=null,csObs='',csFiltro={estado:'',cidade:'',exame:''},csResultados=null,csAgendamentoResumo=null,_csResumoMsg='';
+// local do exame no fluxo da clinica: 'tutor' (endereco residencial de quem vai ser atendido, comportamento
+// original) ou 'clinica' (nas dependencias da propria clinica, usa o endereco cadastrado no perfil dela)
+let csLocal='tutor',CLINICA_ENDERECO=null;
 function prog2(s){
   const steps=['Médico','Horário','Dados','Orientações','✓'];
   return'<div class="prog">'+steps.map((n,i)=>{
@@ -2152,22 +2181,19 @@ function renderCs(){
   }
   else if(cs===2){
     const f=csForm;
+    const temEndClinica=!!CLINICA_ENDERECO;
     b.innerHTML=prog2(2)+
     `<div class="notice" style="margin-bottom:12px;font-size:12px">O tutor recebe um e-mail para confirmar os dados e pagar — preencha com o que o cliente te passou no balcão.</div>
     <div class="fgrid2"><div class="frow"><label class="flabel">Nome do tutor *</label><input class="finput" id="cs-fn" value="${f.nome||''}"/></div><div class="frow"><label class="flabel">WhatsApp *</label><input class="finput" id="cs-ft" value="${f.tel||''}" type="tel" oninput="fmtTel(this)"/></div></div>
     <div class="frow"><label class="flabel">E-mail do tutor *</label><input class="finput" id="cs-fe" value="${f.email||''}" type="email" oninput="verificarTutorExistenteDebounced()"/><div id="cs-tutor-status" style="font-size:12px;margin-top:5px"></div></div>
     <div class="fgrid2"><div class="frow"><label class="flabel">Nome do pet *</label><input class="finput" id="cs-fp" value="${f.pet||''}"/></div><div class="frow"><label class="flabel">Raça</label><input class="finput" id="cs-fr" value="${f.raca||''}"/></div></div>
     <div class="frow"><label class="flabel">Espécie *</label><div class="chips">${ESP.map(e=>`<div class="chip ${f.esp===e?'on':''}" onclick="selCsEsp('${e}')">${e}</div>`).join('')}</div></div>
-    <div class="fgrid2"><div class="frow"><label class="flabel">Rua / Avenida *</label><input class="finput" id="cs-rua" value="${f.rua||''}"/></div><div class="frow"><label class="flabel">Número *</label><input class="finput" id="cs-numero" value="${f.numero||''}"/></div></div>
-    <div class="fgrid2"><div class="frow"><label class="flabel">Complemento</label><input class="finput" id="cs-complemento" value="${f.complemento||''}"/></div><div class="frow"><label class="flabel">CEP *</label><input class="finput" id="cs-cep" value="${f.cep||''}" maxlength="9" oninput="fmtCEP(this)"/></div></div>
-    <div class="fgrid2">
-      <div class="frow"><label class="flabel">Bairro ${bairroEspecificoDisponivel(csMed,f.cidade)?'*':'(opcional)'}</label>
-        <select class="finput" id="cs-bairro">${renderOpcoesBairro(csMed,f.cidade,f.bairro)}</select>
-      </div>
-      <div class="frow"><label class="flabel">Cidade *</label><select class="finput" id="cs-cidade" onchange="syncCsFormFields();renderCs()">${(csMed.areaCidades||[csMed.cidade]).map(c=>`<option ${(f.cidade||csMed.cidade)===c?'selected':''}>${c}</option>`).join('')}</select></div>
+    <div class="frow"><label class="flabel">Local do exame *</label><div class="chips">
+      <div class="chip ${csLocal==='tutor'?'on':''}" onclick="selCsLocal('tutor')">Endereço do tutor</div>
+      <div class="chip ${csLocal==='clinica'?'on':''}" style="${temEndClinica?'':'opacity:.4;cursor:not-allowed'}" onclick="${temEndClinica?"selCsLocal('clinica')":''}">Nas dependências da clínica</div>
     </div>
-    <div class="frow" style="max-width:160px"><label class="flabel">Estado *</label><select class="finput" id="cs-estado"><option ${f.estado===csMed.estado?'selected':''}>${csMed.estado}</option></select></div>
-    <div style="font-size:11px;color:var(--gold);margin-bottom:12px">⚠ O médico atenderá <strong>exatamente neste endereço</strong> — confira com o cliente antes de avançar.</div>
+    ${temEndClinica?'':'<div style="font-size:11px;color:var(--light);margin-top:4px">Cadastre o endereço da clínica em "Meu Perfil" para habilitar esta opção.</div>'}</div>
+    ${csLocal==='clinica'?rendEndClinicaResumo():rendCsEnderecoTutor(f)}
     <div class="brow"><button class="btn-b" onclick="syncCsFormFields();cs=1;renderCs()">← Voltar</button><button class="btn-p" style="flex:1;margin-top:0" onclick="avancarCsOrientacoes()">Continuar →</button></div>`;
   }
   else if(cs===3){
@@ -2188,10 +2214,11 @@ function renderCs(){
         <div class="rrow"><div class="rrow-lbl">Data/hora</div><div class="rrow-val">${fD(r.slot)} ${fH(r.slot)}</div></div>
         <div class="rrow"><div class="rrow-lbl">Tutor</div><div class="rrow-val">${r.form.nome}</div></div>
         <div class="rrow"><div class="rrow-lbl">Pet</div><div class="rrow-val">${r.form.pet} · ${r.form.esp}</div></div>
+        <div class="rrow"><div class="rrow-lbl">Local</div><div class="rrow-val">${r.local==='clinica'?'Nas dependências da clínica':'Endereço do tutor'}</div></div>
         ${r.obs?`<div class="rrow"><div class="rrow-lbl">Orientações</div><div class="rrow-val">${r.obs}</div></div>`:''}
       </div>
       <button class="btn-copy" onclick="copiarResumoCs(this)">Copiar resumo</button>
-      <button class="btn-b" style="width:100%;margin-top:8px" onclick="cs=0;csMed=null;csServs=[];csSlot=null;csForm={};csSlotsCache=null;csObs='';renderCs()">Agendar outro</button>
+      <button class="btn-b" style="width:100%;margin-top:8px" onclick="cs=0;csMed=null;csServs=[];csSlot=null;csForm={};csSlotsCache=null;csObs='';csLocal='tutor';renderCs()">Agendar outro</button>
     </div>`;
   }
 }
@@ -2205,6 +2232,34 @@ function syncCsFormFields(){
   Object.entries(map).forEach(([k,id])=>{const v=g(id);if(v!==undefined)csForm[k]=v;});
 }
 function selCsEsp(e){syncCsFormFields();csForm.esp=e;renderCs();}
+function rendCsEnderecoTutor(f){
+  return `<div class="fgrid2"><div class="frow"><label class="flabel">Rua / Avenida *</label><input class="finput" id="cs-rua" value="${f.rua||''}"/></div><div class="frow"><label class="flabel">Número *</label><input class="finput" id="cs-numero" value="${f.numero||''}"/></div></div>
+    <div class="fgrid2"><div class="frow"><label class="flabel">Complemento</label><input class="finput" id="cs-complemento" value="${f.complemento||''}"/></div><div class="frow"><label class="flabel">CEP *</label><input class="finput" id="cs-cep" value="${f.cep||''}" maxlength="9" oninput="fmtCEP(this)"/></div></div>
+    <div class="fgrid2">
+      <div class="frow"><label class="flabel">Bairro ${bairroEspecificoDisponivel(csMed,f.cidade)?'*':'(opcional)'}</label>
+        <select class="finput" id="cs-bairro">${renderOpcoesBairro(csMed,f.cidade,f.bairro)}</select>
+      </div>
+      <div class="frow"><label class="flabel">Cidade *</label><select class="finput" id="cs-cidade" onchange="syncCsFormFields();renderCs()">${(csMed.areaCidades||[csMed.cidade]).map(c=>`<option ${(f.cidade||csMed.cidade)===c?'selected':''}>${c}</option>`).join('')}</select></div>
+    </div>
+    <div class="frow" style="max-width:160px"><label class="flabel">Estado *</label><select class="finput" id="cs-estado"><option ${f.estado===csMed.estado?'selected':''}>${csMed.estado}</option></select></div>
+    <div style="font-size:11px;color:var(--gold);margin-bottom:12px">⚠ O médico atenderá <strong>exatamente neste endereço</strong> — confira com o cliente antes de avançar.</div>`;
+}
+function rendEndClinicaResumo(){
+  const c=CLINICA_ENDERECO;if(!c)return'';
+  const ok=areaOk(csMed,c.bairro,c.cidade);
+  return `<div class="frow" style="background:#f7f4fb;border-radius:10px;padding:12px;margin-bottom:8px">
+      <div style="font-size:13px;font-weight:600;margin-bottom:2px">${c.rua}, ${c.numero}${c.complemento?' - '+c.complemento:''}</div>
+      <div style="font-size:12px;color:var(--light)">${c.bairro?c.bairro+' - ':''}${c.cidade} - ${c.estado}, CEP ${c.cep}</div>
+    </div>
+    ${ok?'':`<div style="font-size:11px;color:var(--gold);margin-bottom:12px">⚠ Este médico pode não atender a área da clínica (${c.bairro||c.cidade}) — confirme a área de atendimento dele antes de prosseguir.</div>`}`;
+}
+function selCsLocal(v){
+  csLocal=v;
+  if(v==='clinica'&&CLINICA_ENDERECO){
+    csForm={...csForm,rua:CLINICA_ENDERECO.rua,numero:CLINICA_ENDERECO.numero,complemento:CLINICA_ENDERECO.complemento,cep:CLINICA_ENDERECO.cep,bairro:CLINICA_ENDERECO.bairro,cidade:CLINICA_ENDERECO.cidade,estado:CLINICA_ENDERECO.estado};
+  }
+  renderCs();
+}
 function copiarResumoCs(btn){navigator.clipboard.writeText(_csResumoMsg);btn.textContent='✓ Copiado!';}
 let _verifTutorTimer=null;
 function verificarTutorExistenteDebounced(){clearTimeout(_verifTutorTimer);_verifTutorTimer=setTimeout(verificarTutorExistente,500);}
@@ -2258,7 +2313,7 @@ async function clinicaCriarAgendamento(){
     else alert('Não foi possível confirmar: '+error.message);
     return;
   }
-  csAgendamentoResumo={med:csMed,servs:[...csServs],slot:csSlot,form:{...csForm},endereco,obs:csObs};
+  csAgendamentoResumo={med:csMed,servs:[...csServs],slot:csSlot,form:{...csForm},endereco,obs:csObs,local:csLocal};
   _csResumoMsg=`Animagem — agendamento feito pela clínica\n📋 ${csServs.join(', ')}\n📅 ${fD(csSlot)} às ${fH(csSlot)}\n🐾 ${csForm.pet} (${csForm.esp})\n👤 Tutor: ${csForm.nome}\n📍 ${endereco}${csObs?'\n📝 Orientações: '+csObs:''}\n\nEnviamos um e-mail para ${csForm.email} com o link para confirmar e pagar.`;
   cs=4;renderCs();
   carregarAgendamentosClinica();
@@ -2288,6 +2343,15 @@ async function initClinicaPerfil(){
   document.getElementById('cf-cidade').value=c.cidade||'';
   document.getElementById('cf-estado').value=c.estado||'';
   document.getElementById('cf-comissao').value=c.comissao_percentual??0;
+  document.getElementById('cf-end-rua').value=c.endereco_rua||'';
+  document.getElementById('cf-end-numero').value=c.endereco_numero||'';
+  document.getElementById('cf-end-complemento').value=c.endereco_complemento||'';
+  document.getElementById('cf-end-cep').value=c.endereco_cep||'';
+  document.getElementById('cf-end-bairro').value=c.endereco_bairro||'';
+  CLINICA_ENDERECO=(c.endereco_rua&&c.endereco_numero&&c.endereco_cep)?{
+    rua:c.endereco_rua,numero:c.endereco_numero,complemento:c.endereco_complemento||'',
+    cep:c.endereco_cep,bairro:c.endereco_bairro||'',cidade:c.cidade||'',estado:c.estado||''
+  }:null;
   const {data:ob}=await sb.from('clinica_onboarding').select('status').eq('clinica_id',session.user.id).maybeSingle();
   document.getElementById('cf-status').textContent=ob?.status==='aprovado'?'✅ Clínica aprovada':ob?.status==='rejeitado'?'❌ Cadastro rejeitado — fale com a administração':'⏳ Pendente de aprovação da administração';
   const {data:banc}=await sb.from('clinica_dados_bancarios').select('*').eq('clinica_id',session.user.id).maybeSingle();
@@ -2307,11 +2371,17 @@ async function salvarPerfilClinica(){
     nome_fantasia:document.getElementById('cf-fantasia').value.trim()||null,
     cidade:document.getElementById('cf-cidade').value.trim(),
     estado:document.getElementById('cf-estado').value.trim().toUpperCase(),
-    comissao_percentual:Number(document.getElementById('cf-comissao').value)||0
+    comissao_percentual:Number(document.getElementById('cf-comissao').value)||0,
+    endereco_rua:document.getElementById('cf-end-rua').value.trim()||null,
+    endereco_numero:document.getElementById('cf-end-numero').value.trim()||null,
+    endereco_complemento:document.getElementById('cf-end-complemento').value.trim()||null,
+    endereco_cep:document.getElementById('cf-end-cep').value.trim()||null,
+    endereco_bairro:document.getElementById('cf-end-bairro').value.trim()||null
   };
   const {error}=await sb.from('clinicas').update(payload).eq('id',session.user.id);
   if(error){alert('Erro ao salvar (a comissão tem um teto definido pela administração): '+error.message);return;}
   alert('Perfil atualizado.');
+  initClinicaPerfil();
 }
 async function salvarDadosBancariosClinica(){
   const payload={
@@ -2635,6 +2705,7 @@ async function init(){
   renderAuthSlot();
   sb.auth.onAuthStateChange((evt,sess)=>{
     session=sess;
+    if(window.Sentry)Sentry.setUser(sess?.user?.id?{id:sess.user.id}:null); // so o id, nunca nome/email/telefone
     refreshProfile().then(renderAuthSlot);
     if(evt==='PASSWORD_RECOVERY'){authMode='nova_senha';renderAuth();document.getElementById('auth-overlay').classList.add('on');}
   });
